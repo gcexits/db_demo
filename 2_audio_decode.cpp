@@ -4,9 +4,11 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <mutex>
 #include <string>
 #include <thread>
 
@@ -27,6 +29,46 @@ public:
         std::lock_guard<std::mutex> lckMap(audioMx_);
         audioBufferList.push_back(audio);
     }
+
+    int popCache(uint8_t *data) {
+        std::lock_guard<std::mutex> lckMap(audioMx_);
+        if (audioBufferList.empty()) {
+            return 0;
+        }
+        auto audio = audioBufferList.front();
+        memcpy(data, audio.data, audio.size);
+        delete[] audio.data;
+        audioBufferList.pop_front();
+        return audio.size;
+    }
+};
+
+AuidoCache cache_1;
+AuidoCache cache_2;
+
+class AudioData {
+    void allocFrame() {
+        if (!frame) {
+            frame = av_frame_alloc();
+        }
+    }
+
+    void resertFrame() {
+        if (frame) {
+            av_frame_free(&frame);
+            frame = nullptr;
+        }
+    }
+
+public:
+    AVFrame *frame = nullptr;
+    AudioData() {
+        allocFrame();
+    }
+
+    ~AudioData() {
+        resertFrame();
+    }
 };
 
 class Demux {
@@ -34,7 +76,7 @@ class Demux {
     std::string url;
     int audio_index = -1;
     int video_index = -1;
-    AVPacket *pkt;
+    AVPacket *pkt = nullptr;
 
 public:
     Demux(std::string inUrl) : url(inUrl) {
@@ -97,22 +139,20 @@ public:
 
 class Decodec {
     AVCodecContext *ctx = nullptr;
-    AVFrame *frame = nullptr;
     SwrContext *swr = nullptr;
+    bool isFirst = true;
 
 public:
-    AuidoCache cache;
+    AudioData src;
+    AudioData dst;
+
     Decodec() {
         avcodec_register_all();
-        frame = av_frame_alloc();
     }
 
     ~Decodec() {
         if (ctx) {
             avcodec_free_context(&ctx);
-        }
-        if (frame) {
-            av_frame_free(&frame);
         }
     }
 
@@ -135,80 +175,147 @@ public:
         return avcodec_open2(ctx, nullptr, nullptr) == 0 ? true : false;
     }
 
-    bool streamDecode(AVPacket *pkt) {
+    bool streamDecode(AVPacket *pkt, int streamId) {
         if (avcodec_send_packet(ctx, pkt) != 0) {
             return false;
         }
         while (true) {
-            if (avcodec_receive_frame(ctx, frame) != 0) {
+            if (avcodec_receive_frame(ctx, src.frame) != 0) {
                 break;
             }
-            initSwr(frame->channels, frame->sample_rate, (AVSampleFormat)frame->format);
-            int size = frame->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * 2;
+            initSwr(src.frame->channels, src.frame->sample_rate, (AVSampleFormat)src.frame->format);
+            int size = src.frame->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * 2;
+            if (isFirst) {
+                std::cout << "src.frame->sample_rate : " << src.frame->sample_rate << std::endl;
+                std::cout << "src.frame->nb_samples : " << src.frame->nb_samples << std::endl;
+                isFirst = false;
+            }
             uint8_t *pcm = new uint8_t[size];
-            swr_convert(swr, &pcm, frame->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
-            cache.pushCache(pcm, size);
+            int resample_size = swr_convert(swr, &pcm, src.frame->nb_samples, (const uint8_t **)src.frame->data, src.frame->nb_samples);
+            if (streamId == 1) {
+                cache_1.pushCache(pcm, size);
+            } else {
+                cache_2.pushCache(pcm, size);
+            }
             delete[] pcm;
         }
         return true;
     }
 
     void initSwr(int in_channels, int in_sample_rate, AVSampleFormat in_sample_format) {
-        swr = swr_alloc();
-        swr = swr_alloc_set_opts(swr, av_get_default_channel_layout(2), AV_SAMPLE_FMT_S16, in_sample_rate, av_get_default_channel_layout(in_channels), in_sample_format, in_sample_rate, 0, nullptr);
-        swr_init(swr);
+        if (!swr) {
+            swr = swr_alloc();
+            swr = swr_alloc_set_opts(swr, av_get_default_channel_layout(2), AV_SAMPLE_FMT_S16, in_sample_rate, av_get_default_channel_layout(in_channels), in_sample_format, in_sample_rate, 0, nullptr);
+            swr_init(swr);
+        }
+    }
+};
+
+class Api {
+    std::thread demux_thread_1;
+    std::thread demux_thread_2;
+    int threadCount = 0;
+    int threadExit = 0;
+
+    void demuxer_thread(std::string url, int streamId) {
+        threadCount++;
+        Demux demuxer(url);
+        Decodec audioCtx;
+        demuxer.demuxFormat();
+
+        if (!audioCtx.setCodec(demuxer.getAudioParameters())) {
+            std::cout << "err line : " << __LINE__ << std::endl;
+            exit(1);
+        }
+        if (!audioCtx.openCodec()) {
+            std::cout << "err line : " << __LINE__ << std::endl;
+            exit(1);
+        }
+
+        AVPacket *pkt = av_packet_alloc();
+        while (1) {
+            if (!demuxer.readFrame()) {
+                std::cout << "err line : " << __LINE__ << std::endl;
+                exit(1);
+            }
+
+            if (demuxer.streamType() == 0) {
+                demuxer.getPkt(pkt);
+                audioCtx.streamDecode(pkt, streamId);
+            }
+
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        threadExit++;
+    }
+
+public:
+    void start(std::string url_1, std::string url_2) {
+        demux_thread_1 = std::thread(&Api::demuxer_thread, this, url_1, 1);
+        // demux_thread_2 = std::thread(&Api::demuxer_thread, this, url_2, 2);
+    }
+
+    void stop() {
+        assert(demux_thread_1.joinable());
+        // assert(demux_thread_2.joinable());
+        demux_thread_1.join();
+        // demux_thread_2.join();
+    }
+
+    bool threadOver() {
+        return threadExit == threadCount;
     }
 };
 
 // todo : audio解封装，解码
 int main(int argc, char *argv[]) {
-    std::string outUrl = "./decode.pcm";
+    std::string outUrl = "./44100_2_s16le.pcm";
     std::ofstream fp_pcm;
     fp_pcm.open(outUrl, std::ios::out | std::ios::app);
-    std::string url = "../audio_video/盗将行.mp3";
+    std::string url_1 = "../audio_video/1_意外.mp3";
+    std::string url_2 = "../audio_video/2_盗将行.mp3";
 
-    // av_log_set_level(AV_LOG_QUIET);
+    Api api;
+    api.start(url_1, url_2);
 
-    Demux demuxer(url);
-    demuxer.demuxFormat();
-
-    std::cout << "audio_video duration(second) : " << demuxer.getDuration() << std::endl;
-
-    // av_dump_format(ifmt, -1, url.c_str(), 0);
-
-    std::cout << "audio frame_size(nb_samples 1 channel) : " << demuxer.getAudioSize() << std::endl;
-
-    Decodec audioCtx;
-    if (!audioCtx.setCodec(demuxer.getAudioParameters())) {
-        std::cout << __LINE__ << std::endl;
-        return -1;
-    }
-    if (!audioCtx.openCodec()) {
-        std::cout << __LINE__ << std::endl;
-        return -1;
-    }
-
-    AVPacket *pkt = av_packet_alloc();
+    uint8_t *buf_mix_1 = new uint8_t[1024 * 1024];
+    uint8_t *buf_mix_2 = new uint8_t[1024 * 1024];
+    uint8_t *buf_out = new uint8_t[1024 * 1024];
     while (1) {
-        if (!demuxer.readFrame()) {
-            std::cout << __LINE__ << std::endl;
+        int buf_len_1 = cache_1.popCache(buf_mix_1);
+        if (buf_len_1 == 0) {
+            memset(buf_mix_1, 0, 1024 * 1024);
+        }
+        int buf_len_2 = cache_2.popCache(buf_mix_2);
+        if (buf_len_2 == 0) {
+            memset(buf_mix_2, 0, 1024 * 1024);
+        }
+        if (buf_len_1 == 0 && buf_len_2 == 0 && api.threadOver()) {
             break;
         }
-
-        if (demuxer.streamType() == 0) {
-            demuxer.getPkt(pkt);
-            audioCtx.streamDecode(pkt);
-        }
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // fp_pcm.write((char *)buf_mix_2, buf_len_2);
+        fp_pcm.write((char *)buf_mix_1, buf_len_1);
     }
 
+    api.stop();
+
+    delete[] buf_mix_1;
+    delete[] buf_mix_2;
+    delete[] buf_out;
+
+// av_log_set_level(AV_LOG_QUIET);
+
+// std::cout << "audio_video duration(second) : " << demuxer.getDuration() << std::endl;
+
+// std::cout << "audio frame_size(nb_samples 1 channel) : " << demuxer.getAudioSize() << std::endl;
+#if 0
     while (!audioCtx.cache.audioBufferList.empty()) {
         auto lv = audioCtx.cache.audioBufferList.front();
         fp_pcm.write((char *)lv.data, lv.size);
         delete[] lv.data;
         audioCtx.cache.audioBufferList.pop_front();
     }
+#endif
 
     fp_pcm.close();
 
