@@ -56,18 +56,41 @@ class AudioData {
     void resertFrame() {
         if (frame) {
             av_frame_free(&frame);
-            frame = nullptr;
         }
     }
 
 public:
     AVFrame *frame = nullptr;
+    uint8_t *resampleData = nullptr;
+    int bufferSize = 0;
     AudioData() {
         allocFrame();
     }
 
     ~AudioData() {
         resertFrame();
+    }
+
+    void setOpt(int nb_samples, int sample_rate, int channels, int format) {
+        frame->nb_samples = nb_samples;
+        frame->sample_rate = sample_rate;
+        frame->channels = channels;
+        frame->format = format;
+    }
+
+    void fillFrame(uint8_t *audioBuffer, int bufferSize) {
+        avcodec_fill_audio_frame(frame, frame->channels, (AVSampleFormat)frame->format, audioBuffer, bufferSize, 0);
+    }
+
+    void fillFrame() {
+        bufferSize = av_samples_get_buffer_size(nullptr, frame->channels, frame->nb_samples, (AVSampleFormat)frame->format, 0);
+        resampleData = new uint8_t[bufferSize];
+        fillFrame(resampleData, bufferSize);
+        delete[] resampleData;
+    }
+
+    bool isChange(int nb_samples, int sample_rate, int channels, int format) {
+        return nb_samples != frame->nb_samples || sample_rate != frame->sample_rate || channels != frame->channels || format != frame->format;
     }
 };
 
@@ -137,15 +160,44 @@ public:
     }
 };
 
-class Decodec {
-    AVCodecContext *ctx = nullptr;
+class ReSample {
     SwrContext *swr = nullptr;
-    bool isFirst = true;
 
 public:
     AudioData src;
     AudioData dst;
+    ReSample() = default;
 
+    void setSwrOpt() {
+        if (src.isChange(src.frame->nb_samples, src.frame->sample_rate, src.frame->channels, src.frame->format)) {
+            if (swr) {
+                swr_free(&swr);
+            }
+        }
+
+        if (!swr) {
+            swr = swr_alloc();
+            swr = swr_alloc_set_opts(swr, av_get_default_channel_layout(dst.frame->channels), (AVSampleFormat)dst.frame->format, dst.frame->sample_rate, av_get_default_channel_layout(src.frame->channels), (AVSampleFormat)src.frame->format, src.frame->sample_rate, 0, nullptr);
+            swr_init(swr);
+        }
+    }
+
+    void convert(int streamId) {
+        int resample_size = swr_convert(swr, dst.frame->data, dst.frame->nb_samples, (const uint8_t **)src.frame->data, src.frame->nb_samples);
+        if (streamId == 1) {
+            cache_1.pushCache(dst.frame->data[0], dst.bufferSize);
+        } else {
+            cache_2.pushCache(dst.frame->data[0], dst.bufferSize);
+        }
+    }
+};
+
+class Decodec {
+    AVCodecContext *ctx = nullptr;
+    bool isFirst = true;
+    ReSample resample;
+
+public:
     Decodec() {
         avcodec_register_all();
     }
@@ -179,46 +231,32 @@ public:
         if (avcodec_send_packet(ctx, pkt) != 0) {
             return false;
         }
+
         while (true) {
-            if (avcodec_receive_frame(ctx, src.frame) != 0) {
+            if (avcodec_receive_frame(ctx, resample.src.frame) != 0) {
                 break;
             }
-            initSwr(src.frame->channels, src.frame->sample_rate, (AVSampleFormat)src.frame->format);
-            int size = src.frame->nb_samples * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * 2;
+            resample.src.setOpt(resample.src.frame->nb_samples, resample.src.frame->sample_rate, resample.src.frame->channels, resample.src.frame->format);
+            resample.dst.setOpt(resample.src.frame->nb_samples, resample.src.frame->sample_rate, resample.src.frame->channels, 1);
+            resample.dst.fillFrame();
+            resample.setSwrOpt();
             if (isFirst) {
-                std::cout << "src.frame->sample_rate : " << src.frame->sample_rate << std::endl;
-                std::cout << "src.frame->nb_samples : " << src.frame->nb_samples << std::endl;
+                std::cout << "src.frame->sample_rate : " << resample.src.frame->sample_rate << std::endl;
+                std::cout << "src.frame->nb_samples : " << resample.src.frame->nb_samples << std::endl;
                 isFirst = false;
             }
-            uint8_t *pcm = new uint8_t[size];
-            int resample_size = swr_convert(swr, &pcm, src.frame->nb_samples, (const uint8_t **)src.frame->data, src.frame->nb_samples);
-            if (streamId == 1) {
-                cache_1.pushCache(pcm, size);
-            } else {
-                cache_2.pushCache(pcm, size);
-            }
-            delete[] pcm;
+            resample.convert(streamId);
         }
         return true;
-    }
-
-    void initSwr(int in_channels, int in_sample_rate, AVSampleFormat in_sample_format) {
-        if (!swr) {
-            swr = swr_alloc();
-            swr = swr_alloc_set_opts(swr, av_get_default_channel_layout(2), AV_SAMPLE_FMT_S16, in_sample_rate, av_get_default_channel_layout(in_channels), in_sample_format, in_sample_rate, 0, nullptr);
-            swr_init(swr);
-        }
     }
 };
 
 class Api {
     std::thread demux_thread_1;
     std::thread demux_thread_2;
-    int threadCount = 0;
     int threadExit = 0;
 
     void demuxer_thread(std::string url, int streamId) {
-        threadCount++;
         Demux demuxer(url);
         Decodec audioCtx;
         demuxer.demuxFormat();
@@ -236,7 +274,7 @@ class Api {
         while (1) {
             if (!demuxer.readFrame()) {
                 std::cout << "err line : " << __LINE__ << std::endl;
-                exit(1);
+                break;
             }
 
             if (demuxer.streamType() == 0) {
@@ -263,11 +301,10 @@ public:
     }
 
     bool threadOver() {
-        return threadExit == threadCount;
+        return threadExit == 1;
     }
 };
 
-// todo : audio解封装，解码
 int main(int argc, char *argv[]) {
     std::string outUrl = "./44100_2_s16le.pcm";
     std::ofstream fp_pcm;
@@ -281,6 +318,7 @@ int main(int argc, char *argv[]) {
     uint8_t *buf_mix_1 = new uint8_t[1024 * 1024];
     uint8_t *buf_mix_2 = new uint8_t[1024 * 1024];
     uint8_t *buf_out = new uint8_t[1024 * 1024];
+
     while (1) {
         int buf_len_1 = cache_1.popCache(buf_mix_1);
         if (buf_len_1 == 0) {
@@ -303,19 +341,11 @@ int main(int argc, char *argv[]) {
     delete[] buf_mix_2;
     delete[] buf_out;
 
-// av_log_set_level(AV_LOG_QUIET);
+    // av_log_set_level(AV_LOG_QUIET);
 
-// std::cout << "audio_video duration(second) : " << demuxer.getDuration() << std::endl;
+    // std::cout << "audio_video duration(second) : " << demuxer.getDuration() << std::endl;
 
-// std::cout << "audio frame_size(nb_samples 1 channel) : " << demuxer.getAudioSize() << std::endl;
-#if 0
-    while (!audioCtx.cache.audioBufferList.empty()) {
-        auto lv = audioCtx.cache.audioBufferList.front();
-        fp_pcm.write((char *)lv.data, lv.size);
-        delete[] lv.data;
-        audioCtx.cache.audioBufferList.pop_front();
-    }
-#endif
+    // std::cout << "audio frame_size(nb_samples 1 channel) : " << demuxer.getAudioSize() << std::endl;
 
     fp_pcm.close();
 
