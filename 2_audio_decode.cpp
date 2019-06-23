@@ -61,7 +61,6 @@ class AudioData {
 
 public:
     AVFrame *frame = nullptr;
-    uint8_t *resampleData = nullptr;
     int bufferSize = 0;
     AudioData() {
         allocFrame();
@@ -84,9 +83,10 @@ public:
 
     void fillFrame() {
         bufferSize = av_samples_get_buffer_size(nullptr, frame->channels, frame->nb_samples, (AVSampleFormat)frame->format, 0);
-        resampleData = new uint8_t[bufferSize];
+        uint8_t *resampleData = new uint8_t[bufferSize];
         fillFrame(resampleData, bufferSize);
-        delete[] resampleData;
+        // todo: 会崩溃
+        // delete[] resampleData;
     }
 
     bool isChange(int nb_samples, int sample_rate, int channels, int format) {
@@ -157,6 +157,9 @@ public:
     void getPkt(AVPacket *dst) {
         av_packet_ref(dst, pkt);
         av_packet_unref(pkt);
+    }
+
+    bool seekTo(uint32_t time) {
     }
 };
 
