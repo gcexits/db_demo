@@ -3,23 +3,22 @@
 #include <list>
 #include <thread>
 
-#include <speex.h>
-#include <speex_types.h>
-
 #include <SDL2/SDL.h>
+#include <librtmp/amf.h>
+#include <speex/speex.h>
 
 extern "C" {
-#include <amf.h>
+#include <speex/speex_types.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/imgutils.h>
 }
 
 using namespace std;
 
-// #define USING_SDL
-// #define AUIDO_DECODE
-// #define VIDEO_DECODE
-// #define LOG
+#define USING_SDL
+#define AUIDO_DECODE
+#define VIDEO_DECODE
+#define LOG
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
 #define LEN3_(dataTmp) ((dataTmp[0] & 0x000000FF) << 16 | (dataTmp[1] & 0x000000FF) << 8 | (dataTmp[2] & 0x000000FF))
@@ -234,7 +233,6 @@ struct SDL {
 class H264Decode {
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* videoCodec = nullptr;
-
 public:
     H264Decode() {
         avcodec_register_all();
@@ -244,6 +242,7 @@ public:
         avcodec_open2(codecCtx_, videoCodec, nullptr);
     }
     bool Decode(uint8_t* buf, uint32_t size, uint8_t* yuv, uint32_t& yuv_size) {
+#if 0
         AVPacket pkt;
         av_init_packet(&pkt);
         pkt.data = buf;
@@ -267,6 +266,7 @@ public:
             yuv_size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
             memcpy(yuv, frame->data[0], yuv_size);
         }
+#endif
         return true;
     }
 };
@@ -301,7 +301,7 @@ int main() {
     fp_out_video.open("./haha.yuv", ios::app | ios::out | ios::binary);
 #else
     SDL sdl;
-    sdl.sdl_init();
+//    sdl.sdl_init();
     SDL_PauseAudio(0);
 #endif
     fp_in.open("/Users/guochao/Downloads/out-audio-0aee7de51c5b44b8a5f345b146f83809-vs_f_1561097554498_t_1561097988738.flv", ios::in);
