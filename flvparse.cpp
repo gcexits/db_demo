@@ -15,7 +15,7 @@ extern "C" {
 #include <libavutil/imgutils.h>
 }
 
-//#define USING_SDL
+#define USING_SDL
 #define LOG
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
@@ -373,26 +373,72 @@ static void sdl_audio_callback(void* opaque, Uint8* stream, int len) {
     audio_len -= len;
 }
 
+#define REFRESH_EVENT  (SDL_USEREVENT + 1)
+#define BREAK_EVENT  (SDL_USEREVENT + 2)
+
 struct SDL {
+    SDL_Window *screen = nullptr;
+    SDL_Renderer* sdlRenderer = nullptr;
+    SDL_Texture* sdlTexture = nullptr;
+    int screen_w = 0;
+    int screen_h = 0;
+    static bool thread_exit;
+    SDL_Rect sdlRect;
     bool sdl_init() {
         if (SDL_Init(SDL_INIT_AUDIO)) {
             return false;
         }
-        wanted_spec.freq = 16000;
-        wanted_spec.format = AUDIO_S16SYS;
-        wanted_spec.channels = 1;
-        wanted_spec.silence = 0;
-        wanted_spec.samples = 320;
-        wanted_spec.callback = sdl_audio_callback;
-        wanted_spec.userdata = nullptr;
-
-        if (SDL_OpenAudio(&wanted_spec, NULL) < 0) {
-            printf("can't open audio.\n");
-            return -1;
+        screen = SDL_CreateWindow("Simplest Video Play SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                  screen_w, screen_h,SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+        if (!screen) {
+            return false;
         }
         return true;
     }
-    SDL_AudioSpec wanted_spec;
+
+    void setVideo(int pixel_w, int pixel_h) {
+        sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
+        sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, pixel_w, pixel_h);
+    }
+
+    static int refresh_video(void *opaque) {
+        thread_exit = false;
+        while (!thread_exit) {
+            SDL_Event event;
+            event.type = REFRESH_EVENT;
+            SDL_PushEvent(&event);
+            SDL_Delay(40);
+        }
+        thread_exit = true;
+        SDL_Event event;
+        event.type = BREAK_EVENT;
+        SDL_PushEvent(&event);
+    }
+
+    void startVideoSuffer() {
+        SDL_Thread *refresh_thread = SDL_CreateThread(refresh_video, nullptr, nullptr);
+    }
+
+    void startEvent() {
+        SDL_Event event;
+        while (1) {
+            SDL_WaitEvent(&event);
+            if (event.type == REFRESH_EVENT) {
+            } else if (event.type==SDL_WINDOWEVENT) {
+
+            } else if (event.type==SDL_QUIT) {
+                thread_exit = true;
+            } else if (event.type==BREAK_EVENT) {
+                break;
+            }
+        }
+        SDL_Quit();
+        return;
+    }
+
+    void startVideoEvent() {
+
+    }
 };
 
 class H264Decode {
@@ -478,13 +524,12 @@ int main() {
     std::ofstream fp_out_video;
     fp_out_video.open("./haha.yuv", std::ios::app | std::ios::out | std::ios::binary);
 #else
-    SDL sdl;ideo
+    SDL sdl;
 //    sdl.sdl_init();
-    SDL_PauseAudio(0);
 #endif
 //    fp_in.open("/Users/guochao/Downloads/out-audio-0aee7de51c5b44b8a5f345b146f83809-vs_f_1561097554498_t_1561097988738.flv", ios::in);
 //   todo: sing.flv 图片 + speex test.flv h264 + speex
-//    fp_in.open("/Users/guochao/DBY_code/ff_test/sing.flv", ios::in);
+//    fp_in.open("/Users/guochao/DBY_code/ff_test/sing.flv", std::ios::in);
     fp_in.open("/Users/guochao/DBY_code/ff_test/test.flv", std::ios::in);
 
     Header header;
@@ -519,12 +564,6 @@ int main() {
 #if !defined(USING_SDL)
                 fp_out_audio.write((char *)output_frame, frame_size * 2);
 #else
-                audio_chunk = (Uint8*)output_frame;
-                audio_len = frame_size * 2;
-                audio_pos = audio_chunk;
-                while (audio_len > 0) {
-                    SDL_Delay(1);
-                }
 #endif
                 ret = speex_decode_int(dec_state, &bits, output_frame);
             }
@@ -546,7 +585,14 @@ int main() {
                 }
             }
             if (decode.success) {
+#if !defined(USING_SDL)
                 fp_out_video.write((char *)yuv, width * height * 1.5);
+#else
+                sdl.sdlRect.x = 0;
+                sdl.sdlRect.y = 0;
+                sdl.sdlRect.w = width;
+                sdl.sdlRect.h = height;
+#endif
 #if 0
                 char *buf = new char[decode.frame->width * decode.frame->height * 3 / 2];
                 int a = 0;
