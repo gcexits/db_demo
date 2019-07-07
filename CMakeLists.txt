@@ -3,7 +3,7 @@ project(test)
 
 # 支持c++11
 SET(CMAKE_C_COMPILER g++)
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 # 提高编译警告级别
 add_definitions(-Wall)
@@ -14,8 +14,8 @@ set(ROOT ${CMAKE_CURRENT_LIST_DIR})
 # message("${ROOT}")
 set(USR /usr/local/Cellar)
 
-#set(SOURCE_FILES ${ROOT}/flvparse.cpp)
-set(SOURCE_FILES ${ROOT}/yuv.cpp)
+set(SOURCE_FILES ${ROOT}/sdl.cpp)
+#set(SOURCE_FILES ${ROOT}/yuv.cpp)
 
 # 添加第三方库
 #1. *.h
@@ -39,4 +39,4 @@ link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libspeex.a librtmp.a libyuv.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libavformat.a libspeex.a librtmp.a libyuv.a)
