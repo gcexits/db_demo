@@ -26,7 +26,7 @@ int dstHeight = 150;
 //#define ROTE
 //#define CROP
 
-class YuvScaler{
+class YuvScaler {
     bool I420Mirror(uint8_t *src, int srcWidth, int srcHeight, uint8_t *dst, int type) {
         // todo: type 1：垂直翻转 2：水平翻转
         if (type == 1) {
@@ -120,6 +120,7 @@ class YuvScaler{
 #endif
         return true;
     }
+
 public:
     bool Nv21Rot(uint8_t *src, int srcWidth, int srcHeight, int &rotWidth, int &rotHeight, uint8_t *dst, int rot, bool need_mirror) {
         int type = 1;
@@ -197,8 +198,7 @@ public:
             Dst_Stride_Y_rotate = srcHeight;
             Dst_Stride_U_rotate = (srcHeight + 1) >> 1;
             Dst_Stride_V_rotate = Dst_Stride_U_rotate;
-        }
-        else {
+        } else {
             Dst_Stride_Y_rotate = srcWidth;
             Dst_Stride_U_rotate = (srcWidth + 1) >> 1;
             Dst_Stride_V_rotate = Dst_Stride_U_rotate;
@@ -212,19 +212,19 @@ public:
         V_data_src = I420 + I420_Y_Size + I420_U_Size;
 
         ret = libyuv::I420Rotate(Y_data_src, Dst_Stride_Y,
-                           U_data_src, Dst_Stride_U,
-                           V_data_src, Dst_Stride_V,
-                           Y_data_Dst_rotate, Dst_Stride_Y_rotate,
-                           U_data_Dst_rotate, Dst_Stride_U_rotate,
-                           V_data_Dst_rotate, Dst_Stride_V_rotate,
-                           srcWidth, srcHeight, rmode);
+                                 U_data_src, Dst_Stride_U,
+                                 V_data_src, Dst_Stride_V,
+                                 Y_data_Dst_rotate, Dst_Stride_Y_rotate,
+                                 U_data_Dst_rotate, Dst_Stride_U_rotate,
+                                 V_data_Dst_rotate, Dst_Stride_V_rotate,
+                                 srcWidth, srcHeight, rmode);
         if (ret != 0) {
             delete[] I420;
             return false;
         }
         delete[] I420;
 
-        if (rmode == libyuv::kRotate90 || rmode == libyuv::kRotate270){
+        if (rmode == libyuv::kRotate90 || rmode == libyuv::kRotate270) {
             rotWidth = srcHeight;
             rotHeight = srcWidth;
             std::cout << rotWidth << " : " << rotHeight << std::endl;
@@ -255,9 +255,9 @@ public:
         cropWidth = dstWidth;
         cropHeight = dstHeight;
         int cropped_src_width =
-                std::min(srcWidth, dstWidth * srcHeight / dstHeight);
+            std::min(srcWidth, dstWidth * srcHeight / dstHeight);
         int cropped_src_height =
-                std::min(srcHeight, dstHeight * srcWidth / dstWidth);
+            std::min(srcHeight, dstHeight * srcWidth / dstWidth);
         // Make sure the offsets are even to avoid rounding errors for the U/V planes.
         int src_offset_x = ((srcWidth - cropped_src_width) / 2) & ~1;
         int src_offset_y = ((srcHeight - cropped_src_height) / 2) & ~1;
@@ -282,35 +282,35 @@ public:
         int dest_stride_U = (dstWidth + 1) >> 1;
         int dest_stride_V = dest_stride_U;
 
-        uint8_t* y_ptr =
-                Y_data_src +
-                src_offset_y * src_stride_Y +
-                src_offset_x;
-        uint8_t* u_ptr =
-                U_data_src +
-                src_offset_y / 2 * src_stride_U +
-                src_offset_x / 2;
-        uint8_t* v_ptr =
-                V_data_src +
-                src_offset_y / 2 * src_stride_V +
-                src_offset_x / 2;
+        uint8_t *y_ptr =
+            Y_data_src +
+            src_offset_y * src_stride_Y +
+            src_offset_x;
+        uint8_t *u_ptr =
+            U_data_src +
+            src_offset_y / 2 * src_stride_U +
+            src_offset_x / 2;
+        uint8_t *v_ptr =
+            V_data_src +
+            src_offset_y / 2 * src_stride_V +
+            src_offset_x / 2;
 
         int ret = libyuv::I420Scale(
-                y_ptr,
-                src_stride_Y,
-                u_ptr,
-                src_stride_U,
-                v_ptr,
-                src_stride_V,
-                cropped_src_width, cropped_src_height,
-                Y_data_dest,
-                dest_stride_Y,
-                U_data_dest,
-                dest_stride_U,
-                V_data_dest,
-                dest_stride_V,
-                dstWidth, dstHeight,
-                libyuv::kFilterNone);
+            y_ptr,
+            src_stride_Y,
+            u_ptr,
+            src_stride_U,
+            v_ptr,
+            src_stride_V,
+            cropped_src_width, cropped_src_height,
+            Y_data_dest,
+            dest_stride_Y,
+            U_data_dest,
+            dest_stride_U,
+            V_data_dest,
+            dest_stride_V,
+            dstWidth, dstHeight,
+            libyuv::kFilterNone);
         if (ret != 0) {
             return false;
         }
