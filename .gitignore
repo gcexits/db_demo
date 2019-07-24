@@ -8,5 +8,5 @@
 *.yuv
 .idea/*
 cmake-build-debug/*
-flv_parse/.idea/*
-flv_parse/cmake-build-debug/*
+*/.idea/*
+*/cmake-build-debug/*

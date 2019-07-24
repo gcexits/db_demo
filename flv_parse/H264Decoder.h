@@ -23,7 +23,8 @@ public:
         av_log_set_level(AV_LOG_QUIET);
         videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
         codecCtx_ = avcodec_alloc_context3(videoCodec);
-        avcodec_open2(codecCtx_, videoCodec, nullptr);
+        int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
+        assert(ret == 0);
         playInternal.Init("video");
     }
 

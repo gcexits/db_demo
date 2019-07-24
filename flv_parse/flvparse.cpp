@@ -554,8 +554,8 @@ public:
         std::ifstream fp_in;
 //        fp_in.open("/Users/guochao/DBY_code/ff_test/mv.flv", std::ios::in);
 //        fp_in.open("/Users/guochao/Downloads/out-video-fc94ef156a6b40abb7aa7d1c4fde7df1_f_1491816916000_t_1491818181266.flv", std::ios::in);
-//        fp_in.open("/Users/guochao/Downloads/1.flv", std::ios::in);
-        fp_in.open("/Users/guochao/Downloads/out-video-jz7ba5f98319bb48f2bb26cabe7d956045_f_1542686509594_t_1542687353424.flv", std::ios::in);
+        fp_in.open("/Users/guochao/DBY_code/ff_test/1.flv", std::ios::in);
+//        fp_in.open("/Users/guochao/Downloads/out-video-jz7ba5f98319bb48f2bb26cabe7d956045_f_1542686509594_t_1542687353424.flv", std::ios::in);
 //        fp_in.open("//Users/guochao/Downloads/out-video-acb0c0bd325342319dadf48e1772fc49_f_1561097680263_t_1561100555093.flv", std::ios::in);
 //        fp_in.open("/Users/guochao/Downloads/out-audio-0aee7de51c5b44b8a5f345b146f83809-vs_f_1561097554498_t_1561097988738.flv", std::ios::in);
 //        fp_in.open("/Users/guochao/Downloads/crop.flv", std::ios::in);
