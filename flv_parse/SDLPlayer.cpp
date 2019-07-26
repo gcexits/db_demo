@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SDLPlayer.h"
 
 SDLPlayer* SDLPlayer::player = nullptr;
@@ -65,9 +67,12 @@ void SDLPlayer::EventLoop() {
             }
             case SDL_KEYDOWN:
             {
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                if (event.key.keysym.sym == SDLK_SPACE) {
+                    std::cout << "SDLK_ESCAPE" << std::endl;
                 } else if (event.key.keysym.sym == SDLK_LEFT) {
+                    flvPlayer->seekTo(5 * 60 * 1000);
                 } else if (event.key.keysym.sym == SDLK_RIGHT) {
+
                 }
                 break;
             }

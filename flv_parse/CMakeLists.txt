@@ -15,7 +15,7 @@ set(ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${ROOT}/flvparse.cpp
+        ${ROOT}/flvplayer.cpp
         ${ROOT}/H264Decoder.cpp
         ${ROOT}/SpeexDecoder.cpp
         ${ROOT}/Optional.cpp

@@ -5,6 +5,7 @@
 #include <queue>
 
 #include "Optional.h"
+#include "FlvParse.h"
 
 #include <SDL2/SDL.h>
 
@@ -237,6 +238,7 @@ class SDLPlayer {
     SDL_AudioSpec audioSpec;
     AudioContainer audioContainer;
     VideoContainer videoContainer;
+    FlvPlayer *flvPlayer = nullptr;
 
     static int RefreshLoop(void *arg);
     static void AudioCallback(void *userdata, Uint8 *stream, int len) {
@@ -248,6 +250,9 @@ public:
     bool running = true;
     static SDLPlayer* getPlayer();
     virtual ~SDLPlayer();
+    void setPlayer(FlvPlayer &flv) {
+        flvPlayer = &flv;
+    }
 
     void EventLoop();
 
