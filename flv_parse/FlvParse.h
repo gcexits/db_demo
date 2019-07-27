@@ -9,6 +9,7 @@
 
 #include "H264Decoder.h"
 #include "SpeexDecoder.h"
+#include "../Time.h"
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
 #define LEN3_(dataTmp) ((dataTmp[0] & 0x000000FF) << 16 | (dataTmp[1] & 0x000000FF) << 8 | (dataTmp[2] & 0x000000FF))
@@ -95,15 +96,15 @@ public:
             }
         }
 
-        int seek(int64_t s, int _headLen) {
-            int seekTmp = _headLen;
-            for (const auto& v : _keyframes) {
+        void seek(int64_t s, int &_headLen) {
+            for (auto& v : _keyframes) {
                 if (v.timestamp > s) {
                     break;
                 }
-                seekTmp = v.position;
+                _headLen = v.position;
+                previouskeyframetimest = v.timestamp;
             }
-            return seekTmp;
+            return;
         }
 
         bool getFilepositionTimes(AMFObject& obj) {
@@ -291,8 +292,13 @@ public:
     Frame frame_;
     std::ifstream fp_in;
     std::mutex readMtx_;
+    // note: 当前播放的时间戳
+    uint32_t currentTime = 0;
+    std::mutex pauseMtx_;
+    bool hasPause = false;
+    bool stop = false;
 
-    void getVideoAudioData() {
+    void updateThread() {
         int index = 0;
 
         H264Decode video_decode;
@@ -317,79 +323,93 @@ public:
         lock.unlock();
         Body buffer;
 
-        while (!fp_in.eof()) {
-            std::unique_lock<std::mutex> lock(readMtx_);
-            fp_in.read((char*)buffer.body_data, 4);
-            // todo: 返回上一次read的字节数
-            if (fp_in.gcount() == 0) {
-                break;
-            }
-            fp_in.read((char*)buffer.body_data, 11);
-            if (fp_in.gcount() == 0) {
-                break;
-            }
-            frame_.tagType = buffer.body_data[0];
-            frame_.body_length = LEN3_((&buffer.body_data[1]));
-            frame_.timestamp = TIME4_((&buffer.body_data[4]));
-            frame_.body = new uint8_t[frame_.body_length];
-
-            fp_in.read((char*)frame_.body, frame_.body_length);
-
-            if (frame_.tagType == 8) {
-#if defined(LOG)
-                std::cout << "音频数据 : " << frame_.body_length << " index = " << index << std::endl;
-#endif
-                audio_decode.Decode((char *)frame_.body + 1, frame_.body_length - 1, pcm);
-#if !defined(USING_SDL)
-                fp_out_audio.write((char *)pcm, 640);
-#endif
-            } else if (frame_.tagType == 9) {
-#if defined(LOG)
-                std::cout << "视频数据 : " << frame_.body_length << " index = " << index << std::endl;
-#endif
-                int ret = getH264Data(frame_);
-                if (!frame_.data) {
-                    continue;
-                }
-
-                if (ret == kPpsSps) {
-#if defined(LOG)
-                    std::cout << "pps sps : " << frame_.body_length << " index = " << index << std::endl;
-#endif
-                    find_1st_key_frame_ = true;
-                } else if (ret == kKeyVideo) {
-                    video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
-                    frame_.data_length = 0;
-                } else if (ret == kFullVideo) {
-                    if (find_1st_key_frame_) {
-                        video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
-                        frame_.data_length = 0;
-                    }
-                }
-                if (video_decode.success) {
-#if !defined(USING_SDL)
-                    fp_out_video.write((char *)yuv, width * height * 1.5);
-#endif
-                }
-//            fp_in.seekg(flvPlayer.frame_.body_length, fp_in.cur);
-            } else if (frame_.tagType == 18) {
-                std::cout << "flv元数据 : " << frame_.body_length << " index = " << index << std::endl;
-                AMFObject obj;
-                int ret = AMF_Decode(&obj, (char*)frame_.body, frame_.body_length, FALSE);
-                if (ret < 0) {
-                    std::cout << "AMF_Decode failed" << std::endl;
-                    delete [] frame_.body;
+        duobei::Time::Timestamp startTime;
+        startTime.Start();
+        while (!fp_in.eof() && !stop) {
+            while (!hasPause) {
+                std::unique_lock<std::mutex> lock(readMtx_);
+                if (hasPause || stop) {
                     break;
                 }
-                positionManager.getFilepositionTimes(obj);
-                AMF_Reset(&obj);
-            } else {
-                std::cout << "unknow : " << frame_.body_length << " type : " << frame_.tagType << std::endl;
-                fp_in.seekg(frame_.body_length, fp_in.cur);
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                fp_in.read((char*)buffer.body_data, 4);
+                // todo: 返回上一次read的字节数
+                if (fp_in.gcount() == 0) {
+                    break;
+                }
+                fp_in.read((char*)buffer.body_data, 11);
+                if (fp_in.gcount() == 0) {
+                    break;
+                }
+                frame_.tagType = buffer.body_data[0];
+                frame_.body_length = LEN3_((&buffer.body_data[1]));
+                frame_.timestamp = TIME4_((&buffer.body_data[4]));
+                frame_.body = new uint8_t[frame_.body_length];
+                currentTime = frame_.timestamp;
+
+                fp_in.read((char*)frame_.body, frame_.body_length);
+
+                if (frame_.tagType == 8) {
+#if defined(LOG)
+                    std::cout << "音频数据 : " << frame_.body_length << " index = " << index << std::endl;
+#endif
+                    audio_decode.Decode((char *)frame_.body + 1, frame_.body_length - 1, pcm);
+#if !defined(USING_SDL)
+                    fp_out_audio.write((char *)pcm, 640);
+#endif
+                } else if (frame_.tagType == 9) {
+#if defined(LOG)
+                    std::cout << "视频数据 : " << frame_.body_length << " index = " << index << std::endl;
+#endif
+                    int ret = getH264Data(frame_);
+                    if (!frame_.data) {
+                        continue;
+                    }
+
+                    if (ret == kPpsSps) {
+#if defined(LOG)
+                        std::cout << "pps sps : " << frame_.body_length << " index = " << index << std::endl;
+#endif
+                        find_1st_key_frame_ = true;
+                    } else if (ret == kKeyVideo) {
+                        video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
+                        frame_.data_length = 0;
+                    } else if (ret == kFullVideo) {
+                        if (find_1st_key_frame_) {
+                            video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
+                            frame_.data_length = 0;
+                        }
+                    }
+                    if (video_decode.success) {
+#if !defined(USING_SDL)
+                        fp_out_video.write((char *)yuv, width * height * 1.5);
+#endif
+                    }
+//            fp_in.seekg(flvPlayer.frame_.body_length, fp_in.cur);
+                } else if (frame_.tagType == 18) {
+                    std::cout << "flv元数据 : " << frame_.body_length << " index = " << index << std::endl;
+                    AMFObject obj;
+                    int ret = AMF_Decode(&obj, (char*)frame_.body, frame_.body_length, FALSE);
+                    if (ret < 0) {
+                        std::cout << "AMF_Decode failed" << std::endl;
+                        delete [] frame_.body;
+                        break;
+                    }
+                    positionManager.getFilepositionTimes(obj);
+                    AMF_Reset(&obj);
+                } else {
+                    std::cout << "unknow : " << frame_.body_length << " type : " << frame_.tagType << std::endl;
+                    fp_in.seekg(frame_.body_length, fp_in.cur);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                }
+                index++;
+                frame_.reset();
+                // note: push数据控制时间
+                std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                startTime.Stop();
             }
-            index++;
-            frame_.reset();
+            while (hasPause) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            }
         }
         std::cout << "flv读取结束" << std::endl;
         delete[] pcm;
@@ -399,14 +419,16 @@ public:
         fp_out_audio.close();
         fp_out_video.close();
 #endif
-
+        fp_in.close();
     }
     void startParse() {
-        parse = std::thread(&FlvPlayer::getVideoAudioData, this);
+        parse = std::thread(&FlvPlayer::updateThread, this);
     }
     std::thread parse;
 
     void stopParse() {
+        play();
+        stop = true;
         if (parse.joinable()) {
             parse.join();
         }
@@ -488,16 +510,12 @@ public:
         uint32_t timestamp = 0;
         uint8_t buf_h[15] = {0};
 
+        play();
         std::unique_lock<std::mutex> lock(readMtx_);
         frame_.reset();
+        time += currentTime;
         int seekTmp = 9;
-        for (auto& v : positionManager._keyframes) {
-            if (v.timestamp > time) {
-                break;
-            }
-            seekTmp = v.position;
-            positionManager.previouskeyframetimest = v.timestamp;
-        }
+        positionManager.seek(time, seekTmp);
         fp_in.seekg(0, fp_in.beg);
         fp_in.seekg(seekTmp - 4, fp_in.beg);
 
@@ -514,5 +532,16 @@ public:
             fp_in.seekg(dataLen, fp_in.cur);
         }
         std::cout << "seek success over" << std::endl;
+    }
+
+    void pause() {
+        std::lock_guard<std::mutex> lck(pauseMtx_);
+        std::unique_lock<std::mutex> lock(readMtx_);
+        hasPause = true;
+    }
+
+    void play() {
+        std::lock_guard<std::mutex> lck(pauseMtx_);
+        hasPause = false;
     }
 };

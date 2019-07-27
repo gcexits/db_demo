@@ -20,7 +20,8 @@ set(SOURCE_FILES
         ${ROOT}/SpeexDecoder.cpp
         ${ROOT}/Optional.cpp
         ${ROOT}/SDLPlayer.cpp
-        ${ROOT}/../yuvscale.cpp)
+        ${ROOT}/../yuvscale.cpp
+        ${ROOT}/../Time.cpp)
 
 #include_directories(${ROOT})
 

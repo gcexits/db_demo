@@ -21,12 +21,6 @@ SDLPlayer::SDLPlayer() {
     SDL_CreateThread(RefreshLoop, "RefreshLoop", this);
 }
 
-SDLPlayer::~SDLPlayer() {
-    SDL_CloseAudio();
-    running = false;
-    SDL_Quit();
-}
-
 SDLPlayer* SDLPlayer::getPlayer() {
     if(player == nullptr){
         player = new SDLPlayer;
@@ -56,34 +50,37 @@ void SDLPlayer::EventLoop() {
         SDL_WaitEvent(&event);
         switch (event.type) {
             case SDL_QUIT:
-            {
-                SDL_Quit();
+                do_exit();
                 break;
-            }
             case ISSHE_REFRESH_EVENT:
-            {
                 videoContainer.show();
                 break;
-            }
             case SDL_KEYDOWN:
-            {
-                if (event.key.keysym.sym == SDLK_SPACE) {
-                    std::cout << "SDLK_ESCAPE" << std::endl;
-                } else if (event.key.keysym.sym == SDLK_LEFT) {
-                    flvPlayer->seekTo(5 * 60 * 1000);
-                } else if (event.key.keysym.sym == SDLK_RIGHT) {
-
+                switch (event.key.keysym.sym) {
+                    case SDLK_SPACE:
+                        if (!flvPlayer->hasPause) {
+                            flvPlayer->pause();
+                        } else {
+                            flvPlayer->play();
+                        }
+                        break;
+                    case SDLK_LEFT:
+                        flvPlayer->seekTo(-(10 * 1000));
+                        break;
+                    case SDLK_RIGHT:
+                        flvPlayer->seekTo(10 * 1000);
+                        break;
+                    case SDLK_q:
+                    case SDLK_ESCAPE:
+                        do_exit();
+                        break;
+                    default:
+                        break;
                 }
-                break;
-            }
             case SDL_MOUSEBUTTONDOWN:
-            {
                 break;
-            }
             default:
-            {
                 break;
-            }
         }
 
     }

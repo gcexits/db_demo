@@ -1,7 +1,11 @@
+#pragma once
+
 #include <fstream>
 #include <iostream>
 
 #include "yuvscale.h"
+
+#include "Time.h"
 
 // todo: src(9:16)
 int srcWidth = 720;

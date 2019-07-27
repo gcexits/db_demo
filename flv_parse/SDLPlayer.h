@@ -1,21 +1,20 @@
 #pragma once
 
-#include <set>
 #include <map>
 #include <queue>
+#include <set>
 
-#include "Optional.h"
 #include "FlvParse.h"
+#include "Optional.h"
 
 #include <SDL2/SDL.h>
 
 struct AudioChannel {
     std::mutex mx;
     std::string uid;
-    uint8_t *buf = new uint8_t[640];
+    uint8_t* buf = new uint8_t[640];
 
     explicit AudioChannel(const std::string& uid) : uid(uid) {}
-
 
     void push(void* data, uint32_t size) {
         std::lock_guard<std::mutex> lock(mx);
@@ -27,7 +26,7 @@ struct AudioChannel {
 struct VideoChannel {
     struct PixelBuffer {
         void* data = nullptr;
-        int pitch = 0;   // The number of bytes in a row of pixel data, including padding between lines.
+        int pitch = 0;  // The number of bytes in a row of pixel data, including padding between lines.
         int capacity = 0;
         int w = 0;
         int h = 0;
@@ -38,7 +37,7 @@ struct VideoChannel {
         }
 
         ~PixelBuffer() {
-            delete[] static_cast<uint8_t *>(data);
+            delete[] static_cast<uint8_t*>(data);
         }
 
         bool update(void* _data, int _pitch, int _w, int _h) {
@@ -57,8 +56,8 @@ struct VideoChannel {
     };
 
     Uint32 window_id;
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
     SDL_Rect rect;
     std::string uid;
@@ -66,7 +65,7 @@ struct VideoChannel {
     std::queue<PixelBuffer::Ptr> ready_queue_;
     std::mutex mtx_;
 
-    explicit VideoChannel(const std::string& uid): uid(uid) {}
+    explicit VideoChannel(const std::string& uid) : uid(uid) {}
 
     bool ScreenSameIn(const PixelBuffer::Ptr& pixel_buffer) const {
         return std::abs(rect.w - pixel_buffer->w) < 10 && std::abs(rect.h - pixel_buffer->h) < 10;
@@ -161,8 +160,8 @@ struct AudioContainer {
 
 struct VideoContainer {
     std::mutex mtx;
-    std::set<VideoChannel*> sources;             // shard
-    std::map<Uint32, VideoChannel*> channels_;   // weak
+    std::set<VideoChannel*> sources;
+    std::map<Uint32, VideoChannel*> channels_;
 
     VideoChannel* add(const std::string& uid) {
         auto item = new VideoChannel(uid);
@@ -183,6 +182,15 @@ struct VideoContainer {
             channels_.erase(iter);
         }
         return p;
+    }
+
+    void clear() {
+        std::lock_guard<std::mutex> lock(mtx);
+        for (auto& iter : sources) {
+            clearBuffer(iter);
+        }
+        sources.clear();
+        channels_.clear();
     }
 
     void* find(Uint32 window_id) {
@@ -222,12 +230,27 @@ struct VideoContainer {
         return true;
     }
 
+    void clearBuffer (VideoChannel* channel) {
+        std::unique_lock<std::mutex> lock_(channel->mtx_);
+        while (channel->work_queue_.empty()) {
+            channel->work_queue_.pop();
+        }
+        while (channel->ready_queue_.empty()) {
+            channel->ready_queue_.pop();
+        }
+        channel->Destroy();
+    }
+
     bool show() {
         std::lock_guard<std::mutex> lock(mtx);
         for (auto& v : sources) {
             show_internal(v);
         }
         return true;
+    }
+
+    void exit() {
+        clear();
     }
 };
 
@@ -238,10 +261,10 @@ class SDLPlayer {
     SDL_AudioSpec audioSpec;
     AudioContainer audioContainer;
     VideoContainer videoContainer;
-    FlvPlayer *flvPlayer = nullptr;
+    FlvPlayer* flvPlayer = nullptr;
 
-    static int RefreshLoop(void *arg);
-    static void AudioCallback(void *userdata, Uint8 *stream, int len) {
+    static int RefreshLoop(void* arg);
+    static void AudioCallback(void* userdata, Uint8* stream, int len) {
         auto that = (SDLPlayer*)userdata;
         that->audioContainer.MixAudio(stream, len);
     }
@@ -249,8 +272,8 @@ class SDLPlayer {
 public:
     bool running = true;
     static SDLPlayer* getPlayer();
-    virtual ~SDLPlayer();
-    void setPlayer(FlvPlayer &flv) {
+    virtual ~SDLPlayer() = default;
+    void setPlayer(FlvPlayer& flv) {
         flvPlayer = &flv;
     }
 
@@ -279,11 +302,20 @@ public:
 
     void pushAudioData(void* handle, void* data, uint32_t size) {
         assert(handle);
-//        auto that = static_cast<AudioChannel*>(handle);
-//        that->push(data, size);
+        //        auto that = static_cast<AudioChannel*>(handle);
+        //        that->push(data, size);
     }
 
     // destroyPcmPlayer
     void closeAudio(void* handle) {
+    }
+
+
+    void do_exit() {
+        flvPlayer->stopParse();
+        videoContainer.exit();
+        SDL_CloseAudio();
+        SDL_Quit();
+        running = false;
     }
 };
