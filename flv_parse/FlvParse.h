@@ -297,6 +297,8 @@ public:
     std::mutex pauseMtx_;
     bool hasPause = false;
     bool stop = false;
+    // note: 全局播放时间，倍速播放使用
+    uint64_t global_time = 0;
 
     void updateThread() {
         int index = 0;

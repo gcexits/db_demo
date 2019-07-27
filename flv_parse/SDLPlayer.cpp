@@ -44,6 +44,7 @@ int SDLPlayer::RefreshLoop(void* arg) {
     return 0;
 }
 
+// note: space：暂停 ->：快进10s <-：快退10s q/esc：退出 1/2/3：倍速播放
 void SDLPlayer::EventLoop() {
     SDL_Event event;
     while (running) {
@@ -74,6 +75,10 @@ void SDLPlayer::EventLoop() {
                     case SDLK_ESCAPE:
                         do_exit();
                         break;
+                    case SDLK_1:
+                        // note: 倍速播放，未完成
+                    case SDLK_2:
+                    case SDLK_3:
                     default:
                         break;
                 }

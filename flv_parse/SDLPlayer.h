@@ -224,8 +224,6 @@ struct VideoContainer {
 
             channel->Update(pixel_buffer);
             channel->ready_queue_.push(std::move(pixel_buffer));
-            // todo: 解码过快，导致可能瞬间播放完成
-            break;
         }
         return true;
     }
