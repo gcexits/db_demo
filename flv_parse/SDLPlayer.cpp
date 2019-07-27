@@ -77,8 +77,21 @@ void SDLPlayer::EventLoop() {
                         break;
                     case SDLK_1:
                         // note: 倍速播放，未完成
+                        flvPlayer->kStepTime = 40;
+                        break;
                     case SDLK_2:
+                        flvPlayer->kStepTime = 20;
+                        break;
                     case SDLK_3:
+                    case SDLK_4:
+                        flvPlayer->kStepTime = 10;
+                        break;
+                    case SDLK_5:
+                    case SDLK_6:
+                    case SDLK_7:
+                    case SDLK_8:
+                        flvPlayer->kStepTime = 5;
+                        break;
                     default:
                         break;
                 }

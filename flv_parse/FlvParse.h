@@ -299,6 +299,7 @@ public:
     bool stop = false;
     // note: 全局播放时间，倍速播放使用
     uint64_t global_time = 0;
+    int kStepTime = 40;
 
     void updateThread() {
         int index = 0;
@@ -406,7 +407,7 @@ public:
                 index++;
                 frame_.reset();
                 // note: push数据控制时间
-                std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                std::this_thread::sleep_for(std::chrono::milliseconds(kStepTime));
                 startTime.Stop();
             }
             while (hasPause) {
