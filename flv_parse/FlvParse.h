@@ -310,10 +310,13 @@ public:
         uint8_t* pcm = new uint8_t[640];
         int width = 0;
         int height = 0;
+        duobei::Time::Timestamp videotTime;
+        int videoIndex = 0;
+        duobei::Time::Timestamp audiotTime;
+        int audioIndex = 0;
 
 //        fp_in.open("/Users/guochao/DBY_code/ff_test/1.flv", std::ios::in);
-//        fp_in.open("/Users/guochao/Downloads/out-video-jzf6454a7858c547b098de602221558700_f_1561633006252_t_1561633467892.flv", std::ios::in);
-        fp_in.open("/Users/guochao/Downloads/out-video-jz7ba5f98319bb48f2bb26cabe7d956045_f_1542686509594_t_1542687353424.flv", std::ios::in);
+        fp_in.open("/Users/guochao/Downloads/out-video-jzf6454a7858c547b098de602221558700_f_1561633006252_t_1561633467892.flv", std::ios::in);
 #if !defined(USING_SDL)
         std::ofstream fp_out_audio;
         fp_out_audio.open("./haha.pcm", std::ios::ate | std::ios::out | std::ios::binary);
@@ -352,6 +355,13 @@ public:
                 fp_in.read((char*)frame_.body, frame_.body_length);
 
                 if (frame_.tagType == 8) {
+                    if (audioIndex % 2 == 0) {
+                        audiotTime.Start();
+                    } else {
+                        audiotTime.Stop();
+                        auto sleepTime = 40 - audiotTime.Elapsed();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+                    }
 #if defined(LOG)
                     std::cout << "音频数据 : " << frame_.body_length << " index = " << index << std::endl;
 #endif
@@ -359,7 +369,15 @@ public:
 #if !defined(USING_SDL)
                     fp_out_audio.write((char *)pcm, 640);
 #endif
+                    audioIndex++;
                 } else if (frame_.tagType == 9) {
+//                    if (videoIndex % 2 == 0) {
+//                        videotTime.Start();
+//                    } else {
+//                        videotTime.Stop();
+//                        auto sleepTime = 43 - videotTime.Elapsed();
+//                        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+//                    }
 #if defined(LOG)
                     std::cout << "视频数据 : " << frame_.body_length << " index = " << index << std::endl;
 #endif
@@ -387,6 +405,7 @@ public:
                         fp_out_video.write((char *)yuv, width * height * 1.5);
 #endif
                     }
+                    videoIndex++;
 //            fp_in.seekg(flvPlayer.frame_.body_length, fp_in.cur);
                 } else if (frame_.tagType == 18) {
                     std::cout << "flv元数据 : " << frame_.body_length << " index = " << index << std::endl;
@@ -407,7 +426,8 @@ public:
                 index++;
                 frame_.reset();
                 // note: push数据控制时间
-                std::this_thread::sleep_for(std::chrono::milliseconds(kStepTime));
+//                std::this_thread::sleep_for(std::chrono::milliseconds(kStepTime));
+//                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 startTime.Stop();
             }
             while (hasPause) {

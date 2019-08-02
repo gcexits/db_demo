@@ -6,20 +6,23 @@
 
 #include "FlvParse.h"
 #include "Optional.h"
+#include "hlring/RingBuffer.h"
 
 #include <SDL2/SDL.h>
 
 struct AudioChannel {
-    std::mutex mx;
+    std::mutex mtx_;
     std::string uid;
-    uint8_t* buf = new uint8_t[640];
+    RingBuffer buffer_;
 
-    explicit AudioChannel(const std::string& uid) : uid(uid) {}
+    explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 320 * 40) {}
 
     void push(void* data, uint32_t size) {
-        std::lock_guard<std::mutex> lock(mx);
+        std::lock_guard<std::mutex> lock(mtx_);
+        buffer_.write(data, size);
     }
     void clear() {
+        buffer_.clean();
     }
 };
 
@@ -136,8 +139,11 @@ struct AudioContainer {
         std::lock_guard<std::mutex> lock(mtx);
 
         for (auto& x : channels_) {
-            std::lock_guard<std::mutex> lock(x->mx);
-            SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
+            std::lock_guard<std::mutex> lock(x->mtx_);
+            if (x->buffer_.size() > len) {
+                auto l = x->buffer_.read(cache, len);
+                SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
+            }
         }
     }
 
@@ -293,15 +299,16 @@ public:
     }
 
     // initPcmPlayer
-    void* openAudio(AVRegister::PcmPlayer* f) {
+    void* openAudio(const std::string& uid, AVRegister::PcmPlayer* f) {
         using namespace std::placeholders;
         *f = std::bind(&SDLPlayer::pushAudioData, this, _1, _2, _3);
+        return audioContainer.add(uid);
     }
 
     void pushAudioData(void* handle, void* data, uint32_t size) {
         assert(handle);
-        //        auto that = static_cast<AudioChannel*>(handle);
-        //        that->push(data, size);
+        auto that = static_cast<AudioChannel*>(handle);
+        that->push(data, size);
     }
 
     // destroyPcmPlayer

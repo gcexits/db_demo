@@ -9,7 +9,7 @@ namespace AVCallback {
     void* initVideoPlayer(const std::string& uid, VideoPlayer* f);
 
     using PcmPlayer = std::function<void(void*, void*, uint32_t)>;
-    void* initPcmPlayer(PcmPlayer* f);
+    void* initPcmPlayer(const std::string& uid, PcmPlayer* f);
 
     void destroyPcmPlayer(void* handle);
     void destroyVideoPlayer(void* handle);
@@ -20,7 +20,7 @@ namespace AVRegister {
     void setinitVideoPlayer(std::function<void*(const std::string& uid, VideoPlayer*)> f);
 
     using PcmPlayer = AVCallback::PcmPlayer;
-    void setinitPcmPlayer(std::function<void*(PcmPlayer*)> f);
+    void setinitPcmPlayer(std::function<void*(const std::string& uid, PcmPlayer*)> f);
 
     void setdestroyPcmPlayer(std::function<void(void*)> f);
     void setdestroyVideoPlayer(std::function<void(void*)> f);
@@ -32,10 +32,10 @@ namespace audio {
         void *handle = nullptr;
         AVCallback::PcmPlayer player;
 
-        bool Init() {
+        bool Init(const std::string &uid) {
             std::lock_guard<std::mutex> lock(mtx_);
             assert(handle == nullptr);
-            auto h = AVCallback::initPcmPlayer(&player);
+            auto h = AVCallback::initPcmPlayer(uid, &player);
             if (h == nullptr) {
                 return false;
             }

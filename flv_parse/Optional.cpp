@@ -8,7 +8,7 @@ namespace AVCallbackImpl {
     static std::function<void(void*)> destroyVideoPlayer = nullptr;
 
     using PcmPlayer = AVCallback::PcmPlayer;
-    static std::function<void*(PcmPlayer*)> initPcmPlayer = nullptr;
+    static std::function<void*(const std::string&, PcmPlayer*)> initPcmPlayer = nullptr;
     static std::function<void(void*)> destroyPcmPlayer = nullptr;
 }
 
@@ -20,11 +20,11 @@ namespace AVCallback {
         return AVCallbackImpl::initVideoPlayer(uid, f);
     }
 
-    void* initPcmPlayer(PcmPlayer* f) {
+    void* initPcmPlayer(const std::string& uid, PcmPlayer* f) {
         if (!AVCallbackImpl::initPcmPlayer) {
             return nullptr;
         }
-        return AVCallbackImpl::initPcmPlayer(f);
+        return AVCallbackImpl::initPcmPlayer(uid, f);
     }
 
     void destroyPcmPlayer(void* handle) {
@@ -43,7 +43,7 @@ namespace AVCallback {
 }
 
 namespace AVRegister {
-    void setinitPcmPlayer(std::function<void*(PcmPlayer*)> f) {
+    void setinitPcmPlayer(std::function<void*(const std::string& uid, PcmPlayer*)> f) {
         AVCallbackImpl::initPcmPlayer = std::move(f);
     }
 

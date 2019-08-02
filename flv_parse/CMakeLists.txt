@@ -21,7 +21,9 @@ set(SOURCE_FILES
         ${ROOT}/Optional.cpp
         ${ROOT}/SDLPlayer.cpp
         ${ROOT}/../yuvscale.cpp
-        ${ROOT}/../Time.cpp)
+        ${ROOT}/../Time.cpp
+        ${ROOT}/hlring/RingBuffer.cpp
+        ${ROOT}/hlring/rbuf.c)
 
 #include_directories(${ROOT})
 

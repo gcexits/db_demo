@@ -22,7 +22,7 @@ public:
         int speex_enh = 1;
         speex_decoder_ctl(dec_state, SPEEX_SET_ENH, &speex_enh);
         output_frame = new short[frame_size];
-        playInternal.Init();
+        playInternal.Init("audio");
     }
 
     ~SpeexDecode() {

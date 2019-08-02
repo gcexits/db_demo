@@ -17,7 +17,6 @@ SDLPlayer::SDLPlayer() {
     audioSpec.userdata = this;   //可以直接在内部传值给callback函数
     SDL_OpenAudio(&audioSpec,NULL);
     SDL_PauseAudio(0);
-
     SDL_CreateThread(RefreshLoop, "RefreshLoop", this);
 }
 

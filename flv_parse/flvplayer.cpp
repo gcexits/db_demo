@@ -257,7 +257,7 @@ void RegisterPlayer() {
 
     SDLPlayer *player = SDLPlayer::getPlayer();
     AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
-    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1));
+    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
 }
 
 int main() {
