@@ -5,10 +5,12 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 
 namespace json = rapidjson;
 
 struct Common {
+    mutable std::string url;
     std::string sessionId;
     std::string systemId;
     std::string roomId;
@@ -76,6 +78,9 @@ struct Common {
 
         return doc;
     }
+    void fillData() const {
+        url = "www.baidu.com";
+    }
 };
 
 struct Connect: Common {
@@ -112,9 +117,9 @@ struct Connect: Common {
 
         json::Document parseDocument;
         parseDocument.Parse(s.GetString());
-        if (parseDocument.HasParseError()) {
-            exit(-1);
-        }
+//        if (parseDocument.HasMember("url")) {
+//            std::cout << << std::endl;
+//        }
 
         return doc;
     }
@@ -170,6 +175,76 @@ struct MediaParam: Common {
     }
 };
 
+struct PingHistory: Common {
+    std::string type;
+    int step;
+    int64_t fromTimestamp;
+    struct {
+        std::vector<int> LR;
+        std::vector<int> FR;
+        std::vector<int> SR;
+        std::vector<int> entryRTT;
+    } range;
+    struct {
+        std::string serverType;
+    } info;
+    json::Document dump() const override {
+        fillData();
+        auto doc = Common::dump();
+
+        AddString(doc, "type", "pinghistory");
+        AddInt(doc, "step", 9000);
+        AddInt64(doc, "fromTimestamp", fromTimestamp);
+        json::Document::AllocatorType &allocator = doc.GetAllocator();
+
+        json::Value rangValue(json::kObjectType);
+        {
+            if (!range.LR.empty()) {
+                json::Value LRValue(json::kArrayType);
+                for (auto &l : range.LR) {
+                    LRValue.PushBack(l, allocator);
+                }
+                rangValue.AddMember("LR", LRValue, allocator);
+            }
+
+            if (!range.FR.empty()) {
+                json::Value FRValue(json::kArrayType);
+                for (auto &f : range.FR) {
+                    FRValue.PushBack(f, allocator);
+                }
+                rangValue.AddMember("FR", FRValue, allocator);
+            }
+
+            if (!range.SR.empty()) {
+                json::Value SRValue(json::kArrayType);
+                for (auto &f : range.SR) {
+                    SRValue.PushBack(f, allocator);
+                }
+                rangValue.AddMember("SR", SRValue, allocator);
+            }
+
+            if (!range.entryRTT.empty()) {
+                json::Value entryRTTValue(json::kArrayType);
+                for (auto &f : range.entryRTT) {
+                    entryRTTValue.PushBack(f, allocator);
+                }
+                rangValue.AddMember("entryRTT", entryRTTValue, allocator);
+            }
+        }
+        json::Value rangKey("range");
+        doc.AddMember(rangKey, rangValue, allocator);
+
+        json::Value infoValue(json::kObjectType);
+        {
+            AddJsonString(allocator, infoValue, "serverType", info.serverType);
+        }
+        json::Value infoKey("info");
+        doc.AddMember(infoKey, infoValue, allocator);
+
+        return doc;
+    }
+};
+
 // note: 音视频上下行
 struct MediaUpLinkRate: Common {
     std::string type;
@@ -211,36 +286,44 @@ struct MediaDownLinkRate: Common {
     std::string type;
     int step;
     int64_t fromTimestamp;
-    std::string streamUid;
     struct {
         std::vector<int> video;
         std::vector<int> audio;
     } range;
+    struct {
+        std::string sid;
+    } info;
     json::Document dump() const override {
         auto doc = Common::dump();
 
         AddString(doc, "type", "mediadownlinkrate");
         AddInt(doc, "step", step);
         AddInt64(doc, "fromTimestamp", fromTimestamp);
-        AddString(doc, "streamUid", streamUid);
         json::Document::AllocatorType &allocator = doc.GetAllocator();
 
-        json::Value userValue(json::kObjectType);
+        json::Value rangValue(json::kObjectType);
         {
             json::Value videoDownLinkValue(json::kArrayType);
             for (auto &v : range.video) {
                 videoDownLinkValue.PushBack(v, allocator);
             }
-            userValue.AddMember("video", videoDownLinkValue, allocator);
+            rangValue.AddMember("video", videoDownLinkValue, allocator);
 
             json::Value audioDownLinkValue(json::kArrayType);
             for (auto &a : range.audio) {
                 audioDownLinkValue.PushBack(a, allocator);
             }
-            userValue.AddMember("audio", audioDownLinkValue, allocator);
+            rangValue.AddMember("audio", audioDownLinkValue, allocator);
         }
-        json::Value _userIdKey("range");
-        doc.AddMember(_userIdKey, userValue, allocator);
+        json::Value rangdKey("range");
+        doc.AddMember(rangdKey, rangValue, allocator);
+
+        json::Value infoValue(json::kObjectType);
+        {
+            AddJsonString(allocator, infoValue, "sid", info.sid);
+        }
+        json::Value infoKey("info");
+        doc.AddMember(infoKey, infoValue, allocator);
 
         return doc;
     }
@@ -254,9 +337,20 @@ void dump(json::Document &doc) {
 }
 
 int main() {
+#if 0
+    using Pair = std::pair<std::string, std::string>;
     Connect connect;
     auto doc_1 = connect.dump();
     dump(doc_1);
+    std::list<Pair> list;
+    Pair pair;
+    pair = std::make_pair("1", "");
+    list.push_back(pair);
+    for (auto & l : list) {
+        if (!l.second.empty()) {
+            std::cout << l.first << " " << l.second << std::endl;
+        }
+    }
 
     VideoResolution videoResolution;
     auto doc_2 = videoResolution.dump();
@@ -276,17 +370,23 @@ int main() {
     mediaUpLinkRate.range.audio.push_back(6);
     auto doc_4 = mediaUpLinkRate.dump();
     dump(doc_4);
-
-    MediaDownLinkRate mediaDownLinkRate;
-    mediaDownLinkRate.range.video.push_back(7);
-    mediaDownLinkRate.range.video.push_back(8);
-    mediaDownLinkRate.range.video.push_back(9);
-
-    mediaDownLinkRate.range.audio.push_back(10);
-    mediaDownLinkRate.range.audio.push_back(11);
-    mediaDownLinkRate.range.audio.push_back(12);
-    auto doc_5 = mediaDownLinkRate.dump();
-    dump(doc_5);
-
+#else
+//    MediaDownLinkRate mediaDownLinkRate;
+//    mediaDownLinkRate.range.video.push_back(7);
+//    mediaDownLinkRate.range.video.push_back(8);
+//    mediaDownLinkRate.range.video.push_back(9);
+//
+//    mediaDownLinkRate.range.audio.push_back(10);
+//    mediaDownLinkRate.range.audio.push_back(11);
+//    mediaDownLinkRate.range.audio.push_back(12);
+//    auto doc_5 = mediaDownLinkRate.dump();
+//    dump(doc_5);
+    PingHistory pingHistory;
+    pingHistory.range.entryRTT.push_back(1);
+    pingHistory.range.entryRTT.push_back(2);
+    pingHistory.range.entryRTT.push_back(3);
+    auto doc_6 = pingHistory.dump();
+    dump(doc_6);
+#endif
     return 0;
 }

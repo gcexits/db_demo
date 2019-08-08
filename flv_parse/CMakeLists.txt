@@ -20,10 +20,12 @@ set(SOURCE_FILES
         ${ROOT}/SpeexDecoder.cpp
         ${ROOT}/Optional.cpp
         ${ROOT}/SDLPlayer.cpp
-        ${ROOT}/../yuvscale.cpp
+        ${ROOT}/../yuv_deal/yuvscale.cpp
         ${ROOT}/../Time.cpp
         ${ROOT}/hlring/RingBuffer.cpp
         ${ROOT}/hlring/rbuf.c)
+#set(SOURCE_FILES
+#        ${ROOT}/test.cpp)
 
 #include_directories(${ROOT})
 
@@ -31,7 +33,7 @@ set(SOURCE_FILES
 #1. *.h
 set(INC_DIR
         ${USR}/sdl2/2.0.9_1/include
-        ${USR}/ffmpeg/4.1.4-with-options/include
+        ${USR}/ffmpeg/4.1.4_1/include
         ${USR}/speex/1.2.0/include
         ${USR}/rtmpdump/2.4+20151223/include
         /Users/guochao/DBY_code/libyuv-ios/include)
@@ -39,7 +41,7 @@ include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
         ${USR}/sdl2/2.0.9_1/lib
-        ${USR}/ffmpeg/4.1.4-with-options/lib
+        ${USR}/ffmpeg/4.1.4_1/lib
         ${USR}/speex/1.2.0/lib
         ${USR}/rtmpdump/2.4+20151223/lib
         /Users/guochao/DBY_code/libyuv-ios/lib)
