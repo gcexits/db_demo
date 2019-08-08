@@ -16,7 +16,7 @@ set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
         ${ROOT}/main.cpp
-
+        ${ROOT}/OpusEncoder.cpp
         ${ROOT}/SpeexEncoder.cpp)
 
 #include_directories(${ROOT})

@@ -85,8 +85,6 @@ bool OpusEncoderContext::Init() {
     return true;
 }
 
-std::ofstream fp_write;
-
 void OpusEncoderContext::Encode(uint8_t *in, int len) {
     int opus_len = 0;
     opus_int16 *frame = (opus_int16 *)in;

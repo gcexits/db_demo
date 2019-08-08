@@ -1,7 +1,3 @@
-//
-// Created by duobei on 2017/8/13.
-//
-
 #pragma once
 
 #include <math.h>
@@ -43,9 +39,12 @@ struct OpusEncoderContext: EncoderContextInterface {
             opus_encoder_destroy(enc);
             enc = nullptr;
         }
+        fp_write.close();
     }
 
     void Encode(uint8_t *in, int len) override;
+
+    std::ofstream fp_write;
 };
 }  // namespace audio
 }  // namespace duobei
