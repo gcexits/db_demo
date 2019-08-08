@@ -304,8 +304,14 @@ public:
 
     void updateThread() {
         int index = 0;
-        HttpClient httpClient;
-        httpClient.getHttpFileSize("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
+//        HttpClient httpClient;
+//        httpClient.getHttpFileSize("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
+//        httpClient.getHttpFileSize("http://vodkgeyttp8.vod.126.net/cloudmusic/IGAwYDAwMTchIjA1IjIgIg==/mv/302093/3489ca539bab3c019102e36f653be7df.mp4?wsSecret=b07d73eb14cf15415b0711d4219097d5&wsTime=1565251752");
+//        httpClient.download_thread = std::thread(&HttpClient::DownloadThread, &httpClient);
+//        if (httpClient.download_thread.joinable()) {
+//            httpClient.download_thread.join();
+//        }
+//        return;
         H264Decode video_decode;
         SpeexDecode audio_decode;
         uint8_t* yuv = new uint8_t[1920 * 1080 * 3 / 2];

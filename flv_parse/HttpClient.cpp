@@ -5,6 +5,7 @@ static size_t defualtCallback(void *buffer, size_t size, size_t nmemb, void *use
 }
 
 double HttpClient::getHttpFileSize(const std::string& url) {
+    url_ = url;
     EasyCURL c;
     if (!c.curl) {
         return 0;
@@ -31,6 +32,7 @@ double HttpClient::getHttpFileSize(const std::string& url) {
         std::cout << "getHttpFileSize err = " << curl_easy_strerror(retCode) << std::endl;
         return 0;
     }
+    file_size = len;
     std::cout << "url = " << url << " size = " << len << std::endl;
     return len;
 }
