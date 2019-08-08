@@ -9,6 +9,7 @@
 
 #include "H264Decoder.h"
 #include "SpeexDecoder.h"
+#include "HttpClient.h"
 #include "../Time.h"
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
@@ -303,7 +304,8 @@ public:
 
     void updateThread() {
         int index = 0;
-
+        HttpClient httpClient;
+        httpClient.getHttpFileSize("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
         H264Decode video_decode;
         SpeexDecode audio_decode;
         uint8_t* yuv = new uint8_t[1920 * 1080 * 3 / 2];

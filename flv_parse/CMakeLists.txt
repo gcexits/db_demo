@@ -3,7 +3,7 @@ project(flv)
 
 # 支持c++14
 SET(CMAKE_C_COMPILER g++)
-add_compile_options(-std=c++14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # 提高编译警告级别
 add_definitions(-Wall)

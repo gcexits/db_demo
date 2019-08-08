@@ -5,10 +5,10 @@
 #include <iostream>
 
 class HttpClient {
+public:
     HttpClient() = default;
     ~HttpClient() = default;
 
-public:
     struct EasyCURL {
         static int __count;
         CURL *curl = nullptr;
@@ -22,11 +22,10 @@ public:
         }
 
 
-        EasyCURL(bool debug) {
-            if (++__count == 1) {
-                /* Must initialize libcurl before any threads are started */
-                curl_global_init(CURL_GLOBAL_ALL);
-            }
+        EasyCURL() {
+//            if (++__count == 1) {
+//                curl_global_init(CURL_GLOBAL_ALL);
+//            }
 
             curl = curl_easy_init();
 
@@ -34,29 +33,12 @@ public:
             curl_easy_setopt(curl, CURLOPT_SOCKOPTFUNCTION, sockopt_callback);
             curl_easy_setopt(curl, CURLOPT_SOCKOPTDATA, &sockopt_data);
         }
-        explicit EasyCURL()
-            : EasyCURL(false) {}
         ~EasyCURL() {
             FreeHeaders();
             curl_easy_cleanup(curl);
         }
 
-        std::string Escape(const std::string &source) {
-            char *out = curl_easy_escape(curl, source.c_str(), source.length());
-            std::string dest(out);
-            if (out) {
-                curl_free(out);
-            }
-            return dest;
-        }
-
         struct curl_slist *headers = nullptr;
-        // "Content-Type: application/json"
-        void setContentType(const std::string &c) {
-            headers = curl_slist_append(headers, "Expect:");
-            headers = curl_slist_append(headers, c.c_str());
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        }
 
         void FreeHeaders() {
             if (headers) {
