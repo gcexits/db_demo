@@ -20,6 +20,7 @@ set(SOURCE_FILES
         ${ROOT}/SpeexDecoder.cpp
         ${ROOT}/Optional.cpp
         ${ROOT}/SDLPlayer.cpp
+        ${ROOT}/HttpClient.cpp
         ${ROOT}/../yuv_deal/yuvscale.cpp
         ${ROOT}/../Time.cpp
         ${ROOT}/hlring/RingBuffer.cpp
@@ -36,6 +37,7 @@ set(INC_DIR
         ${USR}/ffmpeg/4.1.4_1/include
         ${USR}/speex/1.2.0/include
         ${USR}/rtmpdump/2.4+20151223/include
+        ${USR}/curl/7.65.3/include
         /Users/guochao/DBY_code/libyuv-ios/include)
 include_directories(${INC_DIR})
 #2. lib
@@ -44,10 +46,11 @@ set(LINK_DIR
         ${USR}/ffmpeg/4.1.4_1/lib
         ${USR}/speex/1.2.0/lib
         ${USR}/rtmpdump/2.4+20151223/lib
+        ${USR}/curl/7.65.3/lib
         /Users/guochao/DBY_code/libyuv-ios/lib)
 
 link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libavformat.a libspeex.a librtmp.a libyuv.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libavformat.a libspeex.a librtmp.a libyuv.a libcurl.a)
