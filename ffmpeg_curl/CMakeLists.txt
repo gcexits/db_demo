@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(ffplay)
+project(curl_ffplay)
 
 # 支持c++14
 SET(CMAKE_C_COMPILER g++)
@@ -8,20 +8,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 # 提高编译警告级别
 add_definitions(-Wall)
 
-set(EXE_TARGET_NAME ffplay)
+set(EXE_TARGET_NAME curl_ffplay)
 
 set(ROOT ${CMAKE_CURRENT_LIST_DIR})
-# message("${ROOT}")
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${ROOT}/ffplay.cpp
+        ${ROOT}/main.cpp
         ${ROOT}/HttpClient.cpp
         ${ROOT}/HttpFile.cpp
         ${ROOT}/../flv_parse/hlring/RingBuffer.cpp
         ${ROOT}/../flv_parse/hlring/rbuf.c)
-#set(SOURCE_FILES
-#        ${ROOT}/test.cpp)
 
 #include_directories(${ROOT})
 
