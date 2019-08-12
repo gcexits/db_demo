@@ -1,15 +1,16 @@
 #include <iostream>
+#include <fstream>
 
 extern "C" {
 #include <libavformat/avformat.h>
 }
 
 #include "HttpFile.h"
+#include "SDLPlayer.h"
+#include "H264Decoder.h"
 
 #include "../flv_parse/hlring/RingBuffer.h"
 #include "../flv_parse/hlring/rbuf.h"
-
-#include <fstream>
 
 class Demuxer {
 public:
@@ -102,8 +103,10 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-            addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-            fp.write((char *)pkt->data, pkt->size);
+            static H264Decode video_decode(ifmt_ctx->streams[videoindex]->codec);
+//            addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
+//            fp.write((char *)pkt->data, pkt->size);
+            video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
             return ReadStatus::Audio;
@@ -224,11 +227,19 @@ public:
     }
 };
 
+void RegisterPlayer() {
+    using namespace std::placeholders;
+
+    SDLPlayer *player = SDLPlayer::getPlayer();
+    AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
+    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
+}
 
 int main() {
+    RegisterPlayer();
     int buffer_size = 1024 * 4;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v5-dy.ixigua.com/3d79b9e0984b653ca53dc2b94702d924/5d4d3555/video/m/22023f89fa74a4b40aeb39992ead46eac1c11632091000005db1d2d4ef02/?rc=amRscTh0NnF4bzMzO2kzM0ApcHpAbzM6ODgzOTozNDc4ODw7PDNAKTZkM2hpNTQ7NDc8Nzc4PDRnKXUpQGczdSlAZjN1KTU0ZGBlcjAuMWE1Ml8tLWMtL3NzYmJebyMtLjUvNS0uLS0yMi4tLS4vaTE0NC0vNmJjL2IwNGAxM146YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy.ixigua.com/6b0e04991e1a021b16a1fc19dcdf1f3e/5d50e77d/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSk1Njc1MzM4MzM4NDQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppPzQwNi0vMy4uLS8uLzU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
     if (ret != duobei::FILEOK) {
         std::cout << "url error" << std::endl;
@@ -268,11 +279,13 @@ int main() {
         }
         ready = true;
     }
+    SDLPlayer::getPlayer()->EventLoop();
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {
         readthread.join();
     }
     httpFile.Close();
+    fp.close();
     std::cout << "curl file end" << std::endl;
     return 0;
 }
