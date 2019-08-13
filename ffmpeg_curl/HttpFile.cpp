@@ -75,6 +75,7 @@ int HttpFile::Open(const std::string &url) {
     if (size <= 0) {
         return FILEERR;
     }
+    std::cout << "file_size = " << size << std::endl;
 	std::lock_guard<std::mutex> lock(worker.mtx_);
     worker.file_size = static_cast<size_t>(size);
     worker.running = true;
@@ -111,7 +112,7 @@ int HttpFile::Seek(int delta) {
 }
 
 //读取指定大小 返回读取大小 -2 end 读取完成后指针会延后 OK
-int HttpFile::ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize) {
+int HttpFile::ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize, int& hasReadSize) {
     hasRead = 0;
     size_t endRead = readSize;
     int outTime = 3000 * 2;  // *5 后超时
@@ -154,6 +155,7 @@ int HttpFile::ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize) {
                     synchronizer.cond.notify_all();
                 }
 	            buf_lock.unlock();
+                hasReadSize = hasRead;
                 break;
             } else {  //不够读取
                 //memcpy(buf + hasRead, v->second->data + (current_position - v->second->begin), v->second->end + 1 - current_position);
@@ -162,6 +164,7 @@ int HttpFile::ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize) {
                 hasRead += (v->second->end + 1 - worker.current_position );
                 worker.current_position  = v->second->end + 1;
                 cache_.buffers.erase(v);
+                hasReadSize = hasRead;
             }
         }
         if (!cache_.enough()) {
@@ -172,12 +175,12 @@ int HttpFile::ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize) {
     return readSize;
 }
 
-int HttpFile::Read(uint8_t *buf, size_t bufSize, size_t readSize) {
-    return Read(buf, bufSize, readSize, 15);
+int HttpFile::Read(uint8_t *buf, size_t bufSize, size_t readSize, int& hasReadSize) {
+    return Read(buf, bufSize, readSize, 15, hasReadSize);
 }
 
-int HttpFile::Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size) {
-    auto ret = ReadInternal(buf, bufSize, readSize);
+int HttpFile::Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size, int& hasReadSize) {
+    auto ret = ReadInternal(buf, bufSize, readSize, hasReadSize);
     if (ret == FILEEND) {
         return ret;
     }

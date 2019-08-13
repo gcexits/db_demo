@@ -17,15 +17,23 @@ class H264Decode {
     video::PlayInternal playInternal;
 public:
     bool success = false;
-    H264Decode(AVCodecContext* codecCtx_) {
+    H264Decode() {
         frame = av_frame_alloc();
         avcodec_register_all();
         av_log_set_level(AV_LOG_QUIET);
-        this->codecCtx_ = codecCtx_;
-        videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
+        playInternal.Init("video");
+    }
+
+    bool OpenDecode(AVCodecContext* codecCtx_) {
+        if (codecCtx_) {
+            this->codecCtx_ = codecCtx_;
+            videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
+        } else {
+            videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
+            codecCtx_ = avcodec_alloc_context3(videoCodec);
+        }
         int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
         assert(ret == 0);
-        playInternal.Init("video");
     }
 
     ~H264Decode() {

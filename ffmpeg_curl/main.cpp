@@ -40,6 +40,7 @@ public:
     AVBitStreamFilterContext* h264bsfc = nullptr;
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
+    H264Decode video_decode;
     bool Opened() {
         return opened_;
     }
@@ -98,9 +99,11 @@ public:
     }
 
     // todo: 视频:0, 音频:1, 字幕:2, 失败:-1
-    ReadStatus ReadFrame(std::ofstream &fp) {
+    ReadStatus ReadFrame() {
         int ret = av_read_frame(ifmt_ctx, pkt);
         if (ret < 0) {
+            // todo: 刷新视频解码器中剩余的数据
+            video_decode.Decode(pkt->data, pkt->size);
             if (ret == AVERROR_EOF) {
                 return ReadStatus::EndOff;
             }
@@ -108,9 +111,9 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-            static H264Decode video_decode(ifmt_ctx->streams[videoindex]->codec);
-            addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-            fp.write((char *)pkt->data, pkt->size);
+            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codec);
+            // todo: 给h264裸流添加sps pps
+            // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
             video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
@@ -254,8 +257,9 @@ void RegisterPlayer() {
 int main() {
     RegisterPlayer();
     int buffer_size = 1024 * 320;
+    int hasRead_size = 0;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v3-dy.ixigua.com/47ba8547cffb8db5820603b67dfa060d/5d529a26/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSlFOjM1OTM4MzM1MzQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppQzQ0Ly8xLy4uMDQ1MDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy.ixigua.com/a1e3caf5f670c27dfd710f4dcb2cb73b/5d52a8b4/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSlJOjQ4OTM4MzM1MzQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppQDQ2Ly4vLy4uNjY2MDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
@@ -274,12 +278,17 @@ int main() {
     // todo: mp4解封装 保存h264流有问题，需要av_bitstream_filter_init给h264裸流添加sps pps
     std::ofstream fp;
     if (!fp.is_open()) {
-        fp.open("douyin.h264", std::ios::out | std::ios::binary | std::ios::ate);
+        fp.open("douyin.mp4", std::ios::out | std::ios::binary | std::ios::ate);
     }
-    while (httpFile.Read(buffer, buffer_size, buffer_size) != duobei::FILEEND) {
-        ioBufferContext.FillBuffer(buffer, buffer_size);
+    while (1) {
+        int ret = httpFile.Read(buffer, buffer_size, buffer_size, hasRead_size);
+        ioBufferContext.FillBuffer(buffer, hasRead_size);
+        fp.write((char *)buffer, hasRead_size);
+        if (ret == duobei::FILEEND) {
+            break;
+        }
         if (!ready) {
-            readthread = std::thread([&ioBufferContext, &demuxer, &fp, &finish]{
+            readthread = std::thread([&ioBufferContext, &demuxer, &finish]{
                 bool status = false;
                 void *param = nullptr;
                 if (!status) {
@@ -290,7 +299,7 @@ int main() {
                     demuxer.Open(param);
                 }
                 while (1) {
-                    if (demuxer.ReadFrame(fp) == Demuxer::ReadStatus::Error) {
+                    if (demuxer.ReadFrame() == Demuxer::ReadStatus::EndOff) {
                         finish = true;
                         break;
                     }
@@ -299,7 +308,6 @@ int main() {
         }
         ready = true;
     }
-//    std::cout << "read data over " << ioBufferContext.ringBuffer.size() << std::endl;
     while (!finish) {
         ioBufferContext.FillBuffer(nullptr, 0);
     }

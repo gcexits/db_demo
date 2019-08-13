@@ -37,7 +37,7 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
 #else
         playInternal.Play(yuv, size, frame->width, frame->height);
 #endif
-//        fp.write((char *)yuv, 576 * 1024 * 1.5);
+        fp.write((char *)yuv, 576 * 1024 * 1.5);
         delete []yuv;
     }
     return true;

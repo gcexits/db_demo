@@ -123,7 +123,7 @@ class HttpFile {
     HttpClient http;
     void DownloadThread();
     size_t hasRead = 0;
-    int ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize);
+    int ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize, int& hasReadSize);
     int Seek(int delta);
 public:
     DownloadWorker worker;
@@ -133,8 +133,8 @@ public:
     }
 
     int Open(const std::string &);
-    int Read(uint8_t *buf, size_t bufSize, size_t readSize);
-    int Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size);
+    int Read(uint8_t *buf, size_t bufSize, size_t readSize, int& hasReadSize);
+    int Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size, int& hasReadSize);
     int ReadDelay(uint8_t *buf, size_t bufSize, size_t readSize);
     void Close();
     int SeekTo(size_t size);
