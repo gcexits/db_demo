@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <fstream>
 
 extern "C" {
 #include <libavcodec/avcodec.h>

@@ -4,8 +4,9 @@
 #include <json/writer.h>
 
 #include <iostream>
-#include <vector>
 #include <list>
+#include <map>
+#include <vector>
 
 namespace json = rapidjson;
 
@@ -83,7 +84,7 @@ struct Common {
     }
 };
 
-struct Connect: Common {
+struct Connect : Common {
     std::string type;
     struct {
         std::string reason;
@@ -117,15 +118,15 @@ struct Connect: Common {
 
         json::Document parseDocument;
         parseDocument.Parse(s.GetString());
-//        if (parseDocument.HasMember("url")) {
-//            std::cout << << std::endl;
-//        }
+        //        if (parseDocument.HasMember("url")) {
+        //            std::cout << << std::endl;
+        //        }
 
         return doc;
     }
 };
 
-struct VideoResolution: Common {
+struct VideoResolution : Common {
     std::string type;
     struct {
         std::string value;
@@ -151,7 +152,7 @@ struct VideoResolution: Common {
     }
 };
 
-struct MediaParam: Common {
+struct MediaParam : Common {
     std::string type;
     struct {
         std::string type;
@@ -175,7 +176,7 @@ struct MediaParam: Common {
     }
 };
 
-struct PingHistory: Common {
+struct PingHistory : Common {
     std::string type;
     int step;
     int64_t fromTimestamp;
@@ -246,7 +247,7 @@ struct PingHistory: Common {
 };
 
 // note: 音视频上下行
-struct MediaUpLinkRate: Common {
+struct MediaUpLinkRate : Common {
     std::string type;
     int step;
     struct {
@@ -259,7 +260,6 @@ struct MediaUpLinkRate: Common {
         AddString(doc, "type", "mediauplinkrate");
         AddInt(doc, "step", step);
         json::Document::AllocatorType &allocator = doc.GetAllocator();
-
 
         json::Value rangValue(json::kObjectType);
         {
@@ -282,7 +282,7 @@ struct MediaUpLinkRate: Common {
     }
 };
 
-struct MediaDownLinkRate: Common {
+struct MediaDownLinkRate : Common {
     std::string type;
     int step;
     int64_t fromTimestamp;
@@ -336,7 +336,35 @@ void dump(json::Document &doc) {
     std::cout << s.GetString() << std::endl;
 }
 
+struct AVInfo {
+    std::string uid;
+    struct MediaParam {
+        double down = 0;
+        std::string url;
+        double fps = 0;
+    };
+    MediaParam audio;
+    MediaParam video;
+};
+using AVInfos = std::vector<AVInfo>;
+
 int main() {
+    std::string startTime = "123213414124112412";
+    int64_t time = startTime.empty() ? 0 : std::stoll(startTime);
+    std::cout << time << std::endl;
+
+    AVInfos avInfos;
+    for (int i = 0; i < 3; i++) {
+        struct AVInfo avinfo;
+        avinfo.audio.down = i;
+        avinfo.video.down = i;
+        avinfo.video.fps = i;
+        avInfos.push_back(avinfo);
+    }
+    for (auto & av : avInfos) {
+        std::cout << av.audio.down << " " << av.video.down << " " << av.video.fps << std::endl;
+    }
+    return 0;
 #if 0
     using Pair = std::pair<std::string, std::string>;
     Connect connect;
@@ -371,16 +399,16 @@ int main() {
     auto doc_4 = mediaUpLinkRate.dump();
     dump(doc_4);
 #else
-//    MediaDownLinkRate mediaDownLinkRate;
-//    mediaDownLinkRate.range.video.push_back(7);
-//    mediaDownLinkRate.range.video.push_back(8);
-//    mediaDownLinkRate.range.video.push_back(9);
-//
-//    mediaDownLinkRate.range.audio.push_back(10);
-//    mediaDownLinkRate.range.audio.push_back(11);
-//    mediaDownLinkRate.range.audio.push_back(12);
-//    auto doc_5 = mediaDownLinkRate.dump();
-//    dump(doc_5);
+    //    MediaDownLinkRate mediaDownLinkRate;
+    //    mediaDownLinkRate.range.video.push_back(7);
+    //    mediaDownLinkRate.range.video.push_back(8);
+    //    mediaDownLinkRate.range.video.push_back(9);
+    //
+    //    mediaDownLinkRate.range.audio.push_back(10);
+    //    mediaDownLinkRate.range.audio.push_back(11);
+    //    mediaDownLinkRate.range.audio.push_back(12);
+    //    auto doc_5 = mediaDownLinkRate.dump();
+    //    dump(doc_5);
     PingHistory pingHistory;
     pingHistory.range.entryRTT.push_back(1);
     pingHistory.range.entryRTT.push_back(2);

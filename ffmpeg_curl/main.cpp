@@ -18,7 +18,8 @@ public:
         Video,
         Audio,
         Subtitle,
-        Error
+        Error,
+        EndOff
     };
 
 private:
@@ -98,14 +99,18 @@ public:
 
     // todo: 视频:0, 音频:1, 字幕:2, 失败:-1
     ReadStatus ReadFrame(std::ofstream &fp) {
-        if (av_read_frame(ifmt_ctx, pkt) < 0) {
+        int ret = av_read_frame(ifmt_ctx, pkt);
+        if (ret < 0) {
+            if (ret == AVERROR_EOF) {
+                return ReadStatus::EndOff;
+            }
             //av_seek_frame(ifmt_ctx, pkt->stream_index, 0, AVSEEK_FLAG_BACKWARD);
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
             static H264Decode video_decode(ifmt_ctx->streams[videoindex]->codec);
-//            addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-//            fp.write((char *)pkt->data, pkt->size);
+            addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
+            fp.write((char *)pkt->data, pkt->size);
             video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
@@ -125,6 +130,7 @@ public:
 };
 
 class IOBufferContext {
+public:
     int buffer_size = 1024 * 4;
     AVIOContext* avio_ctx = nullptr;
     AVFormatContext* fmt_ctx = nullptr;
@@ -133,21 +139,27 @@ class IOBufferContext {
     RingBuffer ringBuffer;
     const size_t RingLength;
     std::ofstream fp_douyin;
+    std::mutex ringBufferMtx;
 
     int read_packet(uint8_t* buffer, int length) {
+        int count  = 100;
         while (ringBuffer.size() < length && !io_sync.exit) {
-            //WriteDebugLog("read %d, return %d", length, ringBuffer.size());
+            if (--count == 0) {
+                break;
+            }
+//            std::cout << "line[" << __LINE__ << "] file[" << __FILE__ << "] : ringBuffer.size() " << ringBuffer.size() << ", read " << length << std::endl;
             std::unique_lock<std::mutex> lk(io_sync.m);
             io_sync.cv.wait(lk);
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
 
         if (io_sync.exit) {
             return AVERROR_EOF;
         }
+        std::lock_guard<std::mutex> lck(ringBufferMtx);
         return ringBuffer.read(buffer, length);
     }
 
-public:
     struct {
         mutable std::mutex m;
         mutable std::condition_variable cv;
@@ -208,7 +220,11 @@ public:
     }
 
     int FillBuffer(uint8_t* buffer, int length) {
-        int len = ringBuffer.write(buffer, length);
+        int len = 0;
+        if (length != 0 && buffer) {
+            std::lock_guard<std::mutex> lck(ringBufferMtx);
+            len = ringBuffer.write(buffer, length);
+        }
         std::unique_lock<std::mutex> lk(io_sync.m);
         io_sync.cv.notify_all();
         return len;
@@ -237,9 +253,11 @@ void RegisterPlayer() {
 
 int main() {
     RegisterPlayer();
-    int buffer_size = 1024 * 4;
+    int buffer_size = 1024 * 320;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v3-dy.ixigua.com/6b0e04991e1a021b16a1fc19dcdf1f3e/5d50e77d/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSk1Njc1MzM4MzM4NDQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppPzQwNi0vMy4uLS8uLzU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy.ixigua.com/47ba8547cffb8db5820603b67dfa060d/5d529a26/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSlFOjM1OTM4MzM1MzQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppQzQ0Ly8xLy4uMDQ1MDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
+//    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
+//    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
     if (ret != duobei::FILEOK) {
         std::cout << "url error" << std::endl;
@@ -247,8 +265,9 @@ int main() {
     }
     uint8_t *buffer = new uint8_t[buffer_size + 1];
 
-    IOBufferContext ioBufferContext(1024 * 3200);
+    IOBufferContext ioBufferContext(0);
     bool ready = false;
+    bool finish = false;
     std::thread readthread;
     Demuxer demuxer;
 
@@ -260,7 +279,7 @@ int main() {
     while (httpFile.Read(buffer, buffer_size, buffer_size) != duobei::FILEEND) {
         ioBufferContext.FillBuffer(buffer, buffer_size);
         if (!ready) {
-            readthread = std::thread([&ioBufferContext, &demuxer, &fp]{
+            readthread = std::thread([&ioBufferContext, &demuxer, &fp, &finish]{
                 bool status = false;
                 void *param = nullptr;
                 if (!status) {
@@ -272,6 +291,7 @@ int main() {
                 }
                 while (1) {
                     if (demuxer.ReadFrame(fp) == Demuxer::ReadStatus::Error) {
+                        finish = true;
                         break;
                     }
                 }
@@ -279,8 +299,12 @@ int main() {
         }
         ready = true;
     }
-    SDLPlayer::getPlayer()->EventLoop();
+//    std::cout << "read data over " << ioBufferContext.ringBuffer.size() << std::endl;
+    while (!finish) {
+        ioBufferContext.FillBuffer(nullptr, 0);
+    }
     ioBufferContext.io_sync.exit = true;
+    SDLPlayer::getPlayer()->EventLoop();
     if (readthread.joinable()) {
         readthread.join();
     }

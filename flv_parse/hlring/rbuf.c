@@ -6,7 +6,7 @@
 
 #include "rbuf.h"
 
-#define RBUF_DEFAULT_SIZE 4096
+#define RBUF_DEFAULT_SIZE 1024 * 1024 * 1024
 
 struct _rbuf_s {
     unsigned char *buf;        // the buffer

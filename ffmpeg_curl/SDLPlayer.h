@@ -3,6 +3,7 @@
 #include <map>
 #include <queue>
 #include <set>
+#include <fstream>
 
 #include "Optional.h"
 #include "../flv_parse/hlring/RingBuffer.h"

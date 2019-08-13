@@ -197,7 +197,7 @@ struct CURLAgent {
         //设置接收数据的回调
         curl_easy_setopt(c.curl, CURLOPT_WRITEFUNCTION, buffer.callback);  // CurlOptionWriteFunction
         curl_easy_setopt(c.curl, CURLOPT_WRITEDATA, &buffer);
-        curl_easy_setopt(c.curl, CURLOPT_TIMEOUT_MS, 2000);  //curl最长执行秒数
+        curl_easy_setopt(c.curl, CURLOPT_TIMEOUT, 5);  //curl最长执行秒数
 
         //curl_easy_setopt(c.curl, CURLOPT_INFILESIZE, lFileSize);
         //curl_easy_setopt(c.curl, CURLOPT_HEADER, 1);

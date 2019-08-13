@@ -69,7 +69,7 @@ int HttpFile::Open(const std::string &url) {
     for (int count = 0; count < 5 && size <= 0; ++count) {
         size = http.getHttpFileSize(url);
         if (size <= 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
     }
     if (size <= 0) {

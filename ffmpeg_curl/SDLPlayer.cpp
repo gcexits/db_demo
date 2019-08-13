@@ -46,6 +46,8 @@ int SDLPlayer::RefreshLoop(void* arg) {
 // note: space：暂停 ->：快进10s <-：快退10s q/esc：退出 1/2/3：倍速播放
 void SDLPlayer::EventLoop() {
     SDL_Event event;
+    // todo: 清空事件队列，在RegisterPlayer时就已经开始发命令了
+    while (SDL_PollEvent(&event) != 0);
     while (running) {
         SDL_WaitEvent(&event);
         switch (event.type) {
