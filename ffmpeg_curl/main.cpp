@@ -108,13 +108,14 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
+            // video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
             // todo: 给h264裸流添加sps pps
             // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-            video_decode.Decode(pkt->data, pkt->size);
+            // video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
-            audio_decode.Decode(pkt->data, pkt->size);
+            audio_decode.OpenDecode(ifmt_ctx->streams[audioindex]->codecpar);
+            audio_decode.Decode(pkt);
             return ReadStatus::Audio;
         } else {
             return ReadStatus::Subtitle;
@@ -257,7 +258,7 @@ int main(int argc, char* argv[]) {
     int buffer_size = 1024 * 320;
     int hasRead_size = 0;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v3-dy.ixigua.com/ec44e1393af998ca45ccd758ca522efe/5d52b8d7/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSk0OTczMzM0MzM1NDU0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppLzIuLy4yLS0uLTUtMDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy.ixigua.com/e6ca918c147f791e2e1e94afc65b10fe/5d5392cf/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSlJOTY3NDM4MzM1NzQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppMS4zNi4wLy4uLTUuMTU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
     //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
     //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
     //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
@@ -274,14 +275,14 @@ int main(int argc, char* argv[]) {
     Demuxer demuxer;
 
     // todo: mp4解封装 保存h264流有问题，需要av_bitstream_filter_init给h264裸流添加sps pps
-    std::ofstream fp;
-    if (!fp.is_open()) {
-        fp.open("douyin.mp4", std::ios::out | std::ios::binary | std::ios::ate);
-    }
+//    std::ofstream fp;
+//    if (!fp.is_open()) {
+//        fp.open("douyin.mp4", std::ios::out | std::ios::binary | std::ios::ate);
+//    }
     while (1) {
         int ret = httpFile.Read(buffer, buffer_size, buffer_size, hasRead_size);
         ioBufferContext.FillBuffer(buffer, hasRead_size);
-        fp.write((char*)buffer, hasRead_size);
+//        fp.write((char*)buffer, hasRead_size);
         if (ret == duobei::FILEEND) {
             break;
         }
@@ -310,12 +311,12 @@ int main(int argc, char* argv[]) {
         ioBufferContext.FillBuffer(nullptr, 0);
     }
     ioBufferContext.io_sync.exit = true;
-    SDLPlayer::getPlayer()->EventLoop();
+//    SDLPlayer::getPlayer()->EventLoop();
     if (readthread.joinable()) {
         readthread.join();
     }
     httpFile.Close();
-    fp.close();
+//    fp.close();
     std::cout << "curl file end" << std::endl;
     return 0;
 }

@@ -43,4 +43,4 @@ link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libavformat.a libcurl.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a)

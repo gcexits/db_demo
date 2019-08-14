@@ -15,6 +15,7 @@ class H264Decode {
     AVCodec* videoCodec = nullptr;
     AVFrame* frame = nullptr;
     video::PlayInternal playInternal;
+    bool inited = false;
 
 public:
     H264Decode() {
@@ -25,16 +26,19 @@ public:
     }
 
     bool OpenDecode(const AVCodecParameters* param) {
-        if (param) {
-            codecCtx_ = avcodec_alloc_context3(nullptr);
-            avcodec_parameters_to_context(codecCtx_, param);
-            videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
-        } else {
-            videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-            codecCtx_ = avcodec_alloc_context3(videoCodec);
+        if (!inited) {
+            if (param) {
+                codecCtx_ = avcodec_alloc_context3(nullptr);
+                avcodec_parameters_to_context(codecCtx_, param);
+                videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
+            } else {
+                videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
+                codecCtx_ = avcodec_alloc_context3(videoCodec);
+            }
+            int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
+            assert(ret == 0);
+            inited = true;
         }
-        int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
-        assert(ret == 0);
     }
 
     ~H264Decode() {

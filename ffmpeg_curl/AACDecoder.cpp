@@ -3,16 +3,12 @@
 
 std::fstream audio_fp;
 
-bool AACDecode::Decode(uint8_t *buf, uint32_t size) {
+bool AACDecode::Decode(AVPacket *pkt) {
     if (!audio_fp.is_open()) {
         audio_fp.open("123.pcm", std::ios::binary | std::ios::ate | std::ios::out);
     }
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    pkt.data = buf;
-    pkt.size = size;
 
-    int result = avcodec_send_packet(codecCtx_, &pkt);
+    int result = avcodec_send_packet(codecCtx_, pkt);
     if (result < 0) {
         return false;
     }
@@ -24,7 +20,35 @@ bool AACDecode::Decode(uint8_t *buf, uint32_t size) {
         if (result < 0) {
             return false;
         }
-        int size = av_samples_get_buffer_size(nullptr, frame->channels, codecCtx_->frame_size, (AVSampleFormat)frame->format, 1);
+        if (!isInited()) {
+            channels = frame->channels;
+            sampleFmt = frame->format;
+            sampleRate = frame->sample_rate;
+        }
+        int size = av_samples_get_buffer_size(nullptr, frame->channels, codecCtx_->frame_size, AV_SAMPLE_FMT_S16, 1);
+        uint8_t *dstPcm = new uint8_t[size];
+        AVFrame *dstFram = av_frame_alloc();
+        {
+            dstFram->channels = channels;
+            dstFram->channel_layout = av_get_default_channel_layout(channels);
+            dstFram->format = 1;
+            dstFram->sample_rate = sampleRate;
+            auto nb_samples_ = static_cast<double>(frame->nb_samples * dstFram->sample_rate) / static_cast<double>(codecCtx_->sample_rate) + 0.5;
+            dstFram->nb_samples = static_cast<int>(nb_samples_);
+        }
+        avcodec_fill_audio_frame(dstFram, frame->channels, AV_SAMPLE_FMT_S16, dstPcm, size, 0);
+        if (!pcm_convert) {
+            pcm_convert = swr_alloc_set_opts(pcm_convert,
+                                             av_get_default_channel_layout(channels), AV_SAMPLE_FMT_S16, sampleRate,
+                                             av_get_default_channel_layout(channels), (AVSampleFormat)sampleFmt, sampleRate,
+                                             0, nullptr);
+            swr_init(pcm_convert);
+        }
+        int ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+//        std::cout << "ret = " << ret << std::endl;
+        audio_fp.write((char *)dstFram->data[0], size);
+        delete []dstPcm;
+        av_frame_free(&dstFram);
         //        av_fast_malloc
     }
     return true;
