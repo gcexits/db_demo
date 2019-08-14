@@ -1,7 +1,7 @@
 #pragma once
 
-#include <mutex>
 #include <fstream>
+#include <mutex>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -12,8 +12,9 @@ extern "C" {
 class AACDecode {
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* audioCodec = nullptr;
-    AVFrame *frame = nullptr;
+    AVFrame* frame = nullptr;
     audio::PlayInternal playInternal;
+
 public:
     AACDecode() {
         frame = av_frame_alloc();

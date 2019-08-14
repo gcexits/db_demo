@@ -6,7 +6,7 @@ SDLPlayer* SDLPlayer::player = nullptr;
 
 SDLPlayer::SDLPlayer() {
     SDL_SetMainReady();
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO| SDL_INIT_EVENTS);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
 
     audioSpec.freq = 16000;
     audioSpec.format = AUDIO_S16SYS;
@@ -14,19 +14,19 @@ SDLPlayer::SDLPlayer() {
     audioSpec.silence = 0;
     audioSpec.samples = 320;
     audioSpec.callback = AudioCallback;
-    audioSpec.userdata = this;   //可以直接在内部传值给callback函数
-    SDL_OpenAudio(&audioSpec,NULL);
+    audioSpec.userdata = this;  //可以直接在内部传值给callback函数
+    SDL_OpenAudio(&audioSpec, NULL);
     SDL_PauseAudio(0);
     SDL_CreateThread(RefreshLoop, "RefreshLoop", this);
 }
 
 SDLPlayer* SDLPlayer::getPlayer() {
-    if(player == nullptr){
+    if (player == nullptr) {
         player = new SDLPlayer;
     }
     return player;
 }
-#define ISSHE_REFRESH_EVENT 			(SDL_USEREVENT + 1)
+#define ISSHE_REFRESH_EVENT (SDL_USEREVENT + 1)
 int SDLPlayer::RefreshLoop(void* arg) {
     SDLPlayer* that = (SDLPlayer*)arg;
     SDL_Event event;
@@ -47,7 +47,8 @@ int SDLPlayer::RefreshLoop(void* arg) {
 void SDLPlayer::EventLoop() {
     SDL_Event event;
     // todo: 清空事件队列，在RegisterPlayer时就已经开始发命令了
-    while (SDL_PollEvent(&event) != 0);
+    while (SDL_PollEvent(&event) != 0)
+        ;
     while (running) {
         SDL_WaitEvent(&event);
         switch (event.type) {
@@ -77,7 +78,6 @@ void SDLPlayer::EventLoop() {
             default:
                 break;
         }
-
     }
     printf("Exit %s \n", __FUNCTION__);
 }

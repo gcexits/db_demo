@@ -1,8 +1,8 @@
 #pragma once
 
 #include <curl/curl.h>
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "Time.h"
 
@@ -22,7 +22,7 @@ public:
         int sockopt_data = 1;
         static int sockopt_callback(void *clientp, curl_socket_t curlfd,
                                     curlsocktype purpose) {
-        	int value = *(int *)clientp;
+            int value = *(int *)clientp;
             setsockopt(curlfd, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
             return CURL_SOCKOPT_OK;
         }

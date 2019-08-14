@@ -2,10 +2,10 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+#include "AACDecoder.h"
+#include "H264Decoder.h"
 #include "HttpFile.h"
 #include "SDLPlayer.h"
-#include "H264Decoder.h"
-#include "AACDecoder.h"
 
 #include "../flv_parse/hlring/RingBuffer.h"
 #include "../flv_parse/hlring/rbuf.h"
@@ -58,7 +58,7 @@ public:
 
     bool Open(const std::string& inUrl) {}
     bool Open(void* param) {
-        ifmt_ctx = (struct AVFormatContext *)param;
+        ifmt_ctx = (struct AVFormatContext*)param;
         need_free_ = false;
         int ret = avformat_find_stream_info(ifmt_ctx, NULL);
         if (ret < 0) {
@@ -72,9 +72,9 @@ public:
     }
 
     // todo: 添加sps pps头
-    bool addSpsPps(AVPacket *pkt, AVCodecParameters *codecpar) {
-        const AVBitStreamFilter *avBitStreamFilter = nullptr;
-        AVBSFContext *absCtx = NULL;
+    bool addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar) {
+        const AVBitStreamFilter* avBitStreamFilter = nullptr;
+        AVBSFContext* absCtx = NULL;
 
         avBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
 
@@ -84,11 +84,11 @@ public:
 
         av_bsf_init(absCtx);
 
-        if(av_bsf_send_packet(absCtx, pkt) != 0){
+        if (av_bsf_send_packet(absCtx, pkt) != 0) {
             return false;
         }
 
-        while(av_bsf_receive_packet(absCtx, pkt) == 0) {
+        while (av_bsf_receive_packet(absCtx, pkt) == 0) {
             continue;
         }
 
@@ -143,12 +143,12 @@ public:
     std::mutex ringBufferMtx;
 
     int read_packet(uint8_t* buffer, int length) {
-        int count  = 100;
+        int count = 100;
         while (ringBuffer.size() < length && !io_sync.exit) {
             if (--count == 0) {
                 break;
             }
-//            std::cout << "line[" << __LINE__ << "] file[" << __FILE__ << "] : ringBuffer.size() " << ringBuffer.size() << ", read " << length << std::endl;
+            //            std::cout << "line[" << __LINE__ << "] file[" << __FILE__ << "] : ringBuffer.size() " << ringBuffer.size() << ", read " << length << std::endl;
             std::unique_lock<std::mutex> lk(io_sync.m);
             io_sync.cv.wait(lk);
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -181,7 +181,7 @@ public:
             return AVERROR_EXIT;
         }
 
-        uint8_t *buffer = (uint8_t *)av_malloc(buffer_size);
+        uint8_t* buffer = (uint8_t*)av_malloc(buffer_size);
         if (!buffer) {
             return AVERROR(ENOMEM);
         }
@@ -247,25 +247,25 @@ public:
 void RegisterPlayer() {
     using namespace std::placeholders;
 
-    SDLPlayer *player = SDLPlayer::getPlayer();
+    SDLPlayer* player = SDLPlayer::getPlayer();
     AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
     AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     RegisterPlayer();
     int buffer_size = 1024 * 320;
     int hasRead_size = 0;
     duobei::HttpFile httpFile;
     int ret = httpFile.Open("http://v3-dy.ixigua.com/ec44e1393af998ca45ccd758ca522efe/5d52b8d7/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSk0OTczMzM0MzM1NDU0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppLzIuLy4yLS0uLTUtMDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
-//    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
-//    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
-//    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
+    //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
+    //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
+    //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
     if (ret != duobei::FILEOK) {
         std::cout << "url error" << std::endl;
         return -1;
     }
-    uint8_t *buffer = new uint8_t[buffer_size + 1];
+    uint8_t* buffer = new uint8_t[buffer_size + 1];
 
     IOBufferContext ioBufferContext(0);
     bool ready = false;
@@ -281,18 +281,18 @@ int main() {
     while (1) {
         int ret = httpFile.Read(buffer, buffer_size, buffer_size, hasRead_size);
         ioBufferContext.FillBuffer(buffer, hasRead_size);
-        fp.write((char *)buffer, hasRead_size);
+        fp.write((char*)buffer, hasRead_size);
         if (ret == duobei::FILEEND) {
             break;
         }
         if (!ready) {
-            readthread = std::thread([&ioBufferContext, &demuxer, &finish]{
+            readthread = std::thread([&ioBufferContext, &demuxer, &finish] {
                 bool status = false;
-                void *param = nullptr;
+                void* param = nullptr;
                 if (!status) {
                     do {
                         ioBufferContext.OpenInput();
-                        param = (AVFormatContext *)ioBufferContext.getFormatContext(&status);
+                        param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
                     } while (!status);
                     demuxer.Open(param);
                 }

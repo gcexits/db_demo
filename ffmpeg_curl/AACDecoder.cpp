@@ -25,7 +25,7 @@ bool AACDecode::Decode(uint8_t *buf, uint32_t size) {
             return false;
         }
         int size = av_samples_get_buffer_size(nullptr, frame->channels, codecCtx_->frame_size, (AVSampleFormat)frame->format, 1);
-//        av_fast_malloc
+        //        av_fast_malloc
     }
     return true;
 }

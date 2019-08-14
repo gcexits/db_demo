@@ -143,7 +143,6 @@ int HttpClient::Gets(const std::string &url, std::string &response, const std::s
     return c.Perform();
 }
 
-
 double HttpClient::getHttpFileSize(const std::string &url) {
 #if defined(ENABLE_TERMINATE_CURL_EASY_PERFORM_TIMEOUT)
     auto c = std::make_shared<EasyCURL>();
@@ -178,7 +177,7 @@ double HttpClient::getHttpFileSize(const std::string &url) {
     if (!c.curl) {
         return 0;
     }
-    
+
     curl_easy_setopt(c.curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(c.curl, CURLOPT_SSL_VERIFYPEER, 0L);  //设置不验证证书
     curl_easy_setopt(c.curl, CURLOPT_SSL_VERIFYHOST, 0L);  //不验证host
@@ -275,7 +274,6 @@ int HttpClient::Download(const std::string &url,
     curl_slist_free_all(list); /* free the list again */
     return retcCode;
 }
-
 
 int HttpClient::Download(const std::string &url, size_t begin, size_t end, DownloadBuffer &buffer) {
     EasyCURL c;

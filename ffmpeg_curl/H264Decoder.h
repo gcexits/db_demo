@@ -1,7 +1,7 @@
 #pragma once
 
-#include <mutex>
 #include <fstream>
+#include <mutex>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -13,8 +13,9 @@ extern "C" {
 class H264Decode {
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* videoCodec = nullptr;
-    AVFrame *frame = nullptr;
+    AVFrame* frame = nullptr;
     video::PlayInternal playInternal;
+
 public:
     H264Decode() {
         frame = av_frame_alloc();

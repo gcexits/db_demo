@@ -1,12 +1,12 @@
 #pragma once
 
+#include <fstream>
 #include <map>
 #include <queue>
 #include <set>
-#include <fstream>
 
-#include "Optional.h"
 #include "../flv_parse/hlring/RingBuffer.h"
+#include "Optional.h"
 
 #include <SDL2/SDL.h>
 
@@ -235,7 +235,7 @@ struct VideoContainer {
         return true;
     }
 
-    void clearBuffer (VideoChannel* channel) {
+    void clearBuffer(VideoChannel* channel) {
         std::unique_lock<std::mutex> lock_(channel->mtx_);
         while (channel->work_queue_.empty()) {
             channel->work_queue_.pop();
@@ -311,7 +311,6 @@ public:
     // destroyPcmPlayer
     void closeAudio(void* handle) {
     }
-
 
     void do_exit() {
         videoContainer.exit();

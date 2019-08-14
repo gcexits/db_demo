@@ -1,6 +1,5 @@
 ﻿#include "RingBuffer.h"
 
-
 RingBuffer::RingBuffer(const std::string& n, int c)
     : size_(c), name(n) {
     buffer_ = rbuf_create(size_);
@@ -11,12 +10,12 @@ RingBuffer::~RingBuffer() {
     rbuf_destroy(buffer_);
 }
 
-int RingBuffer::write(void * buf, int32_t length) {
-    return write(static_cast<uint8_t *>(buf), length);
+int RingBuffer::write(void* buf, int32_t length) {
+    return write(static_cast<uint8_t*>(buf), length);
 }
 
 int RingBuffer::write(uint8_t* buf, int32_t length) {
-	return rbuf_write(buffer_, buf, length);
+    return rbuf_write(buffer_, buf, length);
 }
 
 int RingBuffer::clean() {
@@ -24,7 +23,7 @@ int RingBuffer::clean() {
     return 0;
 }
 
-int RingBuffer::read(uint8_t *buf, int32_t length) {
+int RingBuffer::read(uint8_t* buf, int32_t length) {
     return rbuf_read(buffer_, buf, length);
 }
 
