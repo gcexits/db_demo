@@ -4,9 +4,11 @@
 std::fstream video_fp;
 
 bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
+#if defined(SRCFILE)
     if (!video_fp.is_open()) {
         video_fp.open("123.yuv", std::ios::binary | std::ios::ate | std::ios::out);
     }
+#endif
     AVPacket pkt;
     av_init_packet(&pkt);
     pkt.data = buf;
@@ -35,7 +37,10 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
 #else
         playInternal.Play(yuv, size, frame->width, frame->height);
 #endif
+
+#if defined(SRCFILE)
         video_fp.write((char *)yuv, frame->width * frame->height * 1.5);
+#endif
         delete[] yuv;
     }
     return true;

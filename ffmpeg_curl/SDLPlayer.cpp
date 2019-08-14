@@ -8,11 +8,11 @@ SDLPlayer::SDLPlayer() {
     SDL_SetMainReady();
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
 
-    audioSpec.freq = 16000;
+    audioSpec.freq = 48000;
     audioSpec.format = AUDIO_S16SYS;
-    audioSpec.channels = 1;
+    audioSpec.channels = 2;
     audioSpec.silence = 0;
-    audioSpec.samples = 320;
+    audioSpec.samples = 1024;
     audioSpec.callback = AudioCallback;
     audioSpec.userdata = this;  //可以直接在内部传值给callback函数
     SDL_OpenAudio(&audioSpec, NULL);

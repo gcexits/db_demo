@@ -4,10 +4,11 @@
 std::fstream audio_fp;
 
 bool AACDecode::Decode(AVPacket *pkt) {
+#if defined(SRCFILE)
     if (!audio_fp.is_open()) {
         audio_fp.open("123.pcm", std::ios::binary | std::ios::ate | std::ios::out);
     }
-
+#endif
     int result = avcodec_send_packet(codecCtx_, pkt);
     if (result < 0) {
         return false;
@@ -46,7 +47,10 @@ bool AACDecode::Decode(AVPacket *pkt) {
         }
         int ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
 //        std::cout << "ret = " << ret << std::endl;
+#if defined(SRCFILE)
         audio_fp.write((char *)dstFram->data[0], size);
+#endif
+        playInternal.Play(dstFram->data[0], size);
         delete []dstPcm;
         av_frame_free(&dstFram);
         //        av_fast_malloc
