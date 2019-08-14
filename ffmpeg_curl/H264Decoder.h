@@ -24,9 +24,10 @@ public:
         playInternal.Init("video");
     }
 
-    bool OpenDecode(AVCodecContext* codecCtx_) {
-        if (codecCtx_) {
-            this->codecCtx_ = codecCtx_;
+    bool OpenDecode(const AVCodecParameters* param) {
+        if (param) {
+            codecCtx_ = avcodec_alloc_context3(nullptr);
+            avcodec_parameters_to_context(codecCtx_, param);
             videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
         } else {
             videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);

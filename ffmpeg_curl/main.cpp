@@ -108,7 +108,7 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codec);
+            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
             // todo: 给h264裸流添加sps pps
             // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
             video_decode.Decode(pkt->data, pkt->size);
