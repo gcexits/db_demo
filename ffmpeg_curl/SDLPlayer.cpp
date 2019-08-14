@@ -8,7 +8,7 @@ SDLPlayer::SDLPlayer() {
     SDL_SetMainReady();
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
 
-    audioSpec.freq = 48000;
+    audioSpec.freq = 44100;
     audioSpec.format = AUDIO_S16SYS;
     audioSpec.channels = 2;
     audioSpec.silence = 0;
