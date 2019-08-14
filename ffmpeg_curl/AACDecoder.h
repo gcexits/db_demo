@@ -5,37 +5,36 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
 }
 
 #include "Optional.h"
 
-class H264Decode {
+class AACDecode {
     AVCodecContext* codecCtx_ = nullptr;
-    AVCodec* videoCodec = nullptr;
+    AVCodec* audioCodec = nullptr;
     AVFrame *frame = nullptr;
-    video::PlayInternal playInternal;
+    audio::PlayInternal playInternal;
 public:
-    H264Decode() {
+    AACDecode() {
         frame = av_frame_alloc();
         avcodec_register_all();
         av_log_set_level(AV_LOG_QUIET);
-        playInternal.Init("video");
+        playInternal.Init("audio");
     }
 
     bool OpenDecode(AVCodecContext* codecCtx_) {
         if (codecCtx_) {
             this->codecCtx_ = codecCtx_;
-            videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
+            audioCodec = avcodec_find_decoder(codecCtx_->codec_id);
         } else {
-            videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-            codecCtx_ = avcodec_alloc_context3(videoCodec);
+            audioCodec = avcodec_find_decoder(AV_CODEC_ID_AAC);
+            codecCtx_ = avcodec_alloc_context3(audioCodec);
         }
-        int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
+        int ret = avcodec_open2(codecCtx_, audioCodec, nullptr);
         assert(ret == 0);
     }
 
-    ~H264Decode() {
+    ~AACDecode() {
         if (frame) {
             av_frame_free(&frame);
         }
@@ -45,6 +44,5 @@ public:
         }
         playInternal.Destroy();
     }
-
     bool Decode(uint8_t* buf, uint32_t size);
 };

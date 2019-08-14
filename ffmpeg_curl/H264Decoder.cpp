@@ -1,13 +1,12 @@
 #include "H264Decoder.h"
 #include <cassert>
 
-std::fstream fp;
+std::fstream video_fp;
 
 bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
-    if (!fp.is_open()) {
-        fp.open("123.yuv", std::ios::binary | std::ios::ate | std::ios::out);
+    if (!video_fp.is_open()) {
+        video_fp.open("123.yuv", std::ios::binary | std::ios::ate | std::ios::out);
     }
-    success = false;
     AVPacket pkt;
     av_init_packet(&pkt);
     pkt.data = buf;
@@ -33,11 +32,10 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
         width = frame->width;
         height = frame->height;
         assert(ret > 0);
-        success = true;
 #else
         playInternal.Play(yuv, size, frame->width, frame->height);
 #endif
-        fp.write((char *)yuv, 576 * 1024 * 1.5);
+        video_fp.write((char *)yuv, frame->width * frame->height * 1.5);
         delete []yuv;
     }
     return true;

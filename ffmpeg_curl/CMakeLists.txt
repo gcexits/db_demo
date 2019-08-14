@@ -19,6 +19,7 @@ set(SOURCE_FILES
         ${ROOT}/HttpFile.cpp
         ${ROOT}/SDLPlayer.cpp
         ${ROOT}/H264Decoder.cpp
+        ${ROOT}/AACDecoder.cpp
         ${ROOT}/Optional.cpp
         ${ROOT}/../flv_parse/hlring/RingBuffer.cpp
         ${ROOT}/../flv_parse/hlring/rbuf.c)

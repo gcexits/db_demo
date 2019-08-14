@@ -1,6 +1,3 @@
-#include <iostream>
-#include <fstream>
-
 extern "C" {
 #include <libavformat/avformat.h>
 }
@@ -8,6 +5,7 @@ extern "C" {
 #include "HttpFile.h"
 #include "SDLPlayer.h"
 #include "H264Decoder.h"
+#include "AACDecoder.h"
 
 #include "../flv_parse/hlring/RingBuffer.h"
 #include "../flv_parse/hlring/rbuf.h"
@@ -41,6 +39,7 @@ public:
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
     H264Decode video_decode;
+    AACDecode audio_decode;
     bool Opened() {
         return opened_;
     }
@@ -102,8 +101,6 @@ public:
     ReadStatus ReadFrame() {
         int ret = av_read_frame(ifmt_ctx, pkt);
         if (ret < 0) {
-            // todo: 刷新视频解码器中剩余的数据
-            video_decode.Decode(pkt->data, pkt->size);
             if (ret == AVERROR_EOF) {
                 return ReadStatus::EndOff;
             }
@@ -117,6 +114,7 @@ public:
             video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
+            audio_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Audio;
         } else {
             return ReadStatus::Subtitle;
@@ -259,7 +257,7 @@ int main() {
     int buffer_size = 1024 * 320;
     int hasRead_size = 0;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v3-dy.ixigua.com/a1e3caf5f670c27dfd710f4dcb2cb73b/5d52a8b4/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSlJOjQ4OTM4MzM1MzQ0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppQDQ2Ly4vLy4uNjY2MDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy.ixigua.com/ec44e1393af998ca45ccd758ca522efe/5d52b8d7/video/m/220436e769ae59341d6acb40b42515d580611632036b0000538449e668bf/?rc=amRscTh0NnF4bzMzO2kzM0ApdSk0OTczMzM0MzM1NDU0MzQ1bzQ6Z2UzZDQ1ZGVnZDw2ZDdAaUBoNnYpQGczdilAZjM7NEBgZXIwLjFhNTJfLS1jLS9zczppLzIuLy4yLS0uLTUtMDU2LTojXmAxLV5hYTU2MS8xLTE0YGEjbyM6YS1vIzpgLW8jLS8uXg%3D%3D");
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jze288192d5ca748d284352a846d626ec5/streams/out-video-jz0d9bb049e7454cd592e74cc8bfcec94a_f_1565087398128_t_1565099238838.flv");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jz0caeb823fb764ad9abc4a39330851fe8/streams/out-video-jz04e17fa4dc904e5c91f75bf92bc31f55_f_1565175600703_t_1565179641893.flv");
