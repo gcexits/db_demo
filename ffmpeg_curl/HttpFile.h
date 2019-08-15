@@ -138,6 +138,7 @@ public:
 
     int Open(const std::string &);
     std::thread read;
+    bool exit = false;
     void startRead();
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, int &hasReadSize);
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size, int &hasReadSize);

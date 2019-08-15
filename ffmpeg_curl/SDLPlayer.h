@@ -40,7 +40,9 @@ struct VideoChannel {
         }
 
         ~PixelBuffer() {
-            delete[] static_cast<uint8_t*>(data);
+            if (data) {
+                delete[] static_cast<uint8_t*>(data);
+            }
         }
 
         bool update(void* _data, int _pitch, int _w, int _h) {
@@ -232,7 +234,6 @@ struct VideoContainer {
 
             channel->Update(pixel_buffer);
             channel->ready_queue_.push(std::move(pixel_buffer));
-            break;
         }
         return true;
     }

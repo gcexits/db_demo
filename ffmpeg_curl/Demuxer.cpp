@@ -40,6 +40,9 @@ bool Demuxer::addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar) {
 }
 
 Demuxer::ReadStatus Demuxer::ReadFrame() {
+    if (exit) {
+        return ReadStatus::EndOff;
+    }
     int ret = av_read_frame(ifmt_ctx, pkt);
     if (ret < 0) {
         if (ret == AVERROR_EOF) {
@@ -59,7 +62,7 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         audio_decode.OpenDecode(CodecPar(audioindex));
         audio_decode.Decode(pkt);
         auto that = static_cast<AudioChannel*>(audio_decode.playInternal.handle);
-        while (that->buffer_.size() > 0) {
+        while (that->buffer_.size() > 0 && !exit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         return ReadStatus::Audio;

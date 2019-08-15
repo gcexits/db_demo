@@ -28,9 +28,8 @@ public:
             if (--count == 0) {
                 break;
             }
-            //            std::cout << "line[" << __LINE__ << "] file[" << __FILE__ << "] : ringBuffer.size() " << ringBuffer.size() << ", read " << length << std::endl;
-            std::unique_lock<std::mutex> lk(io_sync.m);
-            io_sync.cv.wait(lk);
+//            std::unique_lock<std::mutex> lk(io_sync.m);
+//            io_sync.cv.wait(lk);
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
 
@@ -150,6 +149,7 @@ public:
         Close();
         av_packet_free(&pkt);
     }
+    bool exit = false;
     struct AVFormatContext* ifmt_ctx = nullptr;
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;

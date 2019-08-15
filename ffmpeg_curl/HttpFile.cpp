@@ -198,7 +198,7 @@ void HttpFile::startRead() {
       int buffer_size = 1024 * 320;
       uint8_t* buffer = new uint8_t[buffer_size + 1];
       int hasRead_size = 0;
-      while (1) {
+      while (!exit) {
           int ret = Read(buffer, buffer_size, buffer_size, hasRead_size);
           ioBufferContext->FillBuffer(buffer, hasRead_size);
           if (ret == FILEEND) {
@@ -282,6 +282,9 @@ int HttpFile::SeekToBegin() {
 }
 //OK
 void HttpFile::Close() {
+    if (read.joinable()) {
+        read.join();
+    }
     std::lock_guard<std::mutex> lock(worker.mtx_);
     if (!worker.running) {
         return;

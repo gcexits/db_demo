@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v6-dy.ixigua.com/ba6622f0078d51832cbdb43084559908/5d556e2f/video/m/22023f89fa74a4b40aeb39992ead46eac1c11632091000005db1d2d4ef02/?rc=amRscTh0NnF4bzMzO2kzM0ApcHpAb0k8NDo0NTU0NDk5NDg7PDNAKTZkM2hpNTQ7NDc8Nzc4PDRnKXUpQGczdSlAZjN1KTU0ZGBlcjAuMWE1Ml8tLWMtL3NzYmJebyM1Mi8zMy0yLS0wMC8uLS4vaTE0NC0vNmJjL2IwNGAxM146YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("http://v9-dy-x.ixigua.com/bcd1057268b87ff141e7bb26ecf8b41c/5d5570e1/video/m/220c9e1ac968bca4915bbf9699645c05dd2116317f350000a07e17560e15/?rc=amw7ZHU3ZWpwbzMzZ2kzM0ApcHpAb0lJNTQzNjY0NDc7NDg7PDNAKTY6ZDozNDU7Ozc4NzRlN2RnKXUpQGczdSlAZjN1KTU0ZGpvXnAxX2tjM18tLTAtMHNzYmJebyNBMS0vLS0yLS0xMS8uLS4vaV8wXy8uLjEzLzJjXy0vLTI6YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
 //    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
 //    std::cout << url << std::endl;
@@ -42,15 +42,18 @@ int main(int argc, char* argv[]) {
       }
       while (1) {
           if (demuxer.ReadFrame() == Demuxer::ReadStatus::EndOff) {
+              SDLPlayer::getPlayer()->running = false;
               break;
           }
       }
     });
     SDLPlayer::getPlayer()->EventLoop();
     ioBufferContext.io_sync.exit = true;
+    demuxer.exit = true;
     if (readthread.joinable()) {
         readthread.join();
     }
+    httpFile.exit = true;
     httpFile.Close();
     std::cout << "curl file end" << std::endl;
     return 0;
