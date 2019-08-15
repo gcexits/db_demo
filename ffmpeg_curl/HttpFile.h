@@ -23,6 +23,7 @@ enum {
 class HttpFile {
     IOBufferContext *ioBufferContext = nullptr;
     std::string url_;
+    std::ifstream fp;
 
     struct DownloadWorker {
         size_t file_size = 0;
@@ -121,7 +122,7 @@ class HttpFile {
 
     mutable std::mutex close_Mx_;
     HttpClient http;
-    void DownloadThread();
+    void DownloadThread(bool network);
     size_t hasRead = 0;
     int ReadInternal(uint8_t *buf, size_t bufSize, size_t readSize, int &hasReadSize);
     int Seek(int delta);

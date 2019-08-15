@@ -16,10 +16,10 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v9-dy-x.ixigua.com/bcd1057268b87ff141e7bb26ecf8b41c/5d5570e1/video/m/220c9e1ac968bca4915bbf9699645c05dd2116317f350000a07e17560e15/?rc=amw7ZHU3ZWpwbzMzZ2kzM0ApcHpAb0lJNTQzNjY0NDc7NDg7PDNAKTY6ZDozNDU7Ozc4NzRlN2RnKXUpQGczdSlAZjN1KTU0ZGpvXnAxX2tjM18tLTAtMHNzYmJebyNBMS0vLS0yLS0xMS8uLS4vaV8wXy8uLjEzLzJjXy0vLTI6YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+//    int ret = httpFile.Open("http://v27-dy.ixigua.com/5872d1df8d0b6bd8615334970d3b3f20/5d557d9d/video/m/220c9e1ac968bca4915bbf9699645c05dd2116317f350000a07e17560e15/?rc=amw7ZHU3ZWpwbzMzZ2kzM0ApcHpAb0k6OzozODg0NDc2NTg7PDNAKTY6ZDozNDU7Ozc4NzRlN2RnKXUpQGczdSlAZjN1KTU0ZGpvXnAxX2tjM18tLTAtMHNzYmJebyNALjUvMi0yLS0tMS8uLS4vaV8wXy8uLjEzLzJjXy0vLTI6YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("/Users/guochao/Downloads/douyin_3.mp4");
 //    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
-//    std::cout << url << std::endl;
 //    int ret = httpFile.Open("https://www.youtube.com/watch\\?v\\=L6joGUdc6y4");
     // todo: 目前ffmpeg没支持解封装 不晓得为什么
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");

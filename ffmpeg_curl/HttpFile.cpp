@@ -2,7 +2,7 @@
 
 namespace duobei {
 
-void HttpFile::DownloadThread() {
+void HttpFile::DownloadThread(bool network) {
     CURLAgent curl_agent;
     while (worker.running) {
         //TODO：添加检查代码，检查map中是否有过期数据过期后删除
@@ -37,23 +37,25 @@ void HttpFile::DownloadThread() {
             continue;
         }
         cache_lock.unlock();
-
         auto right_ = left + kCacheLength;
         auto right = right_ > worker.file_size ? worker.file_size - 1 : right_ - 1;
         auto buf_ = Buffer::New(left, right);
         ++worker.cache_index;
-
-        // todo: bf 的有效期问题
-        HttpClient::DownloadBuffer bf(buf_->data);
-        int ret = curl_agent.Download(url_, buf_->begin, buf_->end, bf);
-        if (ret != 0 || bf.size == 0) {
-            // 失败
-            if (worker.cache_index > 0) {
-                --worker.cache_index;
+        if (network) {
+            // todo: bf 的有效期问题
+            HttpClient::DownloadBuffer bf(buf_->data);
+            int ret = curl_agent.Download(url_, buf_->begin, buf_->end, bf);
+            if (ret != 0 || bf.size == 0) {
+                // 失败
+                if (worker.cache_index > 0) {
+                    --worker.cache_index;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                //lck.unlock();
+                continue;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            //lck.unlock();
-            continue;
+        } else {
+            fp.read((char *)buf_->data, kCacheLength);
         }
         cache_lock.lock();
         cache_.buffers.emplace(key, std::move(buf_));
@@ -65,23 +67,35 @@ void HttpFile::DownloadThread() {
 
 int HttpFile::Open(const std::string &url) {
     url_ = url;
+    std::cout << "url = " << url << std::endl;
     double size = 0;
-    for (int count = 0; count < 5 && size <= 0; ++count) {
-        size = http.getHttpFileSize(url);
-        if (size <= 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (url.find("http") != std::string::npos) {
+        for (int count = 0; count < 5 && size <= 0; ++count) {
+            size = http.getHttpFileSize(url);
+            if (size <= 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
         }
-    }
 
-    if (size <= 0) {
-        return FILEERR;
+        if (size <= 0) {
+            return FILEERR;
+        }
+        std::lock_guard<std::mutex> lock(worker.mtx_);
+        worker.file_size = static_cast<size_t>(size);
+        worker.running = true;
+        worker.download_thread = std::thread(&HttpFile::DownloadThread, this, true);
+        return FILEOK;
+    } else {
+        fp.open(url_, std::ios::in);
+        fp.seekg(0, fp.end);
+        size = fp.tellg();
+        fp.seekg(0, fp.beg);
+        std::lock_guard<std::mutex> lock(worker.mtx_);
+        worker.file_size = static_cast<size_t>(size);
+        worker.running = true;
+        worker.download_thread = std::thread(&HttpFile::DownloadThread, this, false);
     }
     std::cout << "file_size = " << size << std::endl;
-    std::lock_guard<std::mutex> lock(worker.mtx_);
-    worker.file_size = static_cast<size_t>(size);
-    worker.running = true;
-    worker.download_thread = std::thread(&HttpFile::DownloadThread, this);
-    return FILEOK;
 }
 
 //跳转指定大小 0 success ,-1 error , -2 end OK
