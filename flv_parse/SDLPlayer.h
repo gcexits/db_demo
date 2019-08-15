@@ -140,10 +140,12 @@ struct AudioContainer {
 
         for (auto& x : channels_) {
             std::lock_guard<std::mutex> lock(x->mtx_);
-            if (x->buffer_.size() > len) {
-                auto l = x->buffer_.read(cache, len);
-                SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
+            if (x->buffer_.size() == 0) {
+                continue;
             }
+            len = len > x->buffer_.size() ? x->buffer_.size() : len;
+            auto l = x->buffer_.read(cache, len);
+            SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
         }
     }
 
