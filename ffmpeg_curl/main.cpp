@@ -99,7 +99,6 @@ public:
 
     // todo: 视频:0, 音频:1, 字幕:2, 失败:-1
     ReadStatus ReadFrame() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(8));
         int ret = av_read_frame(ifmt_ctx, pkt);
         if (ret < 0) {
             if (ret == AVERROR_EOF) {
@@ -109,10 +108,10 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-//            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
-//            // todo: 给h264裸流添加sps pps
-//            // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-//            video_decode.Decode(pkt->data, pkt->size);
+            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
+            // todo: 给h264裸流添加sps pps
+            // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
+            video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
             int buffer_size = 0;
@@ -268,12 +267,12 @@ int main(int argc, char* argv[]) {
     int buffer_size = 1024 * 320;
     int hasRead_size = 0;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v3-dy-x.ixigua.com/bbfcd8ff56ef6cb177139d711100dddb/5d550e76/video/m/2202d1d61ee8d604306a5832a59e79517b911630f0c70000a17255d93705/?rc=MzZmczdmbThkbzMzM2kzM0ApcHpAbzo8NjY1NTU0NDg7Nzg7PDNAKWg5aTRpaDM7NDc1NTg3ODNnKXUpQGczdSlAZjN1KTU0ZGMxb2Fpc29mMF8tLTItMHNzYmJebyM1LTUuLy0yLS0yMS4uLS4vaWMwLmBhXl41MTIyNGBfYV46YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy-z.ixigua.com/579dcc25546a9733bb44c5a483cac124/5d5517c0/video/m/2202d1d61ee8d604306a5832a59e79517b911630f0c70000a17255d93705/?rc=MzZmczdmbThkbzMzM2kzM0ApcHpAbzc3OzkzNjozNDY7ODg7PDNAKWg5aTRpaDM7NDc1NTg3ODNnKXUpQGczdSlAZjN1KTU0ZGMxb2Fpc29mMF8tLTItMHNzYmJebyM0MzEzNi0uLS0wLy4uLS4vaWMwLmBhXl41MTIyNGBfYV46YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
 //    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
 //    std::cout << url << std::endl;
 //    int ret = httpFile.Open("https://www.youtube.com/watch\\?v\\=L6joGUdc6y4");
-    // todo: 目前ffmpeg没支持mov解开封装
+    // todo: 目前ffmpeg没支持解封装 不晓得为什么
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
     if (ret != duobei::FILEOK) {
         std::cout << "url error" << std::endl;
