@@ -26,8 +26,8 @@ bool AACDecode::Decode(AVPacket *pkt) {
             sampleFmt = frame->format;
             sampleRate = frame->sample_rate;
         }
-        int size = av_samples_get_buffer_size(nullptr, frame->channels, codecCtx_->frame_size, AV_SAMPLE_FMT_S16, 1);
-        uint8_t *dstPcm = new uint8_t[size];
+        int buffersize = av_samples_get_buffer_size(nullptr, frame->channels, codecCtx_->frame_size, AV_SAMPLE_FMT_S16, 1);
+        uint8_t *dstPcm = new uint8_t[buffersize];
         AVFrame *dstFram = av_frame_alloc();
         {
             dstFram->channels = channels;
@@ -37,7 +37,7 @@ bool AACDecode::Decode(AVPacket *pkt) {
             auto nb_samples_ = static_cast<double>(frame->nb_samples * dstFram->sample_rate) / static_cast<double>(codecCtx_->sample_rate) + 0.5;
             dstFram->nb_samples = static_cast<int>(nb_samples_);
         }
-        avcodec_fill_audio_frame(dstFram, frame->channels, AV_SAMPLE_FMT_S16, dstPcm, size, 0);
+        avcodec_fill_audio_frame(dstFram, frame->channels, AV_SAMPLE_FMT_S16, dstPcm, buffersize, 0);
         if (!pcm_convert) {
             pcm_convert = swr_alloc_set_opts(pcm_convert,
                                              av_get_default_channel_layout(channels), AV_SAMPLE_FMT_S16, sampleRate,
@@ -50,7 +50,7 @@ bool AACDecode::Decode(AVPacket *pkt) {
 #if defined(SRCFILE)
         audio_fp.write((char *)dstFram->data[0], size);
 #endif
-        playInternal.Play(dstFram->data[0], size);
+        playInternal.Play(dstFram->data[0], buffersize);
         delete []dstPcm;
         av_frame_free(&dstFram);
         //        av_fast_malloc

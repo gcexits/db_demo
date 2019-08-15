@@ -11,6 +11,7 @@ extern "C" {
 #include "Optional.h"
 
 class AACDecode {
+public:
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* audioCodec = nullptr;
     AVFrame* frame = nullptr;
@@ -25,7 +26,6 @@ class AACDecode {
         return (channels == 0 || sampleRate == 0 || sampleFmt == -1) ? false : true;
     }
 
-public:
     AACDecode() {
         frame = av_frame_alloc();
         avcodec_register_all();

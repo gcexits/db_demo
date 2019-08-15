@@ -109,14 +109,19 @@ public:
             return ReadStatus::Error;
         }
         if (pkt->stream_index == videoindex) {
-            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
-            // todo: 给h264裸流添加sps pps
-            // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
-            video_decode.Decode(pkt->data, pkt->size);
+//            video_decode.OpenDecode(ifmt_ctx->streams[videoindex]->codecpar);
+//            // todo: 给h264裸流添加sps pps
+//            // addSpsPps(pkt, ifmt_ctx->streams[videoindex]->codecpar);
+//            video_decode.Decode(pkt->data, pkt->size);
             return ReadStatus::Video;
         } else if (pkt->stream_index == audioindex) {
+            int buffer_size = 0;
             audio_decode.OpenDecode(ifmt_ctx->streams[audioindex]->codecpar);
             audio_decode.Decode(pkt);
+            auto that = static_cast<AudioChannel*>(audio_decode.playInternal.handle);
+            while (that->buffer_.size() > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
             return ReadStatus::Audio;
         } else {
             return ReadStatus::Subtitle;
@@ -263,7 +268,7 @@ int main(int argc, char* argv[]) {
     int buffer_size = 1024 * 320;
     int hasRead_size = 0;
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://v5-dy.ixigua.com/28b7be092f2bffb52235801fd332357d/5d5403cf/video/m/2202d1d61ee8d604306a5832a59e79517b911630f0c70000a17255d93705/?rc=MzZmczdmbThkbzMzM2kzM0ApcHpAb0VHPDQ0NjU0NDU0PDc7PDNAKWg5aTRpaDM7NDc1NTg3ODNnKXUpQGczdSlAZjN1KTU0ZGMxb2Fpc29mMF8tLTItMHNzYmJebyMxNTEwNi0yLS0uMi4uLS4vaWMwLmBhXl41MTIyNGBfYV46YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("http://v3-dy-x.ixigua.com/bbfcd8ff56ef6cb177139d711100dddb/5d550e76/video/m/2202d1d61ee8d604306a5832a59e79517b911630f0c70000a17255d93705/?rc=MzZmczdmbThkbzMzM2kzM0ApcHpAbzo8NjY1NTU0NDg7Nzg7PDNAKWg5aTRpaDM7NDc1NTg3ODNnKXUpQGczdSlAZjN1KTU0ZGMxb2Fpc29mMF8tLTItMHNzYmJebyM1LTUuLy0yLS0yMS4uLS4vaWMwLmBhXl41MTIyNGBfYV46YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
 //    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
 //    std::cout << url << std::endl;
