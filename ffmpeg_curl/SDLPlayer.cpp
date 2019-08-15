@@ -34,7 +34,7 @@ int SDLPlayer::RefreshLoop(void* arg) {
     while (that->running) {
         event.type = ISSHE_REFRESH_EVENT;
         SDL_PushEvent(&event);
-        SDL_Delay(40);
+        SDL_Delay(30);
     }
     event.type = SDL_QUIT;
     SDL_PushEvent(&event);

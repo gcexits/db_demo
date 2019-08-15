@@ -7,6 +7,7 @@
 #include <thread>
 #include <unordered_map>
 #include "HttpClient.h"
+#include "Demuxer.h"
 
 namespace duobei {
 
@@ -20,6 +21,7 @@ enum {
 };
 
 class HttpFile {
+    IOBufferContext *ioBufferContext = nullptr;
     std::string url_;
 
     struct DownloadWorker {
@@ -125,6 +127,9 @@ class HttpFile {
     int Seek(int delta);
 
 public:
+    void setIOBufferContext(IOBufferContext *ioBufferContext_) {
+        ioBufferContext = ioBufferContext_;
+    }
     DownloadWorker worker;
     HttpFile() {}
     virtual ~HttpFile() {
@@ -132,6 +137,8 @@ public:
     }
 
     int Open(const std::string &);
+    std::thread read;
+    void startRead();
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, int &hasReadSize);
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size, int &hasReadSize);
     int ReadDelay(uint8_t *buf, size_t bufSize, size_t readSize);
