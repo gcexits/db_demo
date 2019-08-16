@@ -177,7 +177,7 @@ public:
     bool Open(void* param);
 
     // todo: 添加sps pps头
-    bool addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar);
+    bool addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar, std::string name);
 
     // todo: 视频:0, 音频:1, 字幕:2, 失败:-1
     ReadStatus ReadFrame();

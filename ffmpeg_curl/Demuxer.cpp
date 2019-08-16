@@ -1,5 +1,7 @@
 #include "Demuxer.h"
 
+#include <string>
+
 bool Demuxer::Open(void* param) {
     ifmt_ctx = (struct AVFormatContext*)param;
     need_free_ = false;
@@ -14,11 +16,11 @@ bool Demuxer::Open(void* param) {
     return true;
 }
 
-bool Demuxer::addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar) {
+bool Demuxer::addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar, std::string name) {
     const AVBitStreamFilter* avBitStreamFilter = nullptr;
     AVBSFContext* absCtx = NULL;
 
-    avBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
+    avBitStreamFilter = av_bsf_get_by_name(name.c_str());
 
     av_bsf_alloc(avBitStreamFilter, &absCtx);
 
@@ -54,11 +56,12 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
     if (pkt->stream_index == videoindex) {
         video_decode.OpenDecode(CodecPar(videoindex));
         // todo: 给h264裸流添加sps pps
-        // addSpsPps(pkt, CodecPar(audioindex));
+        addSpsPps(pkt, CodecPar(videoindex), "h264_mp4toannexb");
         video_decode.Decode(pkt->data, pkt->size);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
         audio_decode.OpenDecode(CodecPar(audioindex));
+        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
         audio_decode.Decode(pkt);
         {
             SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
