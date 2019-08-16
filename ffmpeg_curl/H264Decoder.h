@@ -20,7 +20,6 @@ class H264Decode {
 public:
     H264Decode() {
         frame = av_frame_alloc();
-        avcodec_register_all();
         av_log_set_level(AV_LOG_QUIET);
         playInternal.Init("video");
     }
@@ -39,6 +38,7 @@ public:
             assert(ret == 0);
             inited = true;
         }
+        return true;
     }
 
     ~H264Decode() {

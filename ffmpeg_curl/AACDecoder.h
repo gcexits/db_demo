@@ -22,13 +22,13 @@ public:
     int channels = 0;
     int sampleRate = 0;
     int sampleFmt = -1;
+    int nb_samples = 0;
     bool isInited() const {
         return (channels == 0 || sampleRate == 0 || sampleFmt == -1) ? false : true;
     }
 
     AACDecode() {
         frame = av_frame_alloc();
-        avcodec_register_all();
         av_log_set_level(AV_LOG_QUIET);
         playInternal.Init("audio");
     }
@@ -47,6 +47,7 @@ public:
             assert(ret == 0);
             inited = true;
         }
+        return true;
     }
 
     ~AACDecode() {

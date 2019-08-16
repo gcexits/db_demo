@@ -82,7 +82,7 @@ public:
         opened_ = ret == 0;
         return ret;
     }
-    explicit IOBufferContext(int length) : RingLength(length), ringBuffer("IOBufferContext", length) {}
+    explicit IOBufferContext(int length) : ringBuffer("IOBufferContext", length), RingLength(length) {}
     ~IOBufferContext() {
         io_sync.exit = true;
         {
@@ -171,7 +171,9 @@ public:
         }
     }
 
-    bool Open(const std::string& inUrl) {}
+    bool Open(const std::string& inUrl) {
+        return true;
+    }
     bool Open(void* param);
 
     // todo: 添加sps pps头

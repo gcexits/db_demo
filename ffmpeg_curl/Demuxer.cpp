@@ -58,9 +58,11 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         video_decode.Decode(pkt->data, pkt->size);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-        int buffer_size = 0;
         audio_decode.OpenDecode(CodecPar(audioindex));
         audio_decode.Decode(pkt);
+        {
+            SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
+        }
         auto that = static_cast<AudioChannel*>(audio_decode.playInternal.handle);
         while (that->buffer_.size() > 0 && !exit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

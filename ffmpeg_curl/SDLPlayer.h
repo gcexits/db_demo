@@ -147,7 +147,7 @@ struct AudioContainer {
             }
             len = len > x->buffer_.size() ? x->buffer_.size() : len;
             auto l = x->buffer_.read(cache, len);
-            SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
+            SDL_MixAudio(stream, cache, l, SDL_MIX_MAXVOLUME);
         }
     }
 
@@ -263,6 +263,7 @@ struct VideoContainer {
 };
 
 class SDLPlayer {
+public:
     explicit SDLPlayer();
     static SDLPlayer* player;
 
@@ -276,12 +277,26 @@ class SDLPlayer {
         that->audioContainer.MixAudio(stream, len);
     }
 
-public:
     bool running = true;
     static SDLPlayer* getPlayer();
     virtual ~SDLPlayer() = default;
 
     void EventLoop();
+
+    void playAudio(int channels, int sample_rate, int nb_samples) {
+        if (audioSpec.channels == channels && audioSpec.freq == sample_rate && audioSpec.samples == nb_samples) {
+            return;
+        }
+        audioSpec.freq = sample_rate;
+        audioSpec.format = AUDIO_S16SYS;
+        audioSpec.channels = channels;
+        audioSpec.silence = 0;
+        audioSpec.samples = nb_samples;
+        audioSpec.callback = AudioCallback;
+        audioSpec.userdata = this;  //可以直接在内部传值给callback函数
+        SDL_OpenAudio(&audioSpec, NULL);
+        SDL_PauseAudio(0);
+    }
 
     void* openVideo(const std::string& uid, AVRegister::VideoPlayer* f) {
         using namespace std::placeholders;

@@ -30,6 +30,7 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
         int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
         assert(size > 0);
         int ret = av_image_copy_to_buffer(yuv, size, (const uint8_t *const *)frame->data, (const int *)frame->linesize, (AVPixelFormat)frame->format, frame->width, frame->height, 1);
+        assert(ret > 0);
 #if !defined(USING_SDL)
         width = frame->width;
         height = frame->height;

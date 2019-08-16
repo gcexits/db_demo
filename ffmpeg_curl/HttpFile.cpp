@@ -84,11 +84,13 @@ int HttpFile::Open(const std::string &url) {
         worker.file_size = static_cast<size_t>(size);
         worker.running = true;
         worker.download_thread = std::thread(&HttpFile::DownloadThread, this, true);
-        return FILEOK;
     } else {
         fp.open(url_, std::ios::in);
         fp.seekg(0, fp.end);
         size = fp.tellg();
+        if (size <= 0) {
+            return FILEERR;
+        }
         fp.seekg(0, fp.beg);
         std::lock_guard<std::mutex> lock(worker.mtx_);
         worker.file_size = static_cast<size_t>(size);
@@ -96,6 +98,7 @@ int HttpFile::Open(const std::string &url) {
         worker.download_thread = std::thread(&HttpFile::DownloadThread, this, false);
     }
     std::cout << "file_size = " << size << std::endl;
+    return FILEOK;
 }
 
 //跳转指定大小 0 success ,-1 error , -2 end OK
