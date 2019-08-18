@@ -61,7 +61,7 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
         audio_decode.OpenDecode(CodecPar(audioindex));
-        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
+//        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
         audio_decode.Decode(pkt);
         {
             SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
