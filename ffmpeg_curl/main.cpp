@@ -16,11 +16,12 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-//    int ret = httpFile.Open("http://v3-dy-z.ixigua.com/11d21f6fb41ba0c8fc97204b10d8f998/5d56255a/video/m/220c9e1ac968bca4915bbf9699645c05dd2116317f350000a07e17560e15/?rc=amw7ZHU3ZWpwbzMzZ2kzM0ApcHpAbzc1PDgzNjk0NDg7Mzk7PDNAKTY6ZDozNDU7Ozc4NzRlN2RnKXUpQGczdSlAZjN1KTU0ZGpvXnAxX2tjM18tLTAtMHNzYmJebyM0MDAuMi0yLS0xMC4uLS4vaV8wXy8uLjEzLzJjXy0vLTI6YzpiMHAjOmEtcCM6YDUuOg%3D%3D");
+    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/ImQwISAwIGEwZGEhMjEjZA==/mv/5917012/908bd4c52da1bebb66c525de93045d1e.mp4?wsSecret=cff082a4e2b592ff7cad68ba589e64b4&wsTime=1566293200");
 //    int ret = httpFile.Open("/Users/guochao/Downloads/youtube.webm");
 //    int ret = httpFile.Open("/Users/guochao/Downloads/douyin_3.mp4");
 //    int ret = httpFile.Open("/Users/guochao/DBY_code/ff_test/1.flv");
-    int ret = httpFile.Open("https://playback2.duobeiyun.com/jzca393d0a562945259376098f6ab8a324/streams/out-video-jze002ed10fa274d69994bdea9685e8069_f_1556449161787_t_1556450882947.flv");
+//    int ret = httpFile.Open("/Users/guochao/Downloads/wangyiyun.mp4");
+//    int ret = httpFile.Open("https://playback2.duobeiyun.com/jzca393d0a562945259376098f6ab8a324/streams/out-video-jze002ed10fa274d69994bdea9685e8069_f_1556449161787_t_1556450882947.flv");
 //    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
 //    int ret = httpFile.Open("https://www.youtube.com/watch\\?v\\=L6joGUdc6y4");

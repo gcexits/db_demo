@@ -7,6 +7,8 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <queue>
+#include <unordered_map>
 
 namespace json = rapidjson;
 
@@ -60,6 +62,17 @@ struct Common {
         json::Value Value;
         Value.SetBool(value);
         json.AddMember(Key, Value, allocator);
+    }
+    void AddJsonArray(json::Document::AllocatorType &allocator, json::Value &json, std::vector<int> vec, std::string key) const {
+        if (!vec.empty()) {
+            json::Value Key;
+            Key.SetString(key.c_str(), allocator);
+            json::Value LRValue(json::kArrayType);
+            for (auto &l : vec) {
+                LRValue.PushBack(l, allocator);
+            }
+            json.AddMember(Key, LRValue, allocator);
+        }
     }
     virtual json::Document dump() const {
         json::Document doc(json::kObjectType);
@@ -200,37 +213,10 @@ struct PingHistory : Common {
 
         json::Value rangValue(json::kObjectType);
         {
-            if (!range.LR.empty()) {
-                json::Value LRValue(json::kArrayType);
-                for (auto &l : range.LR) {
-                    LRValue.PushBack(l, allocator);
-                }
-                rangValue.AddMember("LR", LRValue, allocator);
-            }
-
-            if (!range.FR.empty()) {
-                json::Value FRValue(json::kArrayType);
-                for (auto &f : range.FR) {
-                    FRValue.PushBack(f, allocator);
-                }
-                rangValue.AddMember("FR", FRValue, allocator);
-            }
-
-            if (!range.SR.empty()) {
-                json::Value SRValue(json::kArrayType);
-                for (auto &f : range.SR) {
-                    SRValue.PushBack(f, allocator);
-                }
-                rangValue.AddMember("SR", SRValue, allocator);
-            }
-
-            if (!range.entryRTT.empty()) {
-                json::Value entryRTTValue(json::kArrayType);
-                for (auto &f : range.entryRTT) {
-                    entryRTTValue.PushBack(f, allocator);
-                }
-                rangValue.AddMember("entryRTT", entryRTTValue, allocator);
-            }
+            AddJsonArray(allocator, rangValue, range.LR, "LR");
+            AddJsonArray(allocator, rangValue, range.FR, "FR");
+            AddJsonArray(allocator, rangValue, range.SR, "SR");
+            AddJsonArray(allocator, rangValue, range.entryRTT, "entryRTT");
         }
         json::Value rangKey("range");
         doc.AddMember(rangKey, rangValue, allocator);
@@ -349,22 +335,40 @@ struct AVInfo {
 using AVInfos = std::vector<AVInfo>;
 
 int main() {
-    std::string startTime = "123213414124112412";
-    int64_t time = startTime.empty() ? 0 : std::stoll(startTime);
-    std::cout << time << std::endl;
-
-    AVInfos avInfos;
-    for (int i = 0; i < 3; i++) {
-        struct AVInfo avinfo;
-        avinfo.audio.down = i;
-        avinfo.video.down = i;
-        avinfo.video.fps = i;
-        avInfos.push_back(avinfo);
+//    std::queue<int> q;
+//    q.push(1);
+//    q.push(2);
+//    q.push(3);
+//    q.push(4);
+//    q.pop();
+//    q.pop();
+//    q.pop();
+//    while (!q.empty()) {
+//        std::cout << ' ' << q.front() << std::endl;
+//        break;
+//    }
+    std::unordered_map<std::string, int> map;
+    map.emplace("1", 1);
+    map.erase("2");
+    for (auto &item : map) {
+        std::cout << item.first << std::endl;
     }
-    for (auto & av : avInfos) {
-        std::cout << av.audio.down << " " << av.video.down << " " << av.video.fps << std::endl;
-    }
-    return 0;
+//    std::string startTime = "123213414124112412";
+//    int64_t time = startTime.empty() ? 0 : std::stoll(startTime);
+//    std::cout << time << std::endl;
+//
+//    AVInfos avInfos;
+//    for (int i = 0; i < 3; i++) {
+//        struct AVInfo avinfo;
+//        avinfo.audio.down = i;
+//        avinfo.video.down = i;
+//        avinfo.video.fps = i;
+//        avInfos.push_back(avinfo);
+//    }
+//    for (auto & av : avInfos) {
+//        std::cout << av.audio.down << " " << av.video.down << " " << av.video.fps << std::endl;
+//    }
+//    return 0;
 #if 0
     using Pair = std::pair<std::string, std::string>;
     Connect connect;
