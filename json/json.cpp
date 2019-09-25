@@ -334,7 +334,28 @@ struct AVInfo {
 };
 using AVInfos = std::vector<AVInfo>;
 
+void Check(std::list<std::pair<std::string, int>> &List, std::pair<std::string, int> pair) {
+    if (List.empty()) {
+        List.emplace_back(pair);
+    } else {
+        for (auto it = List.begin(); it != List.end(); ++it){
+            if (it->first == pair.first) {
+                it = List.erase(it);
+                break;
+            }
+        }
+        List.emplace_back(pair);
+    }
+}
+
+void * fun_1() {
+    return 0;
+}
+
 int main() {
+    void *p = fun_1();
+    assert(p);
+    return 0;
 //    std::queue<int> q;
 //    q.push(1);
 //    q.push(2);
@@ -347,12 +368,46 @@ int main() {
 //        std::cout << ' ' << q.front() << std::endl;
 //        break;
 //    }
-    std::unordered_map<std::string, int> map;
-    map.emplace("1", 1);
-    map.erase("2");
-    for (auto &item : map) {
-        std::cout << item.first << std::endl;
+//    std::unordered_map<std::string, int> map;
+//    map.emplace("1", 1);
+//    map.erase("2");
+//    for (auto &item : map) {
+//        std::cout << item.first << std::endl;
+//    }
+    using Pair = std::pair<std::string, int>;
+    std::list<Pair> OnLineList;
+    std::list<Pair> OffLineList;
+    Pair pair;
+    pair = std::make_pair("1", 1);
+    Check(OnLineList, pair);
+
+    Pair pair_1;
+    pair_1 = std::make_pair("3", 2);
+    Check(OnLineList, pair_1);
+
+    Pair pair_2;
+    pair_2 = std::make_pair("1", 3);
+    Check(OnLineList, pair_2);
+
+    Pair pair_3;
+    pair_3 = std::make_pair("1", 6);
+    Check(OffLineList, pair_3);
+
+
+    for (auto it = OnLineList.begin(); it != OnLineList.end(); it++) {
+        for (auto itof = OffLineList.begin(); itof != OffLineList.end(); itof++) {
+            if (it->first == itof->first) {
+                if (it->second < itof->second) {
+                    std::cout << "offline" << std::endl;
+                } else {
+                    std::cout << "online" << std::endl;
+                }
+            } else {
+                std::cout << "online" << std::endl;
+            }
+        }
     }
+    return 0;
 //    std::string startTime = "123213414124112412";
 //    int64_t time = startTime.empty() ? 0 : std::stoll(startTime);
 //    std::cout << time << std::endl;

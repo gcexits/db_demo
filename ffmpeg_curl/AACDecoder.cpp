@@ -28,7 +28,7 @@ bool AACDecode::Decode(AVPacket *pkt) {
             nb_samples = frame->nb_samples;
         }
         int buffersize = av_samples_get_buffer_size(nullptr, frame->channels, frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
-        uint8_t *dstPcm = new uint8_t[buffersize];
+        uint8_t *dstPcm = new uint8_t[buffersize + 1];
         AVFrame *dstFram = av_frame_alloc();
         {
             dstFram->channels = channels;
@@ -38,7 +38,8 @@ bool AACDecode::Decode(AVPacket *pkt) {
             auto nb_samples_ = static_cast<double>(frame->nb_samples * dstFram->sample_rate) / static_cast<double>(codecCtx_->sample_rate) + 0.5;
             dstFram->nb_samples = static_cast<int>(nb_samples_);
         }
-        avcodec_fill_audio_frame(dstFram, frame->channels, AV_SAMPLE_FMT_S16, dstPcm, buffersize, 0);
+        int ret = avcodec_fill_audio_frame(dstFram, frame->channels, AV_SAMPLE_FMT_S16, dstPcm, buffersize, 1);
+        assert(ret > 0);
         if (!pcm_convert) {
             pcm_convert = swr_alloc_set_opts(pcm_convert,
                                              av_get_default_channel_layout(channels), AV_SAMPLE_FMT_S16, sampleRate,
@@ -46,8 +47,8 @@ bool AACDecode::Decode(AVPacket *pkt) {
                                              0, nullptr);
             swr_init(pcm_convert);
         }
-        int ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
-        assert(ret != 0);
+        ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
+        assert(ret > 0);
 //        std::cout << "ret = " << ret << std::endl;
 #if defined(SRCFILE)
         audio_fp.write((char *)dstFram->data[0], size);

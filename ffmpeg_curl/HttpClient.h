@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-#include "../Time.h"
 
 typedef size_t (*CurlOptionWriteFunction)(void *, size_t, size_t, void *);
 typedef int (*CurlOptionProgressFunction)(void *, double, double, double, double);

@@ -21,8 +21,7 @@ set(SOURCE_FILES
         ${ROOT}/Optional.cpp
         ${ROOT}/SDLPlayer.cpp
         ${ROOT}/FlvParse.cpp
-        ${ROOT}/../yuv_deal/yuvscale.cpp
-        ${ROOT}/../Time.cpp
+        ${ROOT}/../libyuv/yuvscale.cpp
         ${ROOT}/hlring/RingBuffer.cpp
         ${ROOT}/hlring/rbuf.c)
 
