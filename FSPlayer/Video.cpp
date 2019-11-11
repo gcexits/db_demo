@@ -42,7 +42,6 @@ void VideoState::video_play(MediaState *media)
 {
 	int width = 1920;
 	int height = 1080;
-	// ����sdl����
 	window = SDL_CreateWindow("FFmpeg Decode", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width, height, SDL_WINDOW_OPENGL);
 	renderer = SDL_CreateRenderer(window, -1, 0);
