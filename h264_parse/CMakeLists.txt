@@ -10,16 +10,16 @@ add_definitions(-Wall)
 
 set(EXE_TARGET_NAME h264_parse)
 
-set(ROOT ${CMAKE_CURRENT_LIST_DIR})
+set(ROOT ${CMAKE_CURRENT_LIST_DIR}/..)
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${ROOT}/main.cpp
-        ${ROOT}/PacketParser.cpp
-        ${ROOT}/RtmpSender.cpp
-        ${ROOT}/H264Encoder.cpp
-        ${ROOT}/VideoBuffer.cpp
-        ../Time.cpp)
+        ${ROOT}/h264_parse/main.cpp
+        ${ROOT}/h264_parse/PacketParser.cpp
+        ${ROOT}/h264_parse/RtmpSender.cpp
+        ${ROOT}/h264_parse/H264Encoder.cpp
+        ${ROOT}/h264_parse/VideoBuffer.cpp
+        ${ROOT}/utils/Time.cpp)
 
 #include_directories(${ROOT})
 
@@ -38,4 +38,4 @@ link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libavutil.a libavcodec.a libswscale.a libswresample.a libavformat.a librtmp.a)
+target_link_libraries(${EXE_TARGET_NAME} libavutil.a libavcodec.a libswscale.a libswresample.a libavformat.a libavdevice.a librtmp.a)

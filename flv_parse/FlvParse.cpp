@@ -8,12 +8,14 @@ void FlvPlayer::updateThread() {
     uint8_t* pcm = new uint8_t[640];
     int width = 0;
     int height = 0;
-    duobei::Time::Timestamp videotTime;
     int videoIndex = 0;
-    duobei::Time::Timestamp audiotTime;
     int audioIndex = 0;
 
-    fp_in.open("/Users/guochao/DBY_code/ff_test/1.flv", std::ios::in);
+//    std::string name = "out-audio-jzad62fb7ac5164952baaff964acbb3fd7_f_1504667049800_t_1504682210801.flv";
+    std::string name = "out-audio-jzad62fb7ac5164952baaff964acbb3fd7_f_1504682211779_t_1504687086989.flv";
+//    std::string url = "/Users/guochao/Downloads/duobei_videos/" + name;
+    std::string url = "/Users/guochao/Downloads/duobei_audios/" + name;
+    fp_in.open(url, std::ios::in);
 #if !defined(USING_SDL)
     std::ofstream fp_out_audio;
         fp_out_audio.open("./haha.pcm", std::ios::ate | std::ios::out | std::ios::binary);
@@ -26,8 +28,6 @@ void FlvPlayer::updateThread() {
     lock.unlock();
     Body buffer;
 
-    duobei::Time::Timestamp startTime;
-    startTime.Start();
     while (!fp_in.eof() && !stop) {
         while (!hasPause) {
             std::unique_lock<std::mutex> lock(readMtx_);
@@ -55,6 +55,10 @@ void FlvPlayer::updateThread() {
 
             fp_in.read((char*)frame_.body, frame_.body_length);
 
+//            frame_.reset();
+//            std::cout << "timestamp = " << frame_.timestamp << std::endl;
+//            assert(frame_.tagType == 8 || frame_.tagType == 9 || frame_.tagType == 18);
+//            continue;
             if (frame_.tagType == 8) {
 #if defined(LOG)
                 std::cout << "音频数据 : " << frame_.body_length << " index = " << index << std::endl;
@@ -98,6 +102,7 @@ void FlvPlayer::updateThread() {
                 std::cout << "flv元数据 : " << frame_.body_length << " index = " << index << std::endl;
                 AMFObject obj;
                 int ret = AMF_Decode(&obj, (char*)frame_.body, frame_.body_length, FALSE);
+                assert(ret >= 0);
                 if (ret < 0) {
                     std::cout << "AMF_Decode failed" << std::endl;
                     delete[] frame_.body;
@@ -115,7 +120,6 @@ void FlvPlayer::updateThread() {
             // note: push数据控制时间
             //                std::this_thread::sleep_for(std::chrono::milliseconds(kStepTime));
             //                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            startTime.Stop();
         }
         while (hasPause) {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));

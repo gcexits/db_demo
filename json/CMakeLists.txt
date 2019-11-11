@@ -16,7 +16,7 @@ set(USR /usr/local/Cellar)
 
 #set(SOURCE_FILES ${ROOT}/H264HardDecode.cpp ${ROOT}/HardwareContext.cpp ${ROOT}/yuvscale.cpp)
 #set(SOURCE_FILES ${ROOT}/simplest_ffmpeg_decoder.cpp)
-set(SOURCE_FILES ${ROOT}/json.cpp)
+set(SOURCE_FILES ${ROOT}/json.cpp ${ROOT}/RapidJsonWrapper.hpp)
 
 # 添加第三方库
 #1. *.h

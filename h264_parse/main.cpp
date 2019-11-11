@@ -1,4 +1,4 @@
-#include "../Time.h"
+#include "../utils/Time.h"
 #include "H264Encoder.h"
 
 #include <thread>
@@ -41,9 +41,6 @@ int mainDemux() {
         }
     }
 
-    int length;
-    uint8_t *dummy = nullptr;
-
 #if USE_H264BSF
     AVBitStreamFilterContext* h264bsfc = av_bitstream_filter_init("h264_mp4toannexb");
 #endif
@@ -51,15 +48,9 @@ int mainDemux() {
     while (av_read_frame(ifmt_ctx, &pkt) >= 0) {
         if (pkt.stream_index == videoindex) {
             time.Stop();
-//            if (video_count == 1) {
-//                return -1;
-//            }
             bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
 #if USE_H264BSF
             av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoindex]->codec, NULL, &pkt.data, &pkt.size, pkt.data, pkt.size, 0);
-//            av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoindex]->codec, nullptr, &dummy, &length, nullptr, 0, 0);
-//            std::cout << ifmt_ctx->streams[videoindex]->codec->extradata_size << std::endl;
-//            fp_out.write((char *)ifmt_ctx->streams[videoindex]->codec->extradata, ifmt_ctx->streams[videoindex]->codec->extradata_size);
 #else
 //            if (keyFrame) {
 //                uint8_t h264header[] = {0x00, 0x00, 0x00, 0x01};
@@ -75,11 +66,7 @@ int mainDemux() {
 //                pkt.size += 4;
 //            }
 #endif
-//            if (video_count == 0 && keyFrame) {
-//                fp_out.write((char *)pkt.data, pkt.size);
-//                fp_out.write((char *)pkt.data + 1384, pkt.size - 1384);
-//                return -1;
-//            }
+//            fp_out.write((char *)pkt.data, pkt.size);
             // note: header 688
 //            if (video_count == 0) {
 //                rtmpObject.sendH264Packet(pkt.data + 688, pkt.size - 688, keyFrame, time.Elapsed());
@@ -136,6 +123,20 @@ int mainEncode() {
 //ffmpeg -re -stream_loop -1 -i wangyiyun.mp4 -vcodec copy -acodec copy -f flv rtmp://utx-live.duobeiyun.net/live/guochao
 //ffplay rtmp://htx-live.duobeiyun.net/live/guochao
 int main(int argc, char* argv[]) {
-    return mainDemux();
+    avdevice_register_all();
+    auto fmt_ctx = avformat_alloc_context();
+    AVDictionary* options = nullptr;
+    av_dict_set(&options, "framerate", "30", 0);
+    av_dict_set(&options, "video_device_index", "0", 0);
+    av_dict_set(&options, "video_size", "1280x720", 0);
+    av_dict_set(&options, "pixel_format", "nv12", 0);
+//    av_dict_set(&options, "list_devices", "true", 0);
+    auto fmt = av_find_input_format("avfoundation");
+    std::cout << "begin" << std::endl;
+    auto ret = avformat_open_input(&fmt_ctx, "", fmt, &options);
+    std::cout << "end" << std::endl;
+    std::cout << ret << " " << av_err2str(ret) << std::endl;
+    return 0;
+//    return mainDemux();
 //    return mainEncode();
 }

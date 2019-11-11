@@ -2,13 +2,20 @@
 #include <json/rapidjson.h>
 #include <json/stringbuffer.h>
 #include <json/writer.h>
+#include <json/istreamwrapper.h>
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cctype>
 #include <list>
 #include <map>
 #include <vector>
 #include <queue>
 #include <unordered_map>
+
+#include "RapidJsonWrapper.hpp"
 
 namespace json = rapidjson;
 
@@ -348,14 +355,13 @@ void Check(std::list<std::pair<std::string, int>> &List, std::pair<std::string, 
     }
 }
 
-void * fun_1() {
-    return 0;
-}
-
 int main() {
-    void *p = fun_1();
-    assert(p);
-    return 0;
+//    duobei::JsonBuilder jb;
+//    {
+//        auto object = jb.object();
+//        object["room"] = "jz";
+//    }
+//    std::cout << jb.toString() << std::endl;
 //    std::queue<int> q;
 //    q.push(1);
 //    q.push(2);
@@ -374,40 +380,40 @@ int main() {
 //    for (auto &item : map) {
 //        std::cout << item.first << std::endl;
 //    }
-    using Pair = std::pair<std::string, int>;
-    std::list<Pair> OnLineList;
-    std::list<Pair> OffLineList;
-    Pair pair;
-    pair = std::make_pair("1", 1);
-    Check(OnLineList, pair);
-
-    Pair pair_1;
-    pair_1 = std::make_pair("3", 2);
-    Check(OnLineList, pair_1);
-
-    Pair pair_2;
-    pair_2 = std::make_pair("1", 3);
-    Check(OnLineList, pair_2);
-
-    Pair pair_3;
-    pair_3 = std::make_pair("1", 6);
-    Check(OffLineList, pair_3);
-
-
-    for (auto it = OnLineList.begin(); it != OnLineList.end(); it++) {
-        for (auto itof = OffLineList.begin(); itof != OffLineList.end(); itof++) {
-            if (it->first == itof->first) {
-                if (it->second < itof->second) {
-                    std::cout << "offline" << std::endl;
-                } else {
-                    std::cout << "online" << std::endl;
-                }
-            } else {
-                std::cout << "online" << std::endl;
-            }
-        }
-    }
-    return 0;
+//    using Pair = std::pair<std::string, int>;
+//    std::list<Pair> OnLineList;
+//    std::list<Pair> OffLineList;
+//    Pair pair;
+//    pair = std::make_pair("1", 1);
+//    Check(OnLineList, pair);
+//
+//    Pair pair_1;
+//    pair_1 = std::make_pair("3", 2);
+//    Check(OnLineList, pair_1);
+//
+//    Pair pair_2;
+//    pair_2 = std::make_pair("1", 3);
+//    Check(OnLineList, pair_2);
+//
+//    Pair pair_3;
+//    pair_3 = std::make_pair("1", 6);
+//    Check(OffLineList, pair_3);
+//
+//
+//    for (auto it = OnLineList.begin(); it != OnLineList.end(); it++) {
+//        for (auto itof = OffLineList.begin(); itof != OffLineList.end(); itof++) {
+//            if (it->first == itof->first) {
+//                if (it->second < itof->second) {
+//                    std::cout << "offline" << std::endl;
+//                } else {
+//                    std::cout << "online" << std::endl;
+//                }
+//            } else {
+//                std::cout << "online" << std::endl;
+//            }
+//        }
+//    }
+//    return 0;
 //    std::string startTime = "123213414124112412";
 //    int64_t time = startTime.empty() ? 0 : std::stoll(startTime);
 //    std::cout << time << std::endl;
@@ -458,22 +464,54 @@ int main() {
     auto doc_4 = mediaUpLinkRate.dump();
     dump(doc_4);
 #else
-    //    MediaDownLinkRate mediaDownLinkRate;
-    //    mediaDownLinkRate.range.video.push_back(7);
-    //    mediaDownLinkRate.range.video.push_back(8);
-    //    mediaDownLinkRate.range.video.push_back(9);
-    //
-    //    mediaDownLinkRate.range.audio.push_back(10);
-    //    mediaDownLinkRate.range.audio.push_back(11);
-    //    mediaDownLinkRate.range.audio.push_back(12);
-    //    auto doc_5 = mediaDownLinkRate.dump();
-    //    dump(doc_5);
-    PingHistory pingHistory;
-    pingHistory.range.entryRTT.push_back(1);
-    pingHistory.range.entryRTT.push_back(2);
-    pingHistory.range.entryRTT.push_back(3);
-    auto doc_6 = pingHistory.dump();
-    dump(doc_6);
+//    MediaDownLinkRate mediaDownLinkRate;
+//    mediaDownLinkRate.range.video.push_back(7);
+//    mediaDownLinkRate.range.video.push_back(8);
+//    mediaDownLinkRate.range.video.push_back(9);
+//
+//    mediaDownLinkRate.range.audio.push_back(10);
+//    mediaDownLinkRate.range.audio.push_back(11);
+//    mediaDownLinkRate.range.audio.push_back(12);
+//    auto doc_5 = mediaDownLinkRate.dump();
+//    dump(doc_5);
+//    PingHistory pingHistory;
+//    pingHistory.range.entryRTT.push_back(1);
+//    pingHistory.range.entryRTT.push_back(2);
+//    pingHistory.range.entryRTT.push_back(3);
+//    auto doc_6 = pingHistory.dump();
+//    dump(doc_6);
 #endif
+    // https://rapidjson.org/md_doc_stream.html
+    using namespace rapidjson;
+
+    std::fstream ifs("/Users/guochao/dby-client-tool.json", std::ios::binary | std::ios::in);
+    if ( !ifs.is_open() )
+    {
+        std::cerr << "Could not open file for reading!\n";
+        return EXIT_FAILURE;
+    }
+
+    IStreamWrapper isw { ifs };
+
+    Document doc {};
+    doc.ParseStream( isw );
+
+    StringBuffer buffer {};
+    Writer<StringBuffer> writer { buffer };
+    doc.Accept( writer );
+
+    if ( doc.HasParseError() )
+    {
+        std::cout << "Error  : " << doc.GetParseError()  << '\n'
+                  << "Offset : " << doc.GetErrorOffset() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    const std::string jsonStr { buffer.GetString() };
+
+    std::cout << jsonStr << '\n';
+
+
+
     return 0;
 }

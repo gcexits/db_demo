@@ -159,10 +159,11 @@ bool RtmpObject::send_video_only(const uint8_t *buf, int len, bool bKeyFrame, ui
 bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp, bool isdemux) {
     int index = 0;
     if (isdemux) {
+//    if (buffer[4] == 0x06) {
         // todo: 循环跳过解封装的头部SEI帧
-//        if (parser_.isSEI(buffer, length)) {
-//
-//        }
+        //        if (parser_.isSEI(buffer, length)) {
+        //
+        //        }
         index = parser_.dumpHeader(buffer, length);
         buffer += index;
         length -= index;
