@@ -7,7 +7,7 @@ extern "C"{
 }
 extern bool quit;
 
-MediaState::MediaState(char* input_file)
+MediaState::MediaState(std::string input_file)
 	:filename(input_file)
 {
 	pFormatCtx = nullptr;
@@ -29,14 +29,14 @@ MediaState::~MediaState()
 bool MediaState::openInput()
 {
 	// Open input file
-	if (avformat_open_input(&pFormatCtx, filename, nullptr, nullptr) < 0)
+	if (avformat_open_input(&pFormatCtx, filename.c_str(), nullptr, nullptr) < 0)
 		return false;
 
 	if (avformat_find_stream_info(pFormatCtx, nullptr) < 0)
 		return false;
 
 	// Output the stream info to standard 
-	av_dump_format(pFormatCtx, 0, filename, 0);
+	av_dump_format(pFormatCtx, 0, filename.c_str(), 0);
 
 	audio->stream_index = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     video->stream_index = av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
@@ -45,27 +45,27 @@ bool MediaState::openInput()
 		return false;
 
 	// Fill audio state
-	AVCodec *pCodec = avcodec_find_decoder(pFormatCtx->streams[audio->stream_index]->codec->codec_id);
+	AVCodec *pCodec = avcodec_find_decoder(pFormatCtx->streams[audio->stream_index]->codecpar->codec_id);
 	if (!pCodec)
 		return false;
 
 	audio->stream = pFormatCtx->streams[audio->stream_index];
 
 	audio->audio_ctx = avcodec_alloc_context3(pCodec);
-	if (avcodec_copy_context(audio->audio_ctx, pFormatCtx->streams[audio->stream_index]->codec) != 0)
+	if (avcodec_parameters_to_context(audio->audio_ctx, pFormatCtx->streams[audio->stream_index]->codecpar) != 0)
 		return false;
 
 	avcodec_open2(audio->audio_ctx, pCodec, nullptr);
 
 	// Fill video state
-	AVCodec *pVCodec = avcodec_find_decoder(pFormatCtx->streams[video->stream_index]->codec->codec_id);
+	AVCodec *pVCodec = avcodec_find_decoder(pFormatCtx->streams[video->stream_index]->codecpar->codec_id);
 	if (!pVCodec)
 		return false;
 
 	video->stream = pFormatCtx->streams[video->stream_index];
 
 	video->video_ctx = avcodec_alloc_context3(pVCodec);
-	if (avcodec_copy_context(video->video_ctx, pFormatCtx->streams[video->stream_index]->codec) != 0)
+	if (avcodec_parameters_to_context(video->video_ctx, pFormatCtx->streams[video->stream_index]->codecpar) != 0)
 		return false;
 
 	avcodec_open2(video->video_ctx, pVCodec, nullptr);

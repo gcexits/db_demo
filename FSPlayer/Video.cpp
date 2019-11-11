@@ -5,7 +5,7 @@
 extern "C"{
 
 #include <libswscale/swscale.h>
-
+#include <libavutil/imgutils.h>
 }
 
 VideoState::VideoState()
@@ -61,10 +61,10 @@ void VideoState::video_play(MediaState *media)
 	displayFrame->width = width;
 	displayFrame->height = height;
 
-	int numBytes = avpicture_get_size((AVPixelFormat)displayFrame->format,displayFrame->width, displayFrame->height);
+    int numBytes = av_image_get_buffer_size((AVPixelFormat)displayFrame->format, displayFrame->width, displayFrame->height, 1);
 	uint8_t *buffer = (uint8_t*)av_malloc(numBytes * sizeof(uint8_t));
 
-	avpicture_fill((AVPicture*)displayFrame, buffer, (AVPixelFormat)displayFrame->format, displayFrame->width, displayFrame->height);
+    av_image_fill_arrays(displayFrame->data, displayFrame->linesize, buffer, (AVPixelFormat)displayFrame->format, displayFrame->width, displayFrame->height, 1);
 
 	SDL_CreateThread(decode, "", this);
 

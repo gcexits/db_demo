@@ -66,7 +66,7 @@ bool AudioState::audio_play()
 double AudioState::get_audio_clock()
 {
 	int hw_buf_size = audio_buff_size - audio_buff_index;
-	int bytes_per_sec = stream->codec->sample_rate * audio_ctx->channels * 2;
+	int bytes_per_sec = stream->codecpar->sample_rate * audio_ctx->channels * 2;
 
 	double pts = audio_clock - static_cast<double>(hw_buf_size) / bytes_per_sec;
 
@@ -119,7 +119,6 @@ int audio_decode_frame(AudioState *audio_state, uint8_t *audio_buf, int buf_size
 	int data_size = 0;
 	AVPacket pkt;
 	SwrContext *swr_ctx = nullptr;
-	static double clock = 0;
 	
 	if (quit)
 		return -1;
@@ -159,7 +158,7 @@ int audio_decode_frame(AudioState *audio_state, uint8_t *audio_buf, int buf_size
 	data_size = frame->channels * nb * av_get_bytes_per_sample(dst_format);
 
     // 每秒钟音频播放的字节数 sample_rate * channels * sample_format(一个sample占用的字节数)
-	audio_state->audio_clock += static_cast<double>(data_size) / (2 * audio_state->stream->codec->channels * audio_state->stream->codec->sample_rate);
+	audio_state->audio_clock += static_cast<double>(data_size) / (2 * audio_state->stream->codecpar->channels * audio_state->stream->codecpar->sample_rate);
 
 
 	av_frame_free(&frame);

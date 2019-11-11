@@ -20,10 +20,10 @@ struct MediaState
 	VideoState *video;
 	AVFormatContext *pFormatCtx;
 
-	char* filename;
+    std::string filename;
 	//bool quit;
 
-	MediaState(char *filename);
+	MediaState(std::string filename);
 
 	~MediaState();
 

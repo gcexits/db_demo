@@ -22,12 +22,11 @@ bool quit = false;
 
 int main(int argv, char* argc[])
 {
-	av_register_all();
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
 
 //	char* filename = "/Users/guochao/Downloads/7_世界美好与你环环相扣.mkv";
-    char* filename = "/Users/guochao/Downloads/youtube.webm";
+    string filename = "/Users/guochao/Downloads/youtube.webm";
 	MediaState media(filename);
 
 	if (media.openInput())
