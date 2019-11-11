@@ -3,6 +3,12 @@
 namespace duobei {
 
 void HttpFile::DownloadThread(bool network) {
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+    uint8_t *timeoutbuffer = new uint8_t[kCacheLength];
+    bool timeout = false;
+    int timeoutbuffersize = 0;
+#endif
+
     CURLAgent curl_agent;
     while (worker.running) {
         //TODO：添加检查代码，检查map中是否有过期数据过期后删除
@@ -37,31 +43,60 @@ void HttpFile::DownloadThread(bool network) {
             continue;
         }
         cache_lock.unlock();
+
         auto right_ = left + kCacheLength;
         auto right = right_ > worker.file_size ? worker.file_size - 1 : right_ - 1;
         auto buf_ = Buffer::New(left, right);
         ++worker.cache_index;
+
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+        if (timeout) {
+            memcpy(buf_->data, timeoutbuffer, timeoutbuffersize);
+            buf_->begin += timeoutbuffersize;
+        }
+#endif
+
         if (network) {
             // todo: bf 的有效期问题
             HttpClient::DownloadBuffer bf(buf_->data);
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+            if (timeout) {
+                bf.size += timeoutbuffersize;
+            }
+#endif
             int ret = curl_agent.Download(url_, buf_->begin, buf_->end, bf);
             if (ret != 0 || bf.size == 0) {
                 // 失败
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+                timeout = true;
+                memcpy(timeoutbuffer, bf.data, bf.size);
+                timeoutbuffersize = bf.size;
+#endif
                 if (worker.cache_index > 0) {
                     --worker.cache_index;
                 }
+                lck.unlock();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                //lck.unlock();
                 continue;
             }
         } else {
             fp.read((char *)buf_->data, kCacheLength);
         }
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+        if (timeout) {
+            buf_->begin = left;
+        }
+        timeout = false;
+        timeoutbuffersize = 0;
+#endif
         cache_lock.lock();
         cache_.buffers.emplace(key, std::move(buf_));
         cache_lock.unlock();
         //lck.unlock();
     }
+#if defined(ENABLE_CURL_DOWNLOAD_BREAKPOINT)
+    delete []timeoutbuffer;
+#endif
     // WriteDebugLog("DownloadThread quit!");
 }
 

@@ -13,6 +13,8 @@ namespace duobei {
 
 constexpr size_t kCacheLength = 512 * 1024;  //每段缓存大小
 constexpr size_t kCacheBlockSum = 20;
+// todo: curl断点下载，优化弱网播放
+#define ENABLE_CURL_DOWNLOAD_BREAKPOINT
 
 enum {
     FILEOK = 0,

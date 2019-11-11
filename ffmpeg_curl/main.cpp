@@ -16,13 +16,11 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/ImQwISAwIGEwZGEhMjEjZA==/mv/5917012/908bd4c52da1bebb66c525de93045d1e.mp4?wsSecret=cff082a4e2b592ff7cad68ba589e64b4&wsTime=1566293200");
+    int ret = httpFile.Open("/Users/guochao/Downloads/7_世界美好与你环环相扣.mkv");
 //    int ret = httpFile.Open("/Users/guochao/Downloads/youtube.webm");
 //    int ret = httpFile.Open("/Users/guochao/Downloads/douyin_3.mp4");
-//    int ret = httpFile.Open("/Users/guochao/DBY_code/ff_test/1.flv");
 //    int ret = httpFile.Open("/Users/guochao/Downloads/wangyiyun.mp4");
 //    int ret = httpFile.Open("https://playback2.duobeiyun.com/jzca393d0a562945259376098f6ab8a324/streams/out-video-jze002ed10fa274d69994bdea9685e8069_f_1556449161787_t_1556450882947.flv");
-//    int ret = httpFile.Open("http://vodkgeyttp8.vod.126.net/cloudmusic/MDAwICAhITMwOTAwMDAwOA==/mv/304279/88f4918de91e55cc1a9889191f553ff1.mp4?wsSecret=343666b79ca4450d23c11299ce339c65&wsTime=1565775156");
 //    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
 //    int ret = httpFile.Open("https://www.youtube.com/watch\\?v\\=L6joGUdc6y4");
     // todo: 目前ffmpeg没支持解封装 不晓得为什么
