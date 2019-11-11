@@ -11,7 +11,7 @@ extern "C" {
 }
 
 #include "HardwareContext.h"
-#include "yuvscale.h"
+#include "../libyuv/yuvscale.h"
 
 #include <fstream>
 

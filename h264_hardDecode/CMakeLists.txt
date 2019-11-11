@@ -14,15 +14,13 @@ set(ROOT ${CMAKE_CURRENT_LIST_DIR})
 # message("${ROOT}")
 set(USR /usr/local/Cellar)
 
-#set(SOURCE_FILES ${ROOT}/H264HardDecode.cpp ${ROOT}/HardwareContext.cpp ${ROOT}/yuvscale.cpp)
-#set(SOURCE_FILES ${ROOT}/simplest_ffmpeg_decoder.cpp)
-set(SOURCE_FILES ${ROOT}/yuv.cpp ${ROOT}/yuvscale.cpp ${ROOT}/Time.cpp)
+set(SOURCE_FILES ${ROOT}/H264HardDecode.cpp ${ROOT}/HardwareContext.cpp ${ROOT}/../libyuv/yuvscale.cpp)
 
 # 添加第三方库
 #1. *.h
 set(INC_DIR
         ${USR}/sdl2/2.0.9_1/include
-        ${USR}/ffmpeg/4.1.4-with-options/include
+        ${USR}/ffmpeg/4.1.4_1/include
         ${USR}/speex/1.2.0/include
         ${USR}/rtmpdump/2.4+20151223/include
         /Users/guochao/DBY_code/libyuv-ios/include)
@@ -30,7 +28,7 @@ include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
         ${USR}/sdl2/2.0.9_1/lib
-        ${USR}/ffmpeg/4.1.4-with-options/lib
+        ${USR}/ffmpeg/4.1.4_1/lib
         ${USR}/speex/1.2.0/lib
         ${USR}/rtmpdump/2.4+20151223/lib
         /Users/guochao/DBY_code/libyuv-ios/lib)
