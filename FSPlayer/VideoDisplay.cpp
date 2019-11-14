@@ -68,6 +68,7 @@ void video_refresh_timer(void *userdata)
 			if (actual_delay <= 0.010)
 				actual_delay = 0.010; 
 
+			std::cout << "delay time : " << static_cast<int>(actual_delay * 1000 + 0.5) << std::endl;
 			schedule_refresh(media, static_cast<int>(actual_delay * 1000 + 0.5));
 
 			SwsContext *sws_ctx = sws_getContext(video->video_ctx->width, video->video_ctx->height, video->video_ctx->pix_fmt,

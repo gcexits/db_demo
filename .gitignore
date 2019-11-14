@@ -10,5 +10,5 @@
 cmake-build-debug/*
 */.idea/*
 */cmake-build-debug/*
-c++_test/10.26/.idea/*
-c++_test/10.26/cmake-build-debug/*
+*/*/.idea/*
+*/*/cmake-build-debug/*
