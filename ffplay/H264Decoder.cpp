@@ -6,10 +6,19 @@ bool H264Decode::Decode(AVPacket *pkt, AVFrame *frame_) {
     if (result < 0) {
         return false;
     }
+    av_packet_unref(pkt);
 
-    result = avcodec_receive_frame(codecCtx_, frame_);
-    if (result < 0 && result != AVERROR_EOF) {
-        return false;
-    }
+    do {
+        result = avcodec_receive_frame(codecCtx_, frame_);
+        if (result > 0) {
+            frame_->pts = frame_->best_effort_timestamp;
+        }
+        if (result == AVERROR_EOF) {
+            return false;
+        }
+        if (result >= 0) {
+            break;
+        }
+    } while (result != AVERROR(EAGAIN));
     return true;
 }

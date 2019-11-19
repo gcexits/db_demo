@@ -66,10 +66,8 @@ int decode(void *arg) {
         video->videoq->deQueue(&packet, true);
 
         if (video->h264Decode.Decode(&packet, frame)) {
-            if ((pts = av_frame_get_best_effort_timestamp(frame)) == AV_NOPTS_VALUE)
-                pts = 0;
 
-            pts *= av_q2d(video->stream->time_base);
+            pts = av_q2d(video->stream->time_base) * frame->pts;
 
             pts = video->synchronize(frame, pts);
 

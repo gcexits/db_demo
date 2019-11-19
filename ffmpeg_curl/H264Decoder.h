@@ -12,9 +12,6 @@ extern "C" {
 #include "Optional.h"
 
 class H264Decode {
-    AVCodecContext* codecCtx_ = nullptr;
-    AVCodec* videoCodec = nullptr;
-    AVFrame* frame = nullptr;
     video::PlayInternal playInternal;
 
     struct Context {
