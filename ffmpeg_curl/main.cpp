@@ -16,13 +16,8 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open("/Users/guochao/Downloads/7_世界美好与你环环相扣.mkv");
-//    int ret = httpFile.Open("/Users/guochao/Downloads/youtube.webm");
-//    int ret = httpFile.Open("/Users/guochao/Downloads/douyin_3.mp4");
-//    int ret = httpFile.Open("/Users/guochao/Downloads/wangyiyun.mp4");
-//    int ret = httpFile.Open("https://playback2.duobeiyun.com/jzca393d0a562945259376098f6ab8a324/streams/out-video-jze002ed10fa274d69994bdea9685e8069_f_1556449161787_t_1556450882947.flv");
-//    std::string url = "https://www.youtube.com/watch\\?v\\=L6joGUdc6y4";
-//    int ret = httpFile.Open("https://www.youtube.com/watch\\?v\\=L6joGUdc6y4");
+    std::string url = "/Users/guochao/Downloads/4_浪子回頭.mkv";
+    int ret = httpFile.Open(url);
     // todo: 目前ffmpeg没支持解封装 不晓得为什么
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");
 

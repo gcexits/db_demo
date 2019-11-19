@@ -12,6 +12,8 @@ bool Demuxer::Open(void* param) {
     }
     videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+    video_decode.OpenDecode(CodecPar(videoindex));
+    audio_decode.OpenDecode(CodecPar(audioindex));
     opened_ = true;
     return true;
 }
@@ -54,13 +56,11 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         return ReadStatus::Error;
     }
     if (pkt->stream_index == videoindex) {
-        video_decode.OpenDecode(CodecPar(videoindex));
         // todo: 给h264裸流添加sps pps
         addSpsPps(pkt, CodecPar(videoindex), "h264_mp4toannexb");
         video_decode.Decode(pkt->data, pkt->size);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-        audio_decode.OpenDecode(CodecPar(audioindex));
 //        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
         audio_decode.Decode(pkt);
         {

@@ -139,7 +139,7 @@ public:
         Close();
     }
 
-    int Open(const std::string &);
+    int Open(std::string &);
     std::thread read;
     bool exit = false;
     void startRead();

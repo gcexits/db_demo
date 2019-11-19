@@ -100,7 +100,7 @@ void HttpFile::DownloadThread(bool network) {
     // WriteDebugLog("DownloadThread quit!");
 }
 
-int HttpFile::Open(const std::string &url) {
+int HttpFile::Open(std::string &url) {
     url_ = url;
     std::cout << "url = " << url << std::endl;
     double size = 0;

@@ -6,6 +6,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 }
 
 #include "Optional.h"
@@ -15,40 +16,49 @@ class H264Decode {
     AVCodec* videoCodec = nullptr;
     AVFrame* frame = nullptr;
     video::PlayInternal playInternal;
-    bool inited = false;
+
+    struct Context {
+        struct VideoSize {
+            int width = 0;
+            int height = 0;
+        };
+        VideoSize video_size;
+        AVCodecContext *codecCtx_ = nullptr;
+        AVCodec *codec = nullptr;
+        SwsContext *sws_ctx = nullptr;
+        const AVCodecParameters *parameters = nullptr;
+
+        AVFrame *src_frame = nullptr;
+        AVFrame *dst_frame = nullptr;
+        AVFrame *scale_frame = nullptr;
+#if VIDEO_DECODING_USE_HARDWARE
+        HardwareContext *hw_ctx = nullptr;
+#endif
+
+        bool Open(bool with_hw, const AVCodecParameters* param);
+        int Send(const AVPacket *avpkt);
+
+        int Receive();
+
+        void Close();
+
+        bool Update() const;
+        bool Scaling(int dstPixelFormat);
+    };
+    Context context;
 
 public:
     H264Decode() {
-        frame = av_frame_alloc();
         av_log_set_level(AV_LOG_QUIET);
         playInternal.Init("video");
     }
 
     bool OpenDecode(const AVCodecParameters* param) {
-        if (!inited) {
-            if (param) {
-                codecCtx_ = avcodec_alloc_context3(nullptr);
-                avcodec_parameters_to_context(codecCtx_, param);
-                videoCodec = avcodec_find_decoder(codecCtx_->codec_id);
-            } else {
-                videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-                codecCtx_ = avcodec_alloc_context3(videoCodec);
-            }
-            int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
-            assert(ret == 0);
-            inited = true;
-        }
-        return true;
+        return context.Open(false, param);
     }
 
     ~H264Decode() {
-        if (frame) {
-            av_frame_free(&frame);
-        }
-        if (codecCtx_) {
-            avcodec_close(codecCtx_);
-            avcodec_free_context(&codecCtx_);
-        }
+        context.Close();
         playInternal.Destroy();
     }
 
