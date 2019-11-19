@@ -1,14 +1,7 @@
 #include "H264Decoder.h"
 #include <cassert>
 
-std::fstream video_fp;
-
 bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
-#if defined(SRCFILE)
-    if (!video_fp.is_open()) {
-        video_fp.open("123.yuv", std::ios::binary | std::ios::ate | std::ios::out);
-    }
-#endif
     AVPacket pkt;
     av_init_packet(&pkt);
     pkt.data = buf;
@@ -37,9 +30,6 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
         if (success) {
             int size = av_image_get_buffer_size((AVPixelFormat)context.scale_frame->format, context.scale_frame->width, context.scale_frame->height, 1);
             playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size, context.scale_frame->width, context.scale_frame->height);
-#if defined(SRCFILE)
-            video_fp.write((char *)yuv, frame->width * frame->height * 1.5);
-#endif
             av_freep(&context.scale_frame->data[0]);
         }
     }
@@ -47,10 +37,10 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
 }
 
 bool H264Decode::Context::Open(bool with_hw, const AVCodecParameters* param) {
-    parameters = param;
     // todo: Android 硬解
     // codec = avcodec_find_decoder_by_name("h264_mediacodec");
     if (param) {
+        parameters = param;
         codecCtx_ = avcodec_alloc_context3(nullptr);
         avcodec_parameters_to_context(codecCtx_, param);
         codec = avcodec_find_decoder(codecCtx_->codec_id);

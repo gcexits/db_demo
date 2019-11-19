@@ -2,7 +2,6 @@
 #include "SDLPlayer.h"
 #include "FlvParse.h"
 
-//#define LOG
 //#define PARSE_SPS
 
 #if defined(PARSE_SPS)

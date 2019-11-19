@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;
-    std::string url = "/Users/guochao/Downloads/4_浪子回頭.mkv";
+    std::string url = "/Users/guochao/Downloads/5_往后余生.webm";
     int ret = httpFile.Open(url);
     // todo: 目前ffmpeg没支持解封装 不晓得为什么
 //    int ret = httpFile.Open("https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_30mb.mp4");

@@ -10,20 +10,24 @@ add_definitions(-Wall)
 
 set(EXE_TARGET_NAME curl_ffplay)
 
-set(ROOT ${CMAKE_CURRENT_LIST_DIR})
+set(ROOT ${CMAKE_CURRENT_LIST_DIR}/../src)
+set(SRC ${CMAKE_CURRENT_LIST_DIR})
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${ROOT}/main.cpp
-        ${ROOT}/HttpClient.cpp
-        ${ROOT}/HttpFile.cpp
-        ${ROOT}/SDLPlayer.cpp
-        ${ROOT}/H264Decoder.cpp
-        ${ROOT}/AACDecoder.cpp
-        ${ROOT}/Optional.cpp
-        ${ROOT}/Demuxer.cpp
-        ${ROOT}/../flv_parse/hlring/RingBuffer.cpp
-        ${ROOT}/../flv_parse/hlring/rbuf.c)
+        ${SRC}/main.cpp
+        ${SRC}/HttpClient.cpp
+        ${SRC}/HttpFile.cpp
+        ${SRC}/SDLPlayer.cpp
+        ${SRC}/AACDecoder.cpp
+        ${SRC}/Demuxer.cpp
+        ${SRC}/../flv_parse/hlring/RingBuffer.cpp
+        ${SRC}/../flv_parse/hlring/rbuf.c)
+
+set(COMMON_SOURCE_FILES
+        ${ROOT}/utils/Optional.cpp
+
+        ${ROOT}/codec/H264Decoder.cpp)
 
 #include_directories(${ROOT})
 
@@ -42,6 +46,6 @@ set(LINK_DIR
 
 link_directories(${LINK_DIR})
 
-add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES})
 
 target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a)

@@ -5,39 +5,57 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 }
 
 #include "Optional.h"
-#include "libyuv.h"
 
 class H264Decode {
-    AVCodecContext* codecCtx_ = nullptr;
-    AVCodec* videoCodec = nullptr;
-    AVFrame *frame = nullptr;
     video::PlayInternal playInternal;
+
+    struct Context {
+        struct VideoSize {
+            int width = 0;
+            int height = 0;
+        };
+        VideoSize video_size;
+        AVCodecContext *codecCtx_ = nullptr;
+        AVCodec *codec = nullptr;
+        SwsContext *sws_ctx = nullptr;
+        const AVCodecParameters *parameters = nullptr;
+
+        AVFrame *src_frame = nullptr;
+        AVFrame *dst_frame = nullptr;
+        AVFrame *scale_frame = nullptr;
+#if VIDEO_DECODING_USE_HARDWARE
+        HardwareContext *hw_ctx = nullptr;
+#endif
+
+        bool Open(bool with_hw, const AVCodecParameters* param);
+        int Send(const AVPacket *avpkt);
+
+        int Receive();
+
+        void Close();
+
+        bool Update() const;
+        bool Scaling(int dstPixelFormat);
+    };
+    Context context;
 public:
-    bool success = false;
     H264Decode() {
-        frame = av_frame_alloc();
-        avcodec_register_all();
         av_log_set_level(AV_LOG_QUIET);
-        videoCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-        codecCtx_ = avcodec_alloc_context3(videoCodec);
-        int ret = avcodec_open2(codecCtx_, videoCodec, nullptr);
-        assert(ret == 0);
         playInternal.Init("video");
     }
 
+    bool OpenDecode(const AVCodecParameters* param) {
+        return context.Open(false, param);
+    }
+
     ~H264Decode() {
-        if (frame) {
-            av_frame_free(&frame);
-        }
-        if (codecCtx_) {
-            avcodec_close(codecCtx_);
-            avcodec_free_context(&codecCtx_);
-        }
+        context.Close();
         playInternal.Destroy();
     }
 
-    bool Decode(uint8_t* buf, uint32_t size, int& width, int& height, uint8_t* yuv);
+    bool Decode(uint8_t* buf, uint32_t size);
 };

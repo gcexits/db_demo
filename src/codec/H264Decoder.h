@@ -1,6 +1,5 @@
 #pragma once
 
-#include <fstream>
 #include <mutex>
 
 extern "C" {
@@ -9,7 +8,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#include "Optional.h"
+#include "../utils/Optional.h"
 
 class H264Decode {
     video::PlayInternal playInternal;
@@ -43,7 +42,6 @@ class H264Decode {
         bool Scaling(int dstPixelFormat);
     };
     Context context;
-
 public:
     H264Decode() {
         av_log_set_level(AV_LOG_QUIET);

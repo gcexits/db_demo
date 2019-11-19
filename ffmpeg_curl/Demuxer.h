@@ -4,7 +4,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-#include "H264Decoder.h"
+#include "../src/codec/H264Decoder.h"
 #include "AACDecoder.h"
 #include "SDLPlayer.h"
 

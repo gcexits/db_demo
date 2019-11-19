@@ -3,25 +3,15 @@
 void FlvPlayer::updateThread() {
     int index = 0;
     H264Decode video_decode;
+    video_decode.OpenDecode(nullptr);
     SpeexDecode audio_decode;
-    uint8_t* yuv = new uint8_t[1920 * 1080 * 3 / 2];
-    uint8_t* pcm = new uint8_t[640];
     int width = 0;
     int height = 0;
     int videoIndex = 0;
     int audioIndex = 0;
 
-//    std::string name = "out-audio-jzad62fb7ac5164952baaff964acbb3fd7_f_1504667049800_t_1504682210801.flv";
-    std::string name = "out-audio-jzad62fb7ac5164952baaff964acbb3fd7_f_1504682211779_t_1504687086989.flv";
-//    std::string url = "/Users/guochao/Downloads/duobei_videos/" + name;
-    std::string url = "/Users/guochao/Downloads/duobei_audios/" + name;
+    std::string url = "/Users/guochao/Downloads/1_童话镇.flv";
     fp_in.open(url, std::ios::in);
-#if !defined(USING_SDL)
-    std::ofstream fp_out_audio;
-        fp_out_audio.open("./haha.pcm", std::ios::ate | std::ios::out | std::ios::binary);
-        std::ofstream fp_out_video;
-        fp_out_video.open("./haha.yuv", std::ios::ate | std::ios::out | std::ios::binary);
-#endif
     Header header;
     std::unique_lock<std::mutex> lock(readMtx_);
     fp_in.read((char*)header.header_data, 9);
@@ -55,49 +45,27 @@ void FlvPlayer::updateThread() {
 
             fp_in.read((char*)frame_.body, frame_.body_length);
 
-//            frame_.reset();
-//            std::cout << "timestamp = " << frame_.timestamp << std::endl;
-//            assert(frame_.tagType == 8 || frame_.tagType == 9 || frame_.tagType == 18);
-//            continue;
             if (frame_.tagType == 8) {
-#if defined(LOG)
-                std::cout << "音频数据 : " << frame_.body_length << " index = " << index << std::endl;
-#endif
-                audio_decode.Decode((char*)frame_.body + 1, frame_.body_length - 1, pcm);
-#if !defined(USING_SDL)
-                fp_out_audio.write((char*)pcm, 640);
-#endif
+                audio_decode.Decode((char*)frame_.body + 1, frame_.body_length - 1);
                 audioIndex++;
             } else if (frame_.tagType == 9) {
-#if defined(LOG)
-                std::cout << "视频数据 : " << frame_.body_length << " index = " << index << std::endl;
-#endif
                 int ret = getH264Data(frame_);
                 if (!frame_.data) {
                     continue;
                 }
 
                 if (ret == kPpsSps) {
-#if defined(LOG)
-                    std::cout << "pps sps : " << frame_.body_length << " index = " << index << std::endl;
-#endif
                     find_1st_key_frame_ = true;
                 } else if (ret == kKeyVideo) {
-                    video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
+                    video_decode.Decode(frame_.data, frame_.data_length);
                     frame_.data_length = 0;
                 } else if (ret == kFullVideo) {
                     if (find_1st_key_frame_) {
-                        video_decode.Decode(frame_.data, frame_.data_length, width, height, yuv);
+                        video_decode.Decode(frame_.data, frame_.data_length);
                         frame_.data_length = 0;
                     }
                 }
-                if (video_decode.success) {
-#if !defined(USING_SDL)
-                    fp_out_video.write((char*)yuv, width * height * 1.5);
-#endif
-                }
                 videoIndex++;
-                //            fp_in.seekg(flvPlayer.frame_.body_length, fp_in.cur);
             } else if (frame_.tagType == 18) {
                 std::cout << "flv元数据 : " << frame_.body_length << " index = " << index << std::endl;
                 AMFObject obj;
@@ -117,22 +85,13 @@ void FlvPlayer::updateThread() {
             }
             index++;
             frame_.reset();
-            // note: push数据控制时间
-            //                std::this_thread::sleep_for(std::chrono::milliseconds(kStepTime));
-            //                std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         while (hasPause) {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
     std::cout << "flv读取结束" << std::endl;
-    delete[] pcm;
-    delete[] yuv;
 
-#if !defined(USING_SDL)
-    fp_out_audio.close();
-        fp_out_video.close();
-#endif
     fp_in.close();
 }
 
@@ -170,13 +129,13 @@ int FlvPlayer::getH264Data(Frame& one_frame) {
             }
 #if defined(PARSE_SPS)
             int height = 0;
-                int width = 0;
-                int fps = 0;
-                uint8_t* data = new uint8_t[sps.size];
-                memcpy(data, sps.data, sps.size);
-                h264_decode_sps(data, (unsigned int)sps.size, width, height, fps);
-                delete[] data;
-                std::cout << width << " " << height << " " << fps << std::endl;
+            int width = 0;
+            int fps = 0;
+            uint8_t* data = new uint8_t[sps.size];
+            memcpy(data, sps.data, sps.size);
+            h264_decode_sps(data, (unsigned int)sps.size, width, height, fps);
+            delete[] data;
+            std::cout << width << " " << height << " " << fps << std::endl;
 #endif
             int numOfPictureParameterSets = LEN1_((&(dataTmp[0])));
             dataTmp += 1;

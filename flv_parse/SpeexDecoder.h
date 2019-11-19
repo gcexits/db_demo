@@ -34,5 +34,5 @@ public:
         playInternal.Destroy();
     }
 
-    int Decode(char *data, uint32_t size, uint8_t *pcm);
+    int Decode(char *data, uint32_t size);
 };

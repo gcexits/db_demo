@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#define USING_SDL
-
 namespace AVCallback {
     using VideoPlayer = std::function<void(void*, void*, uint32_t, int, int)>;
     void* initVideoPlayer(const std::string& uid, VideoPlayer* f);
