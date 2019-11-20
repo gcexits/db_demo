@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(curl_ffplay)
+project(ffmpeg_curl)
 
 # 支持c++14
 SET(CMAKE_C_COMPILER g++)
@@ -8,7 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 # 提高编译警告级别
 add_definitions(-Wall)
 
-set(EXE_TARGET_NAME curl_ffplay)
+set(EXE_TARGET_NAME ffmpeg_curl)
 
 set(ROOT ${CMAKE_CURRENT_LIST_DIR}/../src)
 set(SRC ${CMAKE_CURRENT_LIST_DIR})

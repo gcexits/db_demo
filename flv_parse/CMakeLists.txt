@@ -10,20 +10,23 @@ add_definitions(-Wall)
 
 set(EXE_TARGET_NAME flv)
 
-set(ROOT ${CMAKE_CURRENT_LIST_DIR})
+set(ROOT ${CMAKE_CURRENT_LIST_DIR}/../src)
+set(SRC ${CMAKE_CURRENT_LIST_DIR})
 # message("${ROOT}")
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${ROOT}/flvplayer.cpp
-        ${ROOT}/H264Decoder.cpp
-        ${ROOT}/SpeexDecoder.cpp
-        ${ROOT}/Optional.cpp
-        ${ROOT}/SDLPlayer.cpp
-        ${ROOT}/FlvParse.cpp
-        ${ROOT}/../libyuv/yuvscale.cpp
-        ${ROOT}/hlring/RingBuffer.cpp
-        ${ROOT}/hlring/rbuf.c)
+        ${SRC}/flvplayer.cpp
+        ${SRC}/SpeexDecoder.cpp
+        ${SRC}/SDLPlayer.cpp
+        ${SRC}/FlvParse.cpp
+        ${SRC}/hlring/RingBuffer.cpp
+        ${SRC}/hlring/rbuf.c)
+
+set(COMMON_SOURCE_FILES
+        ${ROOT}/utils/Optional.cpp
+
+        ${ROOT}/codec/H264Decoder.cpp)
 
 #include_directories(${ROOT})
 
@@ -46,6 +49,6 @@ set(LINK_DIR
 
 link_directories(${LINK_DIR})
 
-add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES})
 
 target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libavformat.a libspeex.a librtmp.a libyuv.a)

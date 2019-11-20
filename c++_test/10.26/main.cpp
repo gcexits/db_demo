@@ -1,10 +1,12 @@
 #include <iostream>
+#include <list>
 #include <regex>
 
 int main(int argc, char *argv[]) {
-    int index = -1;
-    index = std::max(1, 20);
-    index = std::max(index, 10);
-    std::cout << index<< std::endl;
+    std::list<std::string> list;
+    std::list<std::string> list_;
+    for (auto &l : list) {
+        list_.push_back(l);
+    }
     return 0;
 }
