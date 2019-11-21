@@ -1,33 +1,36 @@
 cmake_minimum_required(VERSION 3.7)
-project(ffmpeg_curl)
+project(client_testing)
 
 # 支持c++14
-SET(CMAKE_C_COMPILER g++)
+set(CMAKE_C_COMPILER g++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 # 提高编译警告级别
 add_definitions(-Wall)
 
-set(EXE_TARGET_NAME ffmpeg_curl)
+set(EXE_TARGET_NAME client_testing)
 
-set(ROOT ${CMAKE_CURRENT_LIST_DIR}/../src)
-set(SRC ${CMAKE_CURRENT_LIST_DIR})
+set(ROOT ${CMAKE_CURRENT_LIST_DIR}/src)
 set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
-        ${SRC}/main.cpp
-        ${SRC}/HttpClient.cpp
-        ${SRC}/HttpFile.cpp
-        ${SRC}/SDLPlayer.cpp
-        ${SRC}/AACDecoder.cpp
-        ${SRC}/Demuxer.cpp
-        ${SRC}/../flv_parse/hlring/RingBuffer.cpp
-        ${SRC}/../flv_parse/hlring/rbuf.c)
+        ${ROOT}/client_testing/main.cpp)
 
 set(COMMON_SOURCE_FILES
         ${ROOT}/utils/Optional.cpp
 
-        ${ROOT}/codec/H264Decoder.cpp)
+        ${ROOT}/codec/H264Decoder.cpp
+        ${ROOT}/codec/AACDecoder.cpp
+
+        ${ROOT}/hlring/RingBuffer.cpp
+        ${ROOT}/hlring/rbuf.c
+
+        ${ROOT}/display/SDLPlayer.cpp
+
+        ${ROOT}/network/HttpClient.cpp
+        ${ROOT}/network/HttpFile.cpp
+
+        ${ROOT}/demux/Demuxer.cpp)
 
 #include_directories(${ROOT})
 

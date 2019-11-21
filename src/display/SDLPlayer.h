@@ -1,12 +1,11 @@
 #pragma once
 
-#include <fstream>
 #include <map>
 #include <queue>
 #include <set>
 
-#include "../flv_parse/hlring/RingBuffer.h"
-#include "../src/utils/Optional.h"
+#include "../utils/Optional.h"
+#include "../hlring/RingBuffer.h"
 
 #include <SDL2/SDL.h>
 
@@ -263,7 +262,6 @@ struct VideoContainer {
 };
 
 class SDLPlayer {
-public:
     explicit SDLPlayer();
     static SDLPlayer* player;
 
@@ -277,6 +275,7 @@ public:
         that->audioContainer.MixAudio(stream, len);
     }
 
+public:
     bool running = true;
     static SDLPlayer* getPlayer();
     virtual ~SDLPlayer() = default;

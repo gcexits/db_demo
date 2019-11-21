@@ -5,9 +5,10 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <fstream>
 #include <unordered_map>
 #include "HttpClient.h"
-#include "Demuxer.h"
+#include "../demux/Demuxer.h"
 
 namespace duobei {
 

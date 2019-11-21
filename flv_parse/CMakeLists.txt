@@ -19,14 +19,15 @@ set(SOURCE_FILES
         ${SRC}/flvplayer.cpp
         ${SRC}/SpeexDecoder.cpp
         ${SRC}/SDLPlayer.cpp
-        ${SRC}/FlvParse.cpp
-        ${SRC}/hlring/RingBuffer.cpp
-        ${SRC}/hlring/rbuf.c)
+        ${SRC}/FlvParse.cpp)
 
 set(COMMON_SOURCE_FILES
         ${ROOT}/utils/Optional.cpp
 
-        ${ROOT}/codec/H264Decoder.cpp)
+        ${ROOT}/codec/H264Decoder.cpp
+
+        ${ROOT}/hlring/RingBuffer.cpp
+        ${ROOT}/hlring/rbuf.c)
 
 #include_directories(${ROOT})
 

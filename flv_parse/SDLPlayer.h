@@ -4,9 +4,8 @@
 #include <queue>
 #include <set>
 
-#include "FlvParse.h"
 #include "../src/utils/Optional.h"
-#include "hlring/RingBuffer.h"
+#include "../src/hlring/RingBuffer.h"
 
 #include <SDL2/SDL.h>
 
@@ -40,7 +39,9 @@ struct VideoChannel {
         }
 
         ~PixelBuffer() {
-            delete[] static_cast<uint8_t*>(data);
+            if (data) {
+                delete[] static_cast<uint8_t*>(data);
+            }
         }
 
         bool update(void* _data, int _pitch, int _w, int _h) {
@@ -145,7 +146,7 @@ struct AudioContainer {
             }
             len = len > x->buffer_.size() ? x->buffer_.size() : len;
             auto l = x->buffer_.read(cache, len);
-            SDL_MixAudio(stream, cache, len, SDL_MIX_MAXVOLUME);
+            SDL_MixAudio(stream, cache, l, SDL_MIX_MAXVOLUME);
         }
     }
 
@@ -236,7 +237,7 @@ struct VideoContainer {
         return true;
     }
 
-    void clearBuffer (VideoChannel* channel) {
+    void clearBuffer(VideoChannel* channel) {
         std::unique_lock<std::mutex> lock_(channel->mtx_);
         while (channel->work_queue_.empty()) {
             channel->work_queue_.pop();
@@ -267,7 +268,6 @@ class SDLPlayer {
     SDL_AudioSpec audioSpec;
     AudioContainer audioContainer;
     VideoContainer videoContainer;
-    FlvPlayer* flvPlayer = nullptr;
 
     static int RefreshLoop(void* arg);
     static void AudioCallback(void* userdata, Uint8* stream, int len) {
@@ -279,11 +279,23 @@ public:
     bool running = true;
     static SDLPlayer* getPlayer();
     virtual ~SDLPlayer() = default;
-    void setPlayer(FlvPlayer& flv) {
-        flvPlayer = &flv;
-    }
 
     void EventLoop();
+
+    void playAudio(int channels, int sample_rate, int nb_samples) {
+        if (audioSpec.channels == channels && audioSpec.freq == sample_rate && audioSpec.samples == nb_samples) {
+            return;
+        }
+        audioSpec.freq = sample_rate;
+        audioSpec.format = AUDIO_S16SYS;
+        audioSpec.channels = channels;
+        audioSpec.silence = 0;
+        audioSpec.samples = nb_samples;
+        audioSpec.callback = AudioCallback;
+        audioSpec.userdata = this;  //可以直接在内部传值给callback函数
+        SDL_OpenAudio(&audioSpec, NULL);
+        SDL_PauseAudio(0);
+    }
 
     void* openVideo(const std::string& uid, AVRegister::VideoPlayer* f) {
         using namespace std::placeholders;
@@ -317,9 +329,7 @@ public:
     void closeAudio(void* handle) {
     }
 
-
     void do_exit() {
-        flvPlayer->stopParse();
         videoContainer.exit();
         SDL_CloseAudio();
         SDL_Quit();

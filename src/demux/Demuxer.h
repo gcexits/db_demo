@@ -4,9 +4,9 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-#include "../src/codec/H264Decoder.h"
-#include "AACDecoder.h"
-#include "SDLPlayer.h"
+#include "../codec/H264Decoder.h"
+#include "../codec/AACDecoder.h"
+#include "../display/SDLPlayer.h"
 
 #include <thread>
 
@@ -19,7 +19,6 @@ public:
 
     RingBuffer ringBuffer;
     const size_t RingLength;
-    std::ofstream fp_douyin;
     std::mutex ringBufferMtx;
 
     int read_packet(uint8_t* buffer, int length) {
@@ -154,7 +153,7 @@ public:
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
     H264Decode video_decode;
-    AACDecode audio_decode;
+    AudioDecode audio_decode;
     bool Opened() {
         return opened_;
     }

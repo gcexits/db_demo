@@ -264,8 +264,8 @@ int main() {
     FlvPlayer flvPlayer;
 
     flvPlayer.startParse();
-    SDLPlayer::getPlayer()->setPlayer(flvPlayer);
     SDLPlayer::getPlayer()->EventLoop();
+    flvPlayer.stopParse();
 
     std::cout << "program exit" << std::endl;
 

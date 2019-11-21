@@ -1,8 +1,8 @@
-#include "HttpFile.h"
-#include "Demuxer.h"
+#include "../network/HttpFile.h"
+#include "../demux/Demuxer.h"
 
-#include "../flv_parse/hlring/RingBuffer.h"
-#include "../flv_parse/hlring/rbuf.h"
+#include "../hlring/RingBuffer.h"
+#include "../hlring/rbuf.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -12,7 +12,7 @@ void RegisterPlayer() {
     AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
 }
 
-int main(int argc, char* argv[]) {
+int mainFfmpegCurl() {
     RegisterPlayer();
 
     duobei::HttpFile httpFile;

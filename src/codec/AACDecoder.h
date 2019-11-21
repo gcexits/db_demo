@@ -1,6 +1,5 @@
 #pragma once
 
-#include <fstream>
 #include <mutex>
 
 extern "C" {
@@ -8,9 +7,9 @@ extern "C" {
 #include "libswresample/swresample.h"
 }
 
-#include "../src/utils/Optional.h"
+#include "../utils/Optional.h"
 
-class AACDecode {
+class AudioDecode {
 public:
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* audioCodec = nullptr;
@@ -27,7 +26,7 @@ public:
         return (channels == 0 || sampleRate == 0 || sampleFmt == -1) ? false : true;
     }
 
-    AACDecode() {
+    AudioDecode() {
         frame = av_frame_alloc();
         av_log_set_level(AV_LOG_QUIET);
         playInternal.Init("audio");
@@ -50,7 +49,7 @@ public:
         return true;
     }
 
-    ~AACDecode() {
+    ~AudioDecode() {
         if (frame) {
             av_frame_free(&frame);
         }
