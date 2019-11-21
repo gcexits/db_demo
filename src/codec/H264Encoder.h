@@ -3,7 +3,6 @@
 //https://ffmpeg.org/doxygen/trunk/encode__video_8c_source.html
 
 #include "VideoBuffer.h"
-#include "RtmpSender.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -21,8 +20,6 @@ namespace duobei {
 namespace video {
 class H264Encoder {
     Video::VideoContext videoContext;
-    RtmpObject rtmpObject;
-    std::ofstream fp_out;
 
 public:
     void Reset();

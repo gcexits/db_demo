@@ -21,8 +21,10 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/utils/Time.cpp
 
         ${ROOT}/codec/H264Decoder.cpp
+        ${ROOT}/codec/H264Encoder.cpp
         ${ROOT}/codec/AACDecoder.cpp
         ${ROOT}/codec/SpeexDecoder.cpp
+        ${ROOT}/codec/VideoBuffer.cpp
 
         ${ROOT}/hlring/RingBuffer.cpp
         ${ROOT}/hlring/rbuf.c
@@ -34,11 +36,16 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/demux/Demuxer.cpp
 
-        ${ROOT}/offline/FlvParse.cpp)
+        ${ROOT}/offline/FlvParse.cpp
+
+        ${ROOT}/stream/RtmpSender.cpp
+
+        ${ROOT}/common/PacketParser.cpp)
 
 set(TESTING_FILES
         ${ROOT}/client_testing/ffmpeg_curl.cpp
-        ${ROOT}/client_testing/flv_player.cpp)
+        ${ROOT}/client_testing/flv_player.cpp
+        ${ROOT}/client_testing/send_h264.cpp)
 
 #include_directories(${ROOT})
 

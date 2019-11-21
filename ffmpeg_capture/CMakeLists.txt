@@ -16,7 +16,7 @@ set(USR /usr/local/Cellar)
 set(SOURCE_FILES
         ${ROOT}/main.cpp
         ${ROOT}/VideoRecorder.cpp
-        ../utils/Time.cpp
+        ../src/utils/Time.cpp
         ../h264_parse/PacketParser.cpp
         ../h264_parse/RtmpSender.cpp
         ../h264_parse/H264Encoder.cpp

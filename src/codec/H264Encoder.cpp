@@ -43,16 +43,13 @@ bool H264Encoder::DesktopEncode(uint8_t* videoBuffer, int dstWidth, int dstHeigh
         }
 
         bool isKeyFrame = pkt->flags & AV_PKT_FLAG_KEY;
-        rtmpObject.sendH264Packet(pkt->data, pkt->size, isKeyFrame, timestamp, false);
-//        fp_out.write((char *)pkt->data, pkt->size);
         av_packet_unref(pkt);
     }
     av_packet_free(&pkt);
     return true;
 }
 
-H264Encoder::H264Encoder() : rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao") {
-    fp_out.open("./test_encode.h264", std::ios::binary | std::ios::ate);
+H264Encoder::H264Encoder() {
     av_log_set_level(AV_LOG_QUIET);
 }
 }  // namespace video
