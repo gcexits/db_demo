@@ -6,7 +6,7 @@
 #include <queue>
 #include <set>
 
-#include "../flv_parse/hlring/RingBuffer.h"
+#include "../src/hlring/RingBuffer.h"
 #include "Media.h"
 #include "VideoDisplay.h"
 
