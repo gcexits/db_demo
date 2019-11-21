@@ -5,7 +5,7 @@
 #include <speex/speex.h>
 #include <speex/speex_types.h>
 
-#include "../src/utils/Optional.h"
+#include "../utils/Optional.h"
 
 class SpeexDecode {
     SpeexBits bits;

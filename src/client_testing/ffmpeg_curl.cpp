@@ -1,20 +1,6 @@
-#include "../network/HttpFile.h"
-#include "../demux/Demuxer.h"
+#include "ffmpeg_curl.h"
 
-#include "../hlring/RingBuffer.h"
-#include "../hlring/rbuf.h"
-
-void RegisterPlayer() {
-    using namespace std::placeholders;
-
-    SDLPlayer* player = SDLPlayer::getPlayer();
-    AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
-    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
-}
-
-int mainFfmpegCurl() {
-    RegisterPlayer();
-
+int ffmpeg_curl() {
     duobei::HttpFile httpFile;
     std::string url = "/Users/guochao/Downloads/5_往后余生.webm";
     int ret = httpFile.Open(url);

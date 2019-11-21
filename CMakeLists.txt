@@ -18,9 +18,11 @@ set(SOURCE_FILES
 
 set(COMMON_SOURCE_FILES
         ${ROOT}/utils/Optional.cpp
+        ${ROOT}/utils/Time.cpp
 
         ${ROOT}/codec/H264Decoder.cpp
         ${ROOT}/codec/AACDecoder.cpp
+        ${ROOT}/codec/SpeexDecoder.cpp
 
         ${ROOT}/hlring/RingBuffer.cpp
         ${ROOT}/hlring/rbuf.c
@@ -30,7 +32,13 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/network/HttpClient.cpp
         ${ROOT}/network/HttpFile.cpp
 
-        ${ROOT}/demux/Demuxer.cpp)
+        ${ROOT}/demux/Demuxer.cpp
+
+        ${ROOT}/offline/FlvParse.cpp)
+
+set(TESTING_FILES
+        ${ROOT}/client_testing/ffmpeg_curl.cpp
+        ${ROOT}/client_testing/flv_player.cpp)
 
 #include_directories(${ROOT})
 
@@ -39,16 +47,20 @@ set(COMMON_SOURCE_FILES
 set(INC_DIR
         ${USR}/sdl2/2.0.9_1/include
         ${USR}/ffmpeg/4.1.4_1/include
-        ${USR}/curl/7.65.3/include)
+        ${USR}/curl/7.65.3/include
+        ${USR}/rtmpdump/2.4+20151223/include
+        ${USR}/speex/1.2.0/include)
 include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
         ${USR}/sdl2/2.0.9_1/lib
         ${USR}/ffmpeg/4.1.4_1/lib
-        ${USR}/curl/7.65.3/lib)
+        ${USR}/curl/7.65.3/lib
+        ${USR}/rtmpdump/2.4+20151223/lib
+        ${USR}/speex/1.2.0/lib)
 
 link_directories(${LINK_DIR})
 
-add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES} ${TESTING_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a librtmp.a libspeex.a)

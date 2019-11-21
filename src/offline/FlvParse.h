@@ -7,8 +7,9 @@
 
 #include <librtmp/amf.h>
 
-#include "../src/codec/H264Decoder.h"
-#include "SpeexDecoder.h"
+#include "../codec/H264Decoder.h"
+#include "../display/SDLPlayer.h"
+#include "../codec/SpeexDecoder.h"
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
 #define LEN3_(dataTmp) ((dataTmp[0] & 0x000000FF) << 16 | (dataTmp[1] & 0x000000FF) << 8 | (dataTmp[2] & 0x000000FF))

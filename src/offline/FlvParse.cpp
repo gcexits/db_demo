@@ -47,6 +47,9 @@ void FlvPlayer::updateThread() {
 
             if (frame_.tagType == 8) {
                 audio_decode.Decode((char*)frame_.body + 1, frame_.body_length - 1);
+                {
+                    SDLPlayer::getPlayer()->playAudio(1, 16000, 320);
+                }
                 audioIndex++;
             } else if (frame_.tagType == 9) {
                 int ret = getH264Data(frame_);
