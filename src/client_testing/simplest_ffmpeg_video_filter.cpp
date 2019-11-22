@@ -1,36 +1,6 @@
-/**
- * @file
- * API example for decoding and filtering
- * @example filtering_video.c
- */
+#include "simplest_ffmpeg_video_filter.h"
 
-#define _XOPEN_SOURCE 600 /* for usleep */
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavfilter/buffersink.h>
-#include <libavfilter/buffersrc.h>
-#include <libavformat/avformat.h>
-#include <libavutil/opt.h>
-}
-
-const char *filter_descr = "scale=78:24,transpose=cclock";
-/* other way:
-   scale=78:24 [scl]; [scl] transpose=cclock // assumes "[in]" and "[out]" to be input output pads respectively
- */
-
-static AVFormatContext *fmt_ctx;
-static AVCodecContext *dec_ctx;
-AVFilterContext *buffersink_ctx;
-AVFilterContext *buffersrc_ctx;
-AVFilterGraph *filter_graph;
-static int video_stream_index = -1;
-static int64_t last_pts = AV_NOPTS_VALUE;
-
-static int open_input_file(const char *filename) {
+int open_input_file(const char *filename) {
     int ret;
     AVCodec *dec;
 
@@ -67,7 +37,7 @@ static int open_input_file(const char *filename) {
     return 0;
 }
 
-static int init_filters(const char *filters_descr) {
+int init_filters(const char *filters_descr) {
     char args[512];
     int ret = 0;
     const AVFilter *buffersrc = avfilter_get_by_name("buffer");
@@ -153,46 +123,11 @@ end:
     return ret;
 }
 
-static void display_frame(const AVFrame *frame, AVRational time_base) {
-    int x, y;
-    uint8_t *p0, *p;
-    int64_t delay;
-
-    if (frame->pts != AV_NOPTS_VALUE) {
-        if (last_pts != AV_NOPTS_VALUE) {
-            /* sleep roughly the right amount of time;
-             * usleep is in microseconds, just like AV_TIME_BASE. */
-            delay = av_rescale_q(frame->pts - last_pts,
-                                 time_base, AV_TIME_BASE_Q);
-            if (delay > 0 && delay < 1000000)
-                usleep(delay);
-        }
-        last_pts = frame->pts;
-    }
-
-    /* Trivial ASCII grayscale display. */
-    p0 = frame->data[0];
-    puts("\033c");
-    for (y = 0; y < frame->height; y++) {
-        p = p0;
-        for (x = 0; x < frame->width; x++)
-            putchar(" .-+#"[*(p++) / 52]);
-        putchar('\n');
-        p0 += frame->linesize[0];
-    }
-    fflush(stdout);
-}
-
-int main(int argc, char **argv) {
+int simplest_ffmpeg_video_filter() {
     int ret;
     AVPacket packet;
     AVFrame *frame;
     AVFrame *filt_frame;
-
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s file\n", argv[0]);
-        exit(1);
-    }
 
     frame = av_frame_alloc();
     filt_frame = av_frame_alloc();
@@ -201,7 +136,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    if ((ret = open_input_file(argv[1])) < 0)
+    if ((ret = open_input_file("")) < 0)
         goto end;
     if ((ret = init_filters(filter_descr)) < 0)
         goto end;
@@ -242,7 +177,6 @@ int main(int argc, char **argv) {
                         break;
                     if (ret < 0)
                         goto end;
-                    display_frame(filt_frame, buffersink_ctx->inputs[0]->time_base);
                     av_frame_unref(filt_frame);
                 }
                 av_frame_unref(frame);

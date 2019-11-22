@@ -1,9 +1,6 @@
-#include <fstream>
-#include <iostream>
-#include <string>
+#include "audio_mix.h"
 
 // todo :混音demo
-
 void mix2(char *sourseFile1, char *sourseFile2, char *objectFile, int len) {
     // todo :归一化混音
     int const MAX = 32767;
@@ -33,7 +30,7 @@ void mix2(char *sourseFile1, char *sourseFile2, char *objectFile, int len) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int mainMix() {
     int mix_count = 0;
     std::ifstream fp1;
     std::ifstream fp2;

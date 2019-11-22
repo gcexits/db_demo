@@ -47,7 +47,13 @@ set(TESTING_FILES
         ${ROOT}/client_testing/ffmpeg_curl.cpp
         ${ROOT}/client_testing/flv_player.cpp
         ${ROOT}/client_testing/send_h264.cpp
-        ${ROOT}/client_testing/deal_yuv.cpp)
+        ${ROOT}/client_testing/deal_yuv.cpp
+
+        ${ROOT}/client_testing/audio_mix.cpp
+        ${ROOT}/client_testing/demux_audio_mix.cpp
+        ${ROOT}/client_testing/simplest_ffmpeg_video_filter.cpp
+
+        ${ROOT}/client_testing/json.cpp)
 
 #include_directories(${ROOT})
 
@@ -59,7 +65,9 @@ set(INC_DIR
         ${USR}/curl/7.65.3/include
         ${USR}/rtmpdump/2.4+20151223/include
         ${USR}/speex/1.2.0/include
-        /Users/guochao/DBY_code/libyuv-ios/include)
+
+        /Users/guochao/DBY_code/libyuv-ios/include
+        /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/third_party)
 include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
@@ -74,4 +82,4 @@ link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES} ${TESTING_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a librtmp.a libspeex.a libyuv.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libcurl.a librtmp.a libspeex.a libyuv.a)
