@@ -1,6 +1,7 @@
 #include "ffmpeg_curl.h"
 #include "flv_player.h"
 #include "send_h264.h"
+#include "deal_yuv.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -16,4 +17,5 @@ int main(int argc, char *argv[]) {
     return ffmpeg_curl();
     return flv_player();
     return send_h264();
+    return deal_yuv();
 }

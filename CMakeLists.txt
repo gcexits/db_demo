@@ -19,6 +19,7 @@ set(SOURCE_FILES
 set(COMMON_SOURCE_FILES
         ${ROOT}/utils/Optional.cpp
         ${ROOT}/utils/Time.cpp
+        ${ROOT}/utils/Yuvscale.cpp
 
         ${ROOT}/codec/H264Decoder.cpp
         ${ROOT}/codec/H264Encoder.cpp
@@ -45,7 +46,8 @@ set(COMMON_SOURCE_FILES
 set(TESTING_FILES
         ${ROOT}/client_testing/ffmpeg_curl.cpp
         ${ROOT}/client_testing/flv_player.cpp
-        ${ROOT}/client_testing/send_h264.cpp)
+        ${ROOT}/client_testing/send_h264.cpp
+        ${ROOT}/client_testing/deal_yuv.cpp)
 
 #include_directories(${ROOT})
 
@@ -56,7 +58,8 @@ set(INC_DIR
         ${USR}/ffmpeg/4.1.4_1/include
         ${USR}/curl/7.65.3/include
         ${USR}/rtmpdump/2.4+20151223/include
-        ${USR}/speex/1.2.0/include)
+        ${USR}/speex/1.2.0/include
+        /Users/guochao/DBY_code/libyuv-ios/include)
 include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
@@ -64,10 +67,11 @@ set(LINK_DIR
         ${USR}/ffmpeg/4.1.4_1/lib
         ${USR}/curl/7.65.3/lib
         ${USR}/rtmpdump/2.4+20151223/lib
-        ${USR}/speex/1.2.0/lib)
+        ${USR}/speex/1.2.0/lib
+        /Users/guochao/DBY_code/libyuv-ios/lib)
 
 link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES} ${TESTING_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a librtmp.a libspeex.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libcurl.a librtmp.a libspeex.a libyuv.a)

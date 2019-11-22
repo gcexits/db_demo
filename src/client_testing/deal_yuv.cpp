@@ -1,11 +1,4 @@
-#pragma once
-
-#include <fstream>
-#include <iostream>
-
-#include "yuvscale.h"
-
-#include "Time.h"
+#include "deal_yuv.h"
 
 // todo: src(9:16)
 int srcWidth = 720;
@@ -31,7 +24,7 @@ int dstHeight = 150;
 //#define ROTE
 //#define CROP
 
-int main() {
+int deal_yuv() {
     bool need_mirror = true;
     std::ifstream fp_in;
     std::ofstream fp_out;
