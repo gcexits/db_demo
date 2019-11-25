@@ -26,6 +26,7 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/codec/AACDecoder.cpp
         ${ROOT}/codec/SpeexDecoder.cpp
         ${ROOT}/codec/VideoBuffer.cpp
+        ${ROOT}/codec/VideoRecorder.cpp
 
         ${ROOT}/hlring/RingBuffer.cpp
         ${ROOT}/hlring/rbuf.c
@@ -48,6 +49,7 @@ set(TESTING_FILES
         ${ROOT}/client_testing/flv_player.cpp
         ${ROOT}/client_testing/send_h264.cpp
         ${ROOT}/client_testing/deal_yuv.cpp
+        ${ROOT}/client_testing/ffmpeg_capture.cpp
 
         ${ROOT}/client_testing/audio_mix.cpp
         ${ROOT}/client_testing/demux_audio_mix.cpp
@@ -82,4 +84,4 @@ link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES} ${TESTING_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libcurl.a librtmp.a libspeex.a libyuv.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a)

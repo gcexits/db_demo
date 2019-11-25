@@ -30,9 +30,11 @@ public:
         Reset();
     }
 
-    bool DesktopEncode(uint8_t *videoBuffer, int dstWidth, int dstHeight, int devType, uint32_t timestamp);
+    bool DesktopEncode(uint8_t *videoBuffer, int dstWidth, int dstHeight, int devType);
 
     Video::VideoConversion conversion;
+
+    AVPacket* pkt = nullptr;
 };
 
 }  // namespace video

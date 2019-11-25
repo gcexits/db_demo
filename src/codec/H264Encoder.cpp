@@ -4,9 +4,12 @@ namespace duobei {
 namespace video {
 void H264Encoder::Reset() {
     videoContext.resetContext();
+    if (pkt) {
+        av_packet_free(&pkt);
+    }
 }
 
-bool H264Encoder::DesktopEncode(uint8_t* videoBuffer, int dstWidth, int dstHeight, int devType, uint32_t timestamp) {
+bool H264Encoder::DesktopEncode(uint8_t* videoBuffer, int dstWidth, int dstHeight, int devType) {
     conversion.fillBuffer(videoBuffer, dstWidth, dstHeight, devType, dstWidth, dstHeight);
     if (conversion.resolutionChange()) {
         Reset();
@@ -28,29 +31,21 @@ bool H264Encoder::DesktopEncode(uint8_t* videoBuffer, int dstWidth, int dstHeigh
         return false;
     }
 
-    AVPacket* pkt = av_packet_alloc();
-    if (!pkt) {
-        return false;
-    }
-
     while (ret >= 0) {
         ret = avcodec_receive_packet(videoContext.codec.ctx, pkt);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            return false;
+        }
+        if (ret == 0) {
             break;
         }
-        if (ret < 0) {
-            break;
-        }
-
-        bool isKeyFrame = pkt->flags & AV_PKT_FLAG_KEY;
-        av_packet_unref(pkt);
     }
-    av_packet_free(&pkt);
     return true;
 }
 
 H264Encoder::H264Encoder() {
     av_log_set_level(AV_LOG_QUIET);
+    pkt = av_packet_alloc();
 }
 }  // namespace video
 }  // namespace duobei

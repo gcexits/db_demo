@@ -6,6 +6,7 @@
 #include "demux_audio_mix.h"
 #include "simplest_ffmpeg_video_filter.h"
 #include "json.h"
+#include "ffmpeg_capture.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -26,4 +27,5 @@ int main(int argc, char *argv[]) {
 //    return demux_audio_mix();
 //    return simplest_ffmpeg_video_filter();
     return main_json();
+    return ffmpeg_capture();
 }
