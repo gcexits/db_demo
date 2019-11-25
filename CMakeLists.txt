@@ -3,7 +3,7 @@ project(client_testing)
 
 # 支持c++14
 set(CMAKE_C_COMPILER g++)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # 提高编译警告级别
 add_definitions(-Wall)
@@ -55,7 +55,8 @@ set(TESTING_FILES
         ${ROOT}/client_testing/demux_audio_mix.cpp
         ${ROOT}/client_testing/simplest_ffmpeg_video_filter.cpp
 
-        ${ROOT}/client_testing/json.cpp)
+        ${ROOT}/client_testing/json.cpp
+        ${ROOT}/client_testing/c++_test.cpp)
 
 #include_directories(${ROOT})
 

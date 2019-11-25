@@ -1,13 +1,4 @@
-#include <iostream>
-#include <string>
-#include <map>
-#include <variant>
-#include <unordered_map>
-#include <set>
-#include <vector>
-#include <any>
-#include <optional>
-
+#include "c++_test.h"
 template <typename T>
 struct Pair {
     T a;
@@ -126,7 +117,7 @@ int testFun(int a, int b) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int c_test() {
 //    std::map<std::string, std::string> map_;
 //    map_.emplace("1", "1");
 //    map_.emplace("1", "2");
