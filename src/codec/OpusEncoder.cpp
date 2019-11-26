@@ -9,7 +9,7 @@ namespace duobei {
 namespace audio {
 
 bool OpusEncoderContext::Init() {
-    audio_buffer_[0] = 0xB3;
+    audio_buffer_[0] = 0xC6;
     opus_int32 sampling_rate = 16000;
     int channels = 1;
     opus_int32 bitrate_bps = 64000;
@@ -26,9 +26,12 @@ bool OpusEncoderContext::Init() {
     use_dtx = 0;
     packet_loss_perc = 100;
 
+
     if (sampling_rate != 8000 && sampling_rate != 12000 && sampling_rate != 16000 && sampling_rate != 24000 &&
         sampling_rate != 48000) {
-        std::cout << "Supported sampling rates are 8000, 12000, 16000, 24000 and 48000." << std::endl;
+        fprintf(stderr,
+                "Supported sampling rates are 8000, 12000, "
+                "16000, 24000 and 48000.\n");
         return false;
     }
     assert(frame_bytes == (sampling_rate * 2 * 20) / 1000);
@@ -80,7 +83,9 @@ bool OpusEncoderContext::Init() {
     opus_encoder_ctl(enc, OPUS_SET_INBAND_FEC(0));  //0:Disable, 1:Enable
 
     opus_encoder_ctl(enc, OPUS_GET_LOOKAHEAD(&skip));
-    opus_encoder_ctl(enc, OPUS_SET_LSB_DEPTH(16));
+
+    // note: 使用默认值
+    // opus_encoder_ctl(enc, OPUS_SET_LSB_DEPTH(16));
 
     return true;
 }
@@ -94,15 +99,8 @@ void OpusEncoderContext::Encode(uint8_t *in, int len) {
         return;
     }
     opus_len = nbytes;
-#if 0
     assert(output_fn_);
     output_fn_((int8_t *)audio_buffer_, 1+opus_len);
-#else
-    if (!fp_write.is_open()) {
-        fp_write.open("./test.opus", std::ios::out | std::ios::binary | std::ios::ate);
-    }
-    fp_write.write((char *)audio_buffer_, opus_len + 1);
-#endif
 }
 
 }  // namespace audio

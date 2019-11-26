@@ -25,6 +25,9 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/codec/H264Encoder.cpp
         ${ROOT}/codec/AACDecoder.cpp
         ${ROOT}/codec/SpeexDecoder.cpp
+        ${ROOT}/codec/SpeexEncoder.cpp
+        ${ROOT}/codec/OpusEncoder.cpp
+        ${ROOT}/codec/AudioBuffer.cpp
         ${ROOT}/codec/VideoBuffer.cpp
         ${ROOT}/codec/VideoRecorder.cpp
 
@@ -70,7 +73,8 @@ set(INC_DIR
         ${USR}/speex/1.2.0/include
 
         /Users/guochao/DBY_code/libyuv-ios/include
-        /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/third_party)
+        /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/third_party
+        /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/third_party/opus/darwin/include)
 include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
@@ -79,10 +83,11 @@ set(LINK_DIR
         ${USR}/curl/7.65.3/lib
         ${USR}/rtmpdump/2.4+20151223/lib
         ${USR}/speex/1.2.0/lib
-        /Users/guochao/DBY_code/libyuv-ios/lib)
+        /Users/guochao/DBY_code/libyuv-ios/lib
+        /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/third_party/opus/darwin/lib)
 
 link_directories(${LINK_DIR})
 
 add_executable(${EXE_TARGET_NAME} ${SOURCE_FILES} ${COMMON_SOURCE_FILES} ${TESTING_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a libopus.a)

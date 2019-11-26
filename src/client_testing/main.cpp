@@ -7,6 +7,7 @@
 #include "simplest_ffmpeg_video_filter.h"
 #include "json.h"
 #include "ffmpeg_capture.h"
+#include "c++_test.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -19,13 +20,14 @@ void RegisterPlayer() {
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
-//    return ffmpeg_curl();
-//    return flv_player();
-//    return send_h264();
-//    return deal_yuv();
-//    return mainMix();
-//    return demux_audio_mix();
-//    return simplest_ffmpeg_video_filter();
+    return ffmpeg_curl();
+    return flv_player();
+    return send_h264();
+    return deal_yuv();
+    return mainMix();
+    return demux_audio_mix();
+    return simplest_ffmpeg_video_filter();
     return main_json();
     return ffmpeg_capture();
+    return c_test();
 }

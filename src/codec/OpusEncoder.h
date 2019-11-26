@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <iostream>
-#include <fstream>
 #include <functional>
 #include "opus/opus.h"
 #include "opus/opus_multistream.h"
@@ -30,7 +28,7 @@ struct OpusEncoderContext: EncoderContextInterface {
     int frame_size = 320;
     static const int audio_length_ = 1+frame_bytes;
     int8_t audio_buffer_[audio_length_];
-    char *opusout = (char*)audio_buffer_ + 1;
+    char *opusout = reinterpret_cast<char*>(audio_buffer_) + 1;
 
     bool Init() override;
 
@@ -39,12 +37,9 @@ struct OpusEncoderContext: EncoderContextInterface {
             opus_encoder_destroy(enc);
             enc = nullptr;
         }
-        fp_write.close();
     }
 
     void Encode(uint8_t *in, int len) override;
-
-    std::ofstream fp_write;
 };
 }  // namespace audio
 }  // namespace duobei
