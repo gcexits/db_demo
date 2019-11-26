@@ -26,6 +26,7 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/codec/AACDecoder.cpp
         ${ROOT}/codec/SpeexDecoder.cpp
         ${ROOT}/codec/SpeexEncoder.cpp
+        ${ROOT}/codec/OpusDecoder.cpp
         ${ROOT}/codec/OpusEncoder.cpp
         ${ROOT}/codec/AudioBuffer.cpp
         ${ROOT}/codec/VideoBuffer.cpp
