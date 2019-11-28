@@ -41,9 +41,9 @@ set(RTMP_MODE unisocket)
 add_definitions(-DRTMP_SUPPORT_UNISOCKET)
 
 if (WIN32)
-    set(CROSS_PATH win32)
+    set(CROSS_PATH win)
 elseif (APPLE)
-    set(CROSS_PATH darwin)
+    set(CROSS_PATH mac)
 endif()
 
 if (MSVC)
@@ -107,16 +107,16 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/common/PacketParser.cpp)
 
-include_directories(/Users/guochao/DBY_code/libyuv-ios/include)
 include_directories(/usr/local/Cellar/speex/1.2.0/include/speex)
 include_directories(/usr/local/Cellar/rtmpdump/2.4+20151223/include)
-include_directories(${ROOT}/third_party/opus/mac/include)
-include_directories(${ROOT}/third_party/sdl2/mac/include)
-include_directories(${ROOT}/third_party/ffmpeg/mac/include)
 include_directories(/usr/local/Cellar/curl/7.65.3/include)
+include_directories(${ROOT}/third_party/libyuv/include)
+include_directories(${ROOT}/third_party/opus/${CROSS_PATH}/include)
+include_directories(${ROOT}/third_party/sdl2/${CROSS_PATH}/include)
+include_directories(${ROOT}/third_party/ffmpeg/${CROSS_PATH}/include)
 include_directories(${ROOT}/third_party/)
 
-add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${SPEEX} ${SPEEXDSP} ${LIBRTMP} ${CLIENT_LIVING_FILES} ${PLAYBACK_SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${CLIENT_LIVING_FILES} ${PLAYBACK_SOURCE_FILES})
 
 ## 测试
 #add_subdirectory(/Users/guochao/DBY_code/ff_test/src/client_testing)
@@ -130,7 +130,7 @@ elseif(APPLE)
     set(CMAKE_CXX_FLAGS_RELEASE  " -O2 -DNDEBUG ")
 
     set(SDL_LINK_LIBRARIES
-            ${ROOT}/third_party/sdl2/mac/lib/libSDL2.a
+            ${ROOT}/third_party/sdl2/${CROSS_PATH}/lib/libSDL2.a
 
             "-framework CoreAudio"
             "-framework AudioToolBox"
@@ -148,43 +148,44 @@ elseif(APPLE)
 
     if (${RTMP_MODE} STREQUAL "unisocket")
         set(TARGET_LINK_LIBRARIES
-                ${ROOT}/third_party/ffmpeg/mac/lib/libavcodec.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libavdevice.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libavfilter.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libavformat.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libpostproc.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libavutil.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libswscale.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libswresample.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavcodec.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavdevice.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavfilter.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavformat.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libpostproc.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavutil.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libswscale.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libswresample.a
 
-                ${ROOT}/third_party/ffmpeg/mac/lib/liblzma.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libvpx.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libaom.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libtheora.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libtheoraenc.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libtheoradec.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libfdk-aac.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libopencore-amrnb.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libopencore-amrwb.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libogg.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libaom.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libxvidcore.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libvorbis.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libx264.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libx265.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libmp3lame.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libvorbisenc.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libvorbisfile.a
-                ${ROOT}/third_party/ffmpeg/mac/lib/libvidstab.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/liblzma.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvpx.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libaom.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheora.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheoraenc.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheoradec.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libfdk-aac.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libopencore-amrnb.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libopencore-amrwb.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libogg.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libaom.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libxvidcore.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbis.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libx264.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libx265.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libmp3lame.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbisenc.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbisfile.a
+                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvidstab.a
 
-                ${ROOT}/third_party/opus/mac/lib/libopus.a
+                ${ROOT}/third_party/opus/${CROSS_PATH}/lib/libopus.a
+                ${ROOT}/third_party/libyuv/lib/libyuv.a
+                /usr/local/Cellar/curl/7.65.3/lib/libcurl.a
+
                 /usr/local/Cellar/speex/1.2.0/lib/libspeex.a
                 /usr/local/Cellar/rtmpdump/2.4+20151223/lib/librtmp.a
-                /Users/guochao/DBY_code/libyuv-ios/lib/libyuv.a
 
-                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/${CROSS_PATH}/libcrypto.a
-                /usr/local/Cellar/curl/7.65.3/lib/libcurl.a
-                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/${CROSS_PATH}/libssl.a
+                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/darwin/libcrypto.a
+                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/darwin/libssl.a
                 "-framework Security"
                 "-framework AVFoundation"
 

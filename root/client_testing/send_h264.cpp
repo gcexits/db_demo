@@ -23,31 +23,40 @@ int send_h264() {
         return -1;
     }
 
-    videoindex = -1;
-    for (i = 0; i < ifmt_ctx->nb_streams; i++) {
-        if (ifmt_ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-            videoindex = i;
-        } else if (ifmt_ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audioindex = i;
-        }
-    }
+    videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 
-    AVBitStreamFilterContext* h264bsfc = av_bitstream_filter_init("h264_mp4toannexb");
+    const AVBitStreamFilter* avBitStreamFilter = nullptr;
+    AVBSFContext* absCtx = nullptr;
+
+    avBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
+
+    av_bsf_alloc(avBitStreamFilter, &absCtx);
+
+    avcodec_parameters_copy(absCtx->par_in, ifmt_ctx->streams[videoindex]->codecpar);
+
+    av_bsf_init(absCtx);
 
     while (av_read_frame(ifmt_ctx, &pkt) >= 0) {
         time.Stop();
         if (pkt.stream_index == videoindex) {
             bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
-            av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoindex]->codec, NULL, &pkt.data, &pkt.size, pkt.data, pkt.size, 0);
+            if (av_bsf_send_packet(absCtx, &pkt) != 0) {
+                continue;
+            }
+            while (av_bsf_receive_packet(absCtx, &pkt) == 0) {
+                continue;
+            }
             rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed(), video_count == 0);
             video_count++;
         } else if (pkt.stream_index == audioindex) {
         }
-        av_free_packet(&pkt);
+        av_packet_unref(&pkt);
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-    av_bitstream_filter_close(h264bsfc);
+    av_bsf_free(&absCtx);
+    absCtx = nullptr;
 
     avformat_close_input(&ifmt_ctx);
 

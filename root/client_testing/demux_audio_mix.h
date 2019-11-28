@@ -104,7 +104,6 @@ class Demux {
 
 public:
     Demux(std::string inUrl) : url(inUrl) {
-        av_register_all();
         pkt = av_packet_alloc();
     }
     ~Demux() {
@@ -161,6 +160,7 @@ public:
     }
 
     bool seekTo(uint32_t time) {
+        return true;
     }
 };
 
@@ -202,9 +202,7 @@ class Decodec {
     ReSample resample;
 
 public:
-    Decodec() {
-        avcodec_register_all();
-    }
+    Decodec() = default;
 
     ~Decodec() {
         if (ctx) {

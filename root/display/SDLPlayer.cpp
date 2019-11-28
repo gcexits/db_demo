@@ -1,5 +1,3 @@
-#pragma once
-
 #include "SDLPlayer.h"
 
 SDLPlayer* SDLPlayer::player = nullptr;
