@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../stream/RtmpSender.h"
-#include "../codec/SpeexEncoder.h"
-#include "../utils/Time.h"
+#include "../src_code/stream/RtmpSender.h"
+#include "../src_code/codec/SpeexEncoder.h"
+#include "../src_code/utils/Time.h"
 
 int send_speex();

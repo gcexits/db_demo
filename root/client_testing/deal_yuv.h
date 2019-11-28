@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "../utils/Yuvscale.h"
-#include "../utils/Time.h"
+#include "../src_code/utils/Yuvscale.h"
+#include "../src_code/utils/Time.h"
 
 int deal_yuv();

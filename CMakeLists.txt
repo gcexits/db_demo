@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.7)
-project(dby-client-tool)
+project(client-tool)
 
 set(CMAKE_C_COMPILER g++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
-set(EXE_TARGET_NAME dby-client-tool)
+set(EXE_TARGET_NAME client-tool)
 
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -75,37 +75,37 @@ set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/c++_test.cpp)
 
 set(PLAYBACK_SOURCE_FILES
-        ${ROOT}/offline/FlvParse.cpp)
+        ${ROOT}/src_code/offline/FlvParse.cpp)
 
 set(COMMON_SOURCE_FILES
-        ${ROOT}/utils/Optional.cpp
-        ${ROOT}/utils/Time.cpp
-        ${ROOT}/utils/Yuvscale.cpp
+        ${ROOT}/src_code/utils/Optional.cpp
+        ${ROOT}/src_code/utils/Time.cpp
+        ${ROOT}/src_code/utils/Yuvscale.cpp
 
-        ${ROOT}/codec/H264Decoder.cpp
-        ${ROOT}/codec/H264Encoder.cpp
-        ${ROOT}/codec/AACDecoder.cpp
-        ${ROOT}/codec/SpeexDecoder.cpp
-        ${ROOT}/codec/SpeexEncoder.cpp
-        ${ROOT}/codec/OpusDecoder.cpp
-        ${ROOT}/codec/OpusEncoder.cpp
-        ${ROOT}/codec/AudioBuffer.cpp
-        ${ROOT}/codec/VideoBuffer.cpp
-        ${ROOT}/codec/VideoRecorder.cpp
+        ${ROOT}/src_code/codec/H264Decoder.cpp
+        ${ROOT}/src_code/codec/H264Encoder.cpp
+        ${ROOT}/src_code/codec/AACDecoder.cpp
+        ${ROOT}/src_code/codec/SpeexDecoder.cpp
+        ${ROOT}/src_code/codec/SpeexEncoder.cpp
+        ${ROOT}/src_code/codec/OpusDecoder.cpp
+        ${ROOT}/src_code/codec/OpusEncoder.cpp
+        ${ROOT}/src_code/codec/AudioBuffer.cpp
+        ${ROOT}/src_code/codec/VideoBuffer.cpp
+        ${ROOT}/src_code/codec/VideoRecorder.cpp
 
-        ${ROOT}/hlring/RingBuffer.cpp
-        ${ROOT}/hlring/rbuf.c
+        ${ROOT}/src_code/hlring/RingBuffer.cpp
+        ${ROOT}/src_code/hlring/rbuf.c
 
-        ${ROOT}/display/SDLPlayer.cpp
+        ${ROOT}/src_code/display/SDLPlayer.cpp
 
-        ${ROOT}/network/HttpClient.cpp
-        ${ROOT}/network/HttpFile.cpp
+        ${ROOT}/src_code/network/HttpClient.cpp
+        ${ROOT}/src_code/network/HttpFile.cpp
 
-        ${ROOT}/demux/Demuxer.cpp
+        ${ROOT}/src_code/demux/Demuxer.cpp
 
-        ${ROOT}/stream/RtmpSender.cpp
+        ${ROOT}/src_code/stream/RtmpSender.cpp
 
-        ${ROOT}/common/PacketParser.cpp)
+        ${ROOT}/src_code/common/PacketParser.cpp)
 
 include_directories(/usr/local/Cellar/speex/1.2.0/include/speex)
 include_directories(/usr/local/Cellar/rtmpdump/2.4+20151223/include)
