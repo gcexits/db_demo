@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include <speex/speex.h>
-#include <speex/speex_types.h>
+#include <speex.h>
+#include <speex_types.h>
 
 #include "../utils/Optional.h"
 

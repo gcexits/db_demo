@@ -4,8 +4,8 @@
 
 #include "AudioBuffer.h"
 #include "OpusEncoder.h"
-#include "speex/speex.h"
-#include "speex/speex_types.h"
+#include <speex.h>
+#include <speex_types.h>
 
 #define SAMPLE_RATE 16000
 
