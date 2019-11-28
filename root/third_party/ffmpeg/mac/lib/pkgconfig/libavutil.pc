@@ -1,0 +1,14 @@
+prefix=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace
+exec_prefix=${prefix}
+libdir=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace/lib
+includedir=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.22.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil -pthread -lm -framework VideoToolbox -framework CoreFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices
+Libs.private: 
+Cflags: -I${includedir}

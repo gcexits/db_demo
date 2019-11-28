@@ -1,0 +1,14 @@
+prefix=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace
+exec_prefix=${prefix}
+libdir=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace/lib
+includedir=/Users/johnny/dev/opensource/ffmpeg-build-script/workspace/include
+
+Name: libpostproc
+Description: FFmpeg postprocessing library
+Version: 55.3.100
+Requires: libavutil >= 56.22.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lpostproc -lm
+Libs.private: 
+Cflags: -I${includedir}
