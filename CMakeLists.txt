@@ -52,6 +52,7 @@ set(TESTING_FILES
         ${ROOT}/client_testing/ffmpeg_curl.cpp
         ${ROOT}/client_testing/flv_player.cpp
         ${ROOT}/client_testing/send_h264.cpp
+        ${ROOT}/client_testing/send_speex.cpp
         ${ROOT}/client_testing/deal_yuv.cpp
         ${ROOT}/client_testing/ffmpeg_capture.cpp
 

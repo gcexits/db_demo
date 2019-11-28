@@ -1,6 +1,7 @@
 #include "ffmpeg_curl.h"
 #include "flv_player.h"
 #include "send_h264.h"
+#include "send_speex.h"
 #include "deal_yuv.h"
 #include "audio_mix.h"
 #include "demux_audio_mix.h"
@@ -20,9 +21,10 @@ void RegisterPlayer() {
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
+    return send_speex();
+    return send_h264();
     return ffmpeg_curl();
     return flv_player();
-    return send_h264();
     return deal_yuv();
     return mainMix();
     return demux_audio_mix();

@@ -1,11 +1,8 @@
 #include "send_h264.h"
 
-#define USE_H264BSF 1
-
 // todo: ffmpeg -re -stream_loop -1 -i wangyiyun.mp4 -vcodec copy -acodec copy -f flv rtmp://utx-live.duobeiyun.net/live/guochao
 // todo: ffplay rtmp://htx-live.duobeiyun.net/live/guochao
 int send_h264() {
-//    avformat_write_header();
     duobei::Time::Timestamp time;
     time.Start();
     int video_count = 0;
@@ -35,17 +32,13 @@ int send_h264() {
         }
     }
 
-#if USE_H264BSF
     AVBitStreamFilterContext* h264bsfc = av_bitstream_filter_init("h264_mp4toannexb");
-#endif
 
     while (av_read_frame(ifmt_ctx, &pkt) >= 0) {
+        time.Stop();
         if (pkt.stream_index == videoindex) {
-            time.Stop();
             bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
-#if USE_H264BSF
             av_bitstream_filter_filter(h264bsfc, ifmt_ctx->streams[videoindex]->codec, NULL, &pkt.data, &pkt.size, pkt.data, pkt.size, 0);
-#endif
             rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed(), video_count == 0);
             video_count++;
         } else if (pkt.stream_index == audioindex) {
@@ -54,9 +47,7 @@ int send_h264() {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-#if USE_H264BSF
     av_bitstream_filter_close(h264bsfc);
-#endif
 
     avformat_close_input(&ifmt_ctx);
 

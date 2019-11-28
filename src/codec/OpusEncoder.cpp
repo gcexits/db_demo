@@ -26,7 +26,6 @@ bool OpusEncoderContext::Init() {
     use_dtx = 0;
     packet_loss_perc = 100;
 
-
     if (sampling_rate != 8000 && sampling_rate != 12000 && sampling_rate != 16000 && sampling_rate != 24000 &&
         sampling_rate != 48000) {
         fprintf(stderr,
@@ -90,7 +89,7 @@ bool OpusEncoderContext::Init() {
     return true;
 }
 
-void OpusEncoderContext::Encode(uint8_t *in, int len) {
+void OpusEncoderContext::Encode(uint8_t *in, int len, uint32_t ts) {
     int opus_len = 0;
     opus_int16 *frame = (opus_int16 *)in;
 
@@ -100,7 +99,7 @@ void OpusEncoderContext::Encode(uint8_t *in, int len) {
     }
     opus_len = nbytes;
     assert(output_fn_);
-    output_fn_((int8_t *)audio_buffer_, 1+opus_len);
+    output_fn_((int8_t *)audio_buffer_, 1 + opus_len, ts);
 }
 
 }  // namespace audio

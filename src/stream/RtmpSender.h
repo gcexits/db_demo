@@ -20,6 +20,7 @@ class RtmpObject {
 
     bool send_video_only(const uint8_t *buf, int len, bool bKeyFrame, uint32_t timestamp);
 
+
     bool Init();
 public:
     RtmpObject(std::string url_) : url(url_) {
@@ -27,5 +28,6 @@ public:
     }
 
     bool sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp, bool isdemux);
+    void sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp);
 };
 }  // namespace duobei

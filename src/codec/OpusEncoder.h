@@ -16,10 +16,10 @@ namespace audio {
 struct EncoderContextInterface {
     virtual bool Init() = 0;
     virtual void Reset() = 0;
-    virtual void Encode(uint8_t *data, int size) = 0;
+    virtual void Encode(uint8_t *data, int size, uint32_t ts) = 0;
     virtual ~EncoderContextInterface() = default;
 
-    std::function<void(const int8_t*, int)> output_fn_ = nullptr;
+    std::function<void(const int8_t*, int, uint32_t)> output_fn_ = nullptr;
 };
 
 struct OpusEncoderContext: EncoderContextInterface {
@@ -39,7 +39,7 @@ struct OpusEncoderContext: EncoderContextInterface {
         }
     }
 
-    void Encode(uint8_t *in, int len) override;
+    void Encode(uint8_t *in, int len, uint32_t ts) override;
 };
 }  // namespace audio
 }  // namespace duobei

@@ -13,8 +13,6 @@ extern "C" {
 namespace duobei {
 namespace audio {
 bool SpeexEncoderContext::Init() {
-    audio_buffer_[0] = 0xB2;
-#if defined(kMobilePlatform)
     int quality = 6;
     int sample_rate, vad = 1, denoise = 1, noiseSuppress = -21;
 
@@ -40,44 +38,6 @@ bool SpeexEncoderContext::Init() {
 
     // speex_encoder_ctl(enc_state, SPEEX_SET_VAD, &vad);
     pkt_frame_count = 0;
-#endif
-
-#if defined(kDesktopPlatform)
-    int quality = 8;  // speex 编码质量, 原来的值为 6
-    int sample_rate, vad = 1, denoise = 1, noiseSuppress = -21;
-
-    speex_bits_init(&enc_bits);
-    //enc_state = speex_encoder_init(&speex_wb_mode);
-    enc_state = speex_encoder_init(speex_lib_get_mode(SPEEX_MODEID_WB));
-
-    int speex_quality = 8;                                                  // speex 编码质量, 原来的值为 6, 8, 10
-    speex_encoder_ctl(enc_state, SPEEX_SET_QUALITY, &speex_quality);        // 计划 10
-    int speex_complexity = 6;                                               // 原来为 2
-    speex_encoder_ctl(enc_state, SPEEX_SET_COMPLEXITY, &speex_complexity);  // 计划 10
-
-    speex_encoder_ctl(enc_state, SPEEX_GET_FRAME_SIZE, &enc_frame_size);
-    speex_encoder_ctl(enc_state, SPEEX_GET_SAMPLING_RATE, &sample_rate);
-    //回声消除模块
-    /* Echo canceller with 200 ms tail length */
-    echo_state = speex_echo_state_init(frame_size, 10 * frame_size);
-    speex_complexity = samplerate;
-    speex_echo_ctl(echo_state, SPEEX_ECHO_SET_SAMPLING_RATE, &speex_complexity);
-
-    /* Setup preprocessor and associate with echo canceller for residual echo suppression */
-    preprocess = speex_preprocess_state_init(frame_size, samplerate);
-    speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, echo_state);
-    speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_DENOISE, &denoise);               //降噪
-    speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &noiseSuppress);  //设置噪声的dB
-
-    int speex_vbr = 0;
-    speex_encoder_ctl(enc_state, SPEEX_SET_VBR, &speex_vbr);  // 新增 计划 0
-    int speex_vad = 0;
-    speex_encoder_ctl(enc_state, SPEEX_SET_VAD, &speex_vad);  // 1
-    int speex_dtx = 0;
-    speex_encoder_ctl(enc_state, SPEEX_SET_DTX, &speex_dtx);  // 新增 计划 0
-
-    pkt_frame_count = 0;
-#endif
     return true;
 }
 
@@ -91,7 +51,7 @@ void SpeexEncoderContext::Reset() {
     speex_bits_destroy(&enc_bits);
 }
 
-void SpeexEncoderContext::Encode(uint8_t *data, int size) {
+void SpeexEncoderContext::Encode(uint8_t *data, int size, uint32_t ts) {
     if (size > frame_size * 2) {
         return;
     }
@@ -108,38 +68,38 @@ void SpeexEncoderContext::Encode(uint8_t *data, int size) {
         // note: enc_size 返回了特别大的值
         assert(output_fn_);
         if (frame_size * frames_per_packet > enc_size) {
-            output_fn_(audio_buffer_, 1+enc_size);
+            output_fn_(speex_buffer_, enc_size, ts);
         }
         pkt_frame_count = 0;
     } else {
-        output_fn_(audio_buffer_, 1);
+        output_fn_(speex_buffer_, 1, ts);
     }
 }
 
-void AudioEncoder::Chunking(void *data, int size) {
+void AudioEncoder::Chunking(void *data, int size, uint32_t ts) {
     int postion = 0;
     while (postion < size) {
         auto copy_length = std::min(pcm.kChunk - pcm.postion, size - postion);
-        memcpy(pcm.buffer + pcm.postion, static_cast<uint8_t*>(data) + postion, copy_length);
+        memcpy(pcm.buffer + pcm.postion, static_cast<uint8_t *>(data) + postion, copy_length);
         postion += copy_length;
         pcm.postion += copy_length;
 
         if (pcm.postion == pcm.kChunk) {
-            encoder_->Encode(pcm.buffer, pcm.postion);
+            encoder_->Encode(pcm.buffer, pcm.postion, ts);
             pcm.postion = 0;
         }
         assert(pcm.postion < pcm.kChunk);
     }
 }
 
-void AudioEncoder::Sampling(void *data, int size) {
+void AudioEncoder::Sampling(void *data, int size, uint32_t ts) {
     sampling.src.fillFrame((uint8_t *)data, size);
     sampling.convert();
     void *d = (void *)sampling.dst.Frame->data[0];
     int s = sampling.dst.Frame->nb_samples * sizeof(short);
-    Chunking(d, s);
+    Chunking(d, s, ts);
 }
-void AudioEncoder::Encode(void *data, size_t size) {
+void AudioEncoder::Encode(void *data, size_t size, uint32_t ts) {
     if (audio.sampling()) {
         if (!sampling.DataInit()) {
             sampling.src.updateFrame(audio.src);
@@ -148,9 +108,9 @@ void AudioEncoder::Encode(void *data, size_t size) {
             sampling.dst.setCodecOptions(audio.dst.nb_samples());  // 16k / 50
             sampling.dst.fillFrame();
         }
-        Sampling(data, size);
+        Sampling(data, size, ts);
     } else {
-        Chunking(data, size);
+        Chunking(data, size, ts);
     }
 }
 AudioEncoder::AudioEncoder(bool use_opus_) {
