@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "Yuvscale.h"
 
 bool YuvScaler::I420Mirror(uint8_t *src, int srcWidth, int srcHeight, uint8_t *dst, int type) {

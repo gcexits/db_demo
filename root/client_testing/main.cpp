@@ -9,6 +9,7 @@
 #include "json.h"
 #include "ffmpeg_capture.h"
 #include "c++_test.h"
+#include "H264HardDecode.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -21,6 +22,7 @@ void RegisterPlayer() {
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
+    return c_test();
     return send_speex();
     return send_h264();
     return ffmpeg_curl();
@@ -31,5 +33,4 @@ int main(int argc, char *argv[]) {
     return simplest_ffmpeg_video_filter();
     return main_json();
     return ffmpeg_capture();
-    return c_test();
 }

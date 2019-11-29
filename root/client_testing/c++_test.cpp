@@ -118,6 +118,21 @@ int testFun(int a, int b) {
 }
 
 int c_test() {
+    std::vector<int> v1 {1, 1, 2 ,3, 3, 3, 3, 5};
+    // todo: vector 去重
+    std::sort(v1.begin(), v1.end());
+    v1.erase(std::unique(v1.begin(), v1.end()), v1.end());
+    for (auto &v : v1) {
+        std::cout << v << std::endl;
+    }
+    std::vector<int> v2 {4};
+    std::vector<int> diff;
+    // todo: vector 如果不去重，会有多个相同元素
+    std::set_difference(v1.begin(), v1.end(), v2.begin(), v2.end(), std::back_inserter(diff));
+//    for (auto &v : diff) {
+//        std::cout << v << std::endl;
+//    }
+    return 0;
 //    std::map<std::string, std::string> map_;
 //    map_.emplace("1", "1");
 //    map_.emplace("1", "2");

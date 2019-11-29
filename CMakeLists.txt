@@ -72,7 +72,9 @@ set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/simplest_ffmpeg_video_filter.cpp
 
         ${ROOT}/client_testing/json.cpp
-        ${ROOT}/client_testing/c++_test.cpp)
+        ${ROOT}/client_testing/c++_test.cpp
+
+        ${ROOT}/client_testing/H264HardDecode.cpp)
 
 set(PLAYBACK_SOURCE_FILES
         ${ROOT}/src_code/offline/FlvParse.cpp)
@@ -92,6 +94,7 @@ set(COMMON_SOURCE_FILES
         ${ROOT}/src_code/codec/AudioBuffer.cpp
         ${ROOT}/src_code/codec/VideoBuffer.cpp
         ${ROOT}/src_code/codec/VideoRecorder.cpp
+        ${ROOT}/src_code/codec/HardwareContext.cpp
 
         ${ROOT}/src_code/hlring/RingBuffer.cpp
         ${ROOT}/src_code/hlring/rbuf.c

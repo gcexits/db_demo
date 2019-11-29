@@ -1,3 +1,7 @@
+#pragma once
+
+#include <iostream>
+
 #include <libyuv.h>
 
 class YuvScaler {

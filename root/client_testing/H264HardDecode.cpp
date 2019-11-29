@@ -1,19 +1,4 @@
-#include <stdio.h>
-
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avassert.h>
-#include <libavutil/hwcontext.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
-}
-
-#include "HardwareContext.h"
-#include "../libyuv/yuvscale.h"
-
-#include <fstream>
+#include "H264HardDecode.h"
 
 int decode_write(AVCodecContext *avctx, AVPacket *packet, HardwareContext &hardwareContext, std::ofstream &fp) {
     AVFrame *frame = nullptr, *sw_frame = nullptr;
@@ -77,10 +62,10 @@ int decode_write(AVCodecContext *avctx, AVPacket *packet, HardwareContext &hardw
     }
 }
 
-int main(int argc, char *argv[]) {
-    argv[1] = "videotoolbox";
-    argv[2] = "/Users/guochao/Downloads/mda-hfapq015649s8777.mp4";
-    argv[3] = "./854x480.yuv";
+int h264HardDecode() {
+    std::string hard_codec_name = "videotoolbox";
+    std::string file_name = "/Users/guochao/Downloads/mda-hfapq015649s8777.mp4";
+    std::string output_file = "./854x480.yuv";
     AVFormatContext *input_ctx = nullptr;
     int video_stream, ret;
     AVStream *video = nullptr;
@@ -90,8 +75,8 @@ int main(int argc, char *argv[]) {
 
     HardwareContext hardwareContext;
 
-    if (avformat_open_input(&input_ctx, argv[2], nullptr, nullptr) != 0) {
-        fprintf(stderr, "Cannot open input file '%s'\n", argv[2]);
+    if (avformat_open_input(&input_ctx, file_name.c_str(), nullptr, nullptr) != 0) {
+        fprintf(stderr, "Cannot open input file '%s'\n", file_name.c_str());
         return -1;
     }
 
@@ -110,7 +95,7 @@ int main(int argc, char *argv[]) {
     if (!(decoder_ctx = avcodec_alloc_context3(decoder)))
         return AVERROR(ENOMEM);
 
-    hardwareContext.find(argv[1], decoder);
+    hardwareContext.find(hard_codec_name.c_str(), decoder);
     hardwareContext.init(decoder_ctx);
 
     video = input_ctx->streams[video_stream];
@@ -122,7 +107,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    std::ofstream fp_(argv[3], std::ofstream::out | std::ofstream::binary | std::ofstream::ate);
+    std::ofstream fp_(output_file, std::ofstream::out | std::ofstream::binary | std::ofstream::ate);
 
     while (ret >= 0) {
         if ((ret = av_read_frame(input_ctx, &packet)) < 0)
