@@ -19,7 +19,6 @@ public:
 
     RingBuffer ringBuffer;
     const size_t RingLength;
-    std::ofstream fp_douyin;
     std::mutex ringBufferMtx;
 
     int read_packet(uint8_t* buffer, int length) {
@@ -136,11 +135,13 @@ public:
     };
     MediaState mediaState;
 
+private:
     bool opened_ = false;
     int videoindex = -1;
     int audioindex = -1;
     int scan_all_pmts_set = 0;
 
+public:
     Demuxer() {
         pkt = av_packet_alloc();
     }

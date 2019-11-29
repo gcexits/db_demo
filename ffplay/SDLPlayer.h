@@ -1,12 +1,11 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
 #include <map>
 #include <queue>
 #include <set>
 
-#include "../src/hlring/RingBuffer.h"
+#include "../root/src_code/hlring/RingBuffer.h"
 #include "Media.h"
 #include "VideoDisplay.h"
 
@@ -29,12 +28,47 @@ struct AudioChannel {
 };
 
 struct VideoChannel {
+    struct PixelBuffer {
+        void* data = nullptr;
+        int pitch = 0;  // The number of bytes in a row of pixel data, including padding between lines.
+        int capacity = 0;
+        int w = 0;
+        int h = 0;
+        PixelBuffer(void* _data, int _pitch, int _w, int _h) {
+            capacity = _w * _h * 3 / 2 + 1;
+            data = new uint8_t[capacity];
+            update(_data, _pitch, _w, _h);
+        }
+
+        ~PixelBuffer() {
+            if (data) {
+                delete[] static_cast<uint8_t*>(data);
+            }
+        }
+
+        bool update(void* _data, int _pitch, int _w, int _h) {
+            int size = _w * _h * 3 / 2;
+            if (size < capacity) {
+                memcpy(data, _data, size);
+                pitch = _w;
+                w = _w;
+                h = _h;
+                return true;
+            }
+            return false;
+        }
+
+        using Ptr = std::unique_ptr<PixelBuffer>;
+    };
+
     Uint32 window_id;
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
     SDL_Rect rect;
     std::string uid;
+    std::queue<PixelBuffer::Ptr> work_queue_;
+    std::queue<PixelBuffer::Ptr> ready_queue_;
     std::mutex mtx_;
 
     explicit VideoChannel(const std::string& uid) : uid(uid) {}
@@ -126,7 +160,6 @@ struct VideoContainer {
     std::set<VideoChannel*> sources;
     std::map<Uint32, VideoChannel*> channels_;
     MediaState* mediaState = nullptr;
-    std::ofstream fp;
 
     VideoChannel* add(const std::string& uid) {
         auto item = new VideoChannel(uid);
@@ -156,32 +189,6 @@ struct VideoContainer {
         }
         sources.clear();
         channels_.clear();
-    }
-
-    void write(AVFrame *frame) {
-        int h = 1080;
-        int w = 1920;
-
-        if (!fp.is_open()) {
-            fp.open("/Users/guochao/1.yuv", std::ios::binary | std::ios::out | std::ios::app);
-        }
-        char* buf = new char[h * w * 1.5];
-        int a = 0;
-        for (int i = 0; i < h; i++) {
-            memcpy(buf + a, frame->data[0] + i * frame->linesize[0], w);
-            a += w;
-        }
-        for (int i = 0; i < h / 2; i++) {
-            memcpy(buf + a, frame->data[1] + i * frame->linesize[1], w / 2);
-            a += w / 2;
-        }
-        for (int i = 0; i < h / 2; i++) {
-            memcpy(buf + a, frame->data[2] + i * frame->linesize[2], w / 2);
-            a += w / 2;
-        }
-        fp.write(buf, w * h * 1.5);
-        delete[] buf;
-        buf = NULL;
     }
 
     bool show_internal(VideoChannel* channel) {
@@ -255,7 +262,6 @@ struct VideoContainer {
 
     void exit() {
         clear();
-        fp.close();
     }
 };
 

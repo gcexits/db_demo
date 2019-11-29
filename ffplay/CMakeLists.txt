@@ -21,8 +21,8 @@ set(SOURCE_FILES
         ${ROOT}/H264Decoder.cpp
         ${ROOT}/AudioDecoder.cpp
         ${ROOT}/Demuxer.cpp
-        ${ROOT}/../src/hlring/RingBuffer.cpp
-        ${ROOT}/../src/hlring/rbuf.c
+        ${ROOT}/../root/src_code/hlring/RingBuffer.cpp
+        ${ROOT}/../root/src_code/hlring/rbuf.c
         ${ROOT}/Video.cpp
         ${ROOT}/Audio.cpp
         ${ROOT}/Media.cpp

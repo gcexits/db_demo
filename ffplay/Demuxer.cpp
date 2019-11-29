@@ -52,6 +52,7 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         if (ret == AVERROR_EOF || avio_feof(ifmt_ctx->pb)) {
             return ReadStatus::EndOff;
         }
+        //av_seek_frame(ifmt_ctx, pkt->stream_index, 0, AVSEEK_FLAG_BACKWARD);
         return ReadStatus::Error;
     }
     if (pkt->stream_index == videoindex) {

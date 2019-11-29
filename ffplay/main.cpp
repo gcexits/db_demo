@@ -2,8 +2,8 @@
 #include "HttpFile.h"
 #include "VideoDisplay.h"
 
-#include "../src/hlring/RingBuffer.h"
-#include "../src/hlring/rbuf.h"
+#include "../root/src_code/hlring/RingBuffer.h"
+#include "../root/src_code/hlring/rbuf.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
