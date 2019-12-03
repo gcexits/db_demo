@@ -151,6 +151,7 @@ public:
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
     H264Decode video_decode;
+    AudioDecode audio_decode;
     bool Opened() {
         return opened_;
     }

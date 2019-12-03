@@ -3,7 +3,6 @@
 #include <cassert>
 
 bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
-
     auto ret = context.Send(pkt);
     if (ret < 0) {
         return false;

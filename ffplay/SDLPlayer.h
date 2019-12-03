@@ -18,7 +18,7 @@ struct AudioChannel {
     std::string uid;
     RingBuffer buffer_;
 
-    explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 320 * 40) {}
+    explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 0) {}
 
     void push(void* data, uint32_t size) {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -176,16 +176,16 @@ struct AudioContainer {
     void MixAudio(Uint8* stream, int len) {
         SDL_memset(stream, 0, len);
         std::lock_guard<std::mutex> lock(mtx);
-
         for (auto& x : channels_) {
             while (len > 0) {
                 std::lock_guard<std::mutex> lock(x->mtx_);
                 if (x->buffer_.size() == 0) {
                     continue;
                 }
-                len = len > x->buffer_.size() ? x->buffer_.size() : len;
-                auto len1 = x->buffer_.read(cache, len);
+                auto len1 = x->buffer_.size() > len ? len : x->buffer_.size();
+                x->buffer_.read(cache, len1);
                 SDL_MixAudio(stream, cache, len1, SDL_MIX_MAXVOLUME);
+
                 len -= len1;
                 stream += len1;
             }
@@ -351,7 +351,7 @@ public:
         audioSpec.silence = 0;
         audioSpec.samples = nb_samples;
         audioSpec.callback = AudioCallback;
-        audioSpec.userdata = this;  //可以直接在内部传值给callback函数
+        audioSpec.userdata = this;
         SDL_OpenAudio(&audioSpec, NULL);
         SDL_PauseAudio(0);
     }

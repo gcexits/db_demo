@@ -6,12 +6,14 @@ extern "C" {
 #include "libswresample/swresample.h"
 }
 
+#include "Optional.h"
 
-class AACDecode {
+class AudioDecode {
 public:
     AVCodecContext* codecCtx_ = nullptr;
     AVCodec* audioCodec = nullptr;
     AVFrame *frame = nullptr;
+    audio::PlayInternal playInternal;
     SwrContext* pcm_convert = nullptr;
     bool inited = false;
 
@@ -23,9 +25,10 @@ public:
         return (channels == 0 || sampleRate == 0 || sampleFmt == -1) ? false : true;
     }
 
-    AACDecode() {
+    AudioDecode() {
         frame = av_frame_alloc();
         av_log_set_level(AV_LOG_QUIET);
+        playInternal.Init("audio");
     }
 
     bool OpenDecode(const AVCodecParameters* param) {
@@ -45,7 +48,7 @@ public:
         return true;
     }
 
-    ~AACDecode() {
+    ~AudioDecode() {
         if (frame) {
             av_frame_free(&frame);
         }
@@ -53,6 +56,7 @@ public:
             avcodec_close(codecCtx_);
             avcodec_free_context(&codecCtx_);
         }
+        playInternal.Destroy();
     }
     bool Decode(AVPacket *pkt, uint8_t *buf, int& len);
 };

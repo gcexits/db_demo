@@ -16,7 +16,7 @@ extern "C"{
  */
 struct AudioState
 {
-    AACDecode aacDecode;
+    AudioDecode aacDecode;
 	const uint32_t BUFFER_SIZE;// 缓冲区的大小
 
 	PacketQueue audioq;

@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-bool AACDecode::Decode(AVPacket *pkt, uint8_t *buf, int& len) {
+bool AudioDecode::Decode(AVPacket *pkt, uint8_t *buf, int& len) {
     int result = avcodec_send_packet(codecCtx_, pkt);
     if (result < 0) {
         return false;

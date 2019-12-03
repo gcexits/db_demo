@@ -145,10 +145,7 @@ struct AudioContainer {
                 if (x->buffer_.size() == 0) {
                     continue;
                 }
-                auto len1 = x->buffer_.size();
-                if (len1 > len) {
-                    len1 = len;
-                }
+                auto len1 = x->buffer_.size() > len ? len : x->buffer_.size();
                 x->buffer_.read(cache, len1);
                 SDL_MixAudio(stream, cache, len1, SDL_MIX_MAXVOLUME);
 
