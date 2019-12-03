@@ -2,7 +2,7 @@
 #ifndef VIDEO_DISPLAY_H
 #define VIDEO_DISPLAY_H
 
-#include "Video.h"
+#include "Media.h"
 
 extern "C" {
 #include <libavutil/time.h>

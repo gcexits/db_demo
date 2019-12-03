@@ -66,6 +66,9 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         {
             SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
         }
+        // todo: 抑制音频数据发送太快:
+        // 1. buffer内存太小，速度太快会导致数据覆盖
+        // 2. 模型需要delay，线程结束会干掉sdl_event线程
         auto that = static_cast<AudioChannel*>(audio_decode.playInternal.handle);
         while (that->buffer_.size() > 0 && !exit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

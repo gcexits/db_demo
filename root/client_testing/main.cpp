@@ -22,10 +22,10 @@ void RegisterPlayer() {
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
+    return ffmpeg_curl();
     return c_test();
     return send_speex();
     return send_h264();
-    return ffmpeg_curl();
     return flv_player();
     return deal_yuv();
     return mainMix();

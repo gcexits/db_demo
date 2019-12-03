@@ -14,7 +14,7 @@ struct AudioChannel {
     std::string uid;
     RingBuffer buffer_;
 
-    explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 320 * 40) {}
+    explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 0) {}
 
     void push(void* data, uint32_t size) {
         std::lock_guard<std::mutex> lock(mtx_);
@@ -140,13 +140,21 @@ struct AudioContainer {
         std::lock_guard<std::mutex> lock(mtx);
 
         for (auto& x : channels_) {
-            std::lock_guard<std::mutex> lock(x->mtx_);
-            if (x->buffer_.size() == 0) {
-                continue;
+            while (len > 0) {
+                std::lock_guard<std::mutex> lock(x->mtx_);
+                if (x->buffer_.size() == 0) {
+                    continue;
+                }
+                auto len1 = x->buffer_.size();
+                if (len1 > len) {
+                    len1 = len;
+                }
+                x->buffer_.read(cache, len1);
+                SDL_MixAudio(stream, cache, len1, SDL_MIX_MAXVOLUME);
+
+                len -= len1;
+                stream += len1;
             }
-            len = len > x->buffer_.size() ? x->buffer_.size() : len;
-            auto l = x->buffer_.read(cache, len);
-            SDL_MixAudio(stream, cache, l, SDL_MIX_MAXVOLUME);
         }
     }
 

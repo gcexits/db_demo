@@ -13,7 +13,8 @@ bool Demuxer::Open(void* param) {
     videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     mediaState.audio->stream = ifmt_ctx->streams[audioindex];
-    mediaState.video->stream = ifmt_ctx->streams[videoindex];
+    video_decode.videoState.stream = ifmt_ctx->streams[videoindex];
+    video_decode.OpenDecode(CodecPar(videoindex));
     opened_ = true;
     return true;
 }
@@ -56,11 +57,7 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         return ReadStatus::Error;
     }
     if (pkt->stream_index == videoindex) {
-        if (mediaState.video->h264Decode.OpenDecode(CodecPar(videoindex))) {
-            mediaState.video->frame_timer = static_cast<double>(av_gettime()) / 1000000.0;
-            mediaState.video->frame_last_delay = 40e-3;
-        }
-        mediaState.video->videoq->enQueue(pkt);
+        video_decode.Decode(pkt, 0);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
         mediaState.audio->aacDecode.OpenDecode(CodecPar(audioindex));

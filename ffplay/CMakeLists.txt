@@ -15,15 +15,15 @@ set(USR /usr/local/Cellar)
 
 set(SOURCE_FILES
         ${ROOT}/main.cpp
-        ${ROOT}/HttpClient.cpp
         ${ROOT}/HttpFile.cpp
         ${ROOT}/SDLPlayer.cpp
         ${ROOT}/H264Decoder.cpp
         ${ROOT}/AudioDecoder.cpp
+        ${ROOT}/Optional.cpp
         ${ROOT}/Demuxer.cpp
         ${ROOT}/../root/src_code/hlring/RingBuffer.cpp
         ${ROOT}/../root/src_code/hlring/rbuf.c
-        ${ROOT}/Video.cpp
+        ${ROOT}/../root/src_code/network/HttpClient.cpp
         ${ROOT}/Audio.cpp
         ${ROOT}/Media.cpp
         ${ROOT}/PacketQueue.cpp

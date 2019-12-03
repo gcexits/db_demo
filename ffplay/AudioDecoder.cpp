@@ -1,7 +1,6 @@
 #include "AudioDecoder.h"
 #include <cassert>
-
-std::fstream audio_fp;
+#include <iostream>
 
 bool AACDecode::Decode(AVPacket *pkt, uint8_t *buf, int& len) {
     int result = avcodec_send_packet(codecCtx_, pkt);

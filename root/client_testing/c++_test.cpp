@@ -118,6 +118,16 @@ int testFun(int a, int b) {
 }
 
 int c_test() {
+    std::queue<int> q1;
+    q1.push(1);
+    q1.emplace(2);
+    q1.push(3);
+    q1.emplace(4);
+    while (!q1.empty()) {
+        std::cout << q1.front() << std::endl;
+        q1.pop();
+    }
+    return 0;
     std::vector<int> v1 {1, 1, 2 ,3, 3, 3, 3, 5};
     // todo: vector 去重
     std::sort(v1.begin(), v1.end());

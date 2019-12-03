@@ -2,11 +2,12 @@
 
 #include <condition_variable>
 #include <iostream>
+#include <fstream>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
-#include "HttpClient.h"
+#include "../root/src_code/network/HttpClient.h"
 #include "Demuxer.h"
 
 namespace duobei {
@@ -139,7 +140,7 @@ public:
         Close();
     }
 
-    int Open(const std::string &);
+    int Open(std::string &);
     std::thread read;
     bool exit = false;
     void startRead();

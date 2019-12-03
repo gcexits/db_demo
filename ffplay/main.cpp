@@ -1,6 +1,7 @@
 #include "Demuxer.h"
 #include "HttpFile.h"
 #include "VideoDisplay.h"
+#include "Optional.h"
 
 #include "../root/src_code/hlring/RingBuffer.h"
 #include "../root/src_code/hlring/rbuf.h"
@@ -9,7 +10,7 @@ void RegisterPlayer() {
     using namespace std::placeholders;
 
     SDLPlayer* player = SDLPlayer::getPlayer();
-    player->videoContainer.add("1");
+    AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
 }
 
 int main(int argc, char* argv[]) {
@@ -34,13 +35,11 @@ int main(int argc, char* argv[]) {
     std::thread readthread = std::thread([&ioBufferContext, &demuxer] {
         bool status = false;
         void* param = nullptr;
-        if (!status) {
-            do {
-                ioBufferContext.OpenInput();
-                param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
-            } while (!status);
-            demuxer.Open(param);
-        }
+        do {
+            ioBufferContext.OpenInput();
+            param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
+        } while (!status);
+        demuxer.Open(param);
         while (1) {
             if (demuxer.ReadFrame() == Demuxer::ReadStatus::EndOff) {
                 break;
@@ -49,11 +48,9 @@ int main(int argc, char* argv[]) {
     });
 
     demuxer.mediaState.audio->audio_play();
-    demuxer.mediaState.video->video_play(&demuxer.mediaState);
-    auto item = SDLPlayer::getPlayer()->videoContainer.mediaState = &demuxer.mediaState;
+    schedule_refresh(&demuxer.mediaState, 40);
+    SDLPlayer::getPlayer()->videoContainer.mediaState = &demuxer.mediaState;
     SDLPlayer::getPlayer()->EventLoop();
-    demuxer.mediaState.video->running = false;
-    SDL_WaitThread(demuxer.mediaState.video->decoder_tid, nullptr);
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {
         readthread.join();

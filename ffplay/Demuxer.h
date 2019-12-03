@@ -1,12 +1,9 @@
 #pragma once
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavutil/time.h>
-}
-
 #include "SDLPlayer.h"
 #include "Media.h"
+
+#include "H264Decoder.h"
 
 #include <thread>
 
@@ -153,6 +150,7 @@ public:
     struct AVFormatContext* ifmt_ctx = nullptr;
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
+    H264Decode video_decode;
     bool Opened() {
         return opened_;
     }
