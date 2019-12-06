@@ -1,9 +1,9 @@
 #pragma once
 
 #include "SDLPlayer.h"
-#include "Media.h"
 
 #include "H264Decoder.h"
+#include "AudioDecoder.h"
 
 #include <thread>
 
@@ -130,7 +130,6 @@ public:
         Error,
         EndOff
     };
-    MediaState mediaState;
 
 private:
     bool opened_ = false;

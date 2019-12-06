@@ -25,7 +25,7 @@ void SDLPlayer::EventLoop() {
                 do_exit();
                 break;
             case FF_REFRESH_EVENT:
-                videoContainer.show();
+                show();
                 break;
             case SDL_KEYDOWN:
                 switch (event.key.keysym.sym) {

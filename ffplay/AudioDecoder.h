@@ -1,9 +1,11 @@
 #pragma once
+
 #include <mutex>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include "libswresample/swresample.h"
+#include <libavformat/avformat.h>
 }
 
 #include "Optional.h"
@@ -28,7 +30,7 @@ public:
     AudioDecode() {
         frame = av_frame_alloc();
         av_log_set_level(AV_LOG_QUIET);
-        playInternal.Init("audio");
+        playInternal.Init("123");
     }
 
     bool OpenDecode(const AVCodecParameters* param) {
@@ -58,5 +60,5 @@ public:
         }
         playInternal.Destroy();
     }
-    bool Decode(AVPacket *pkt, uint8_t *buf, int& len);
+    bool Decode(AVPacket *pkt);
 };

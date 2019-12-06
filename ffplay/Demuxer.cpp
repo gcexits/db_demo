@@ -12,9 +12,12 @@ bool Demuxer::Open(void* param) {
     }
     videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    mediaState.audio->stream = ifmt_ctx->streams[audioindex];
+
     video_decode.videoState.stream = ifmt_ctx->streams[videoindex];
     video_decode.OpenDecode(CodecPar(videoindex));
+
+    static_cast<AudioChannel*>(audio_decode.playInternal.handle)->audioState.stream = ifmt_ctx->streams[audioindex];
+    audio_decode.OpenDecode(CodecPar(audioindex));
     opened_ = true;
     return true;
 }
@@ -53,15 +56,16 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         if (ret == AVERROR_EOF || avio_feof(ifmt_ctx->pb)) {
             return ReadStatus::EndOff;
         }
-        //av_seek_frame(ifmt_ctx, pkt->stream_index, 0, AVSEEK_FLAG_BACKWARD);
         return ReadStatus::Error;
     }
     if (pkt->stream_index == videoindex) {
         video_decode.Decode(pkt, 0);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-        mediaState.audio->aacDecode.OpenDecode(CodecPar(audioindex));
-        mediaState.audio->audioq.enQueue(pkt);
+        audio_decode.Decode(pkt);
+        {
+            SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
+        }
         return ReadStatus::Audio;
     } else {
         return ReadStatus::Subtitle;

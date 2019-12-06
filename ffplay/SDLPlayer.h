@@ -8,24 +8,63 @@
 #include "Optional.h"
 
 #include "../root/src_code/hlring/RingBuffer.h"
-#include "Media.h"
 #include "VideoDisplay.h"
+#include "H264Decoder.h"
 
 #include <SDL2/SDL.h>
 
 struct AudioChannel {
+    struct AudioState_ {
+        int64_t audio_buff_consume;
+        int64_t decode_size;
+        int channels;
+        double audio_clock; // audio clock
+        AVStream *stream; // audio stream
+        AudioState_() {
+            audio_buff_consume = 0;
+            decode_size = 0;
+            channels = 2;
+            audio_clock = 0;
+            stream = nullptr;
+        }
+        ~AudioState_() {
+            if (stream) {
+                stream = nullptr;
+            }
+        }
+
+    };
+
+    AudioState_ audioState;
     std::mutex mtx_;
     std::string uid;
     RingBuffer buffer_;
 
     explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 0) {}
 
-    void push(void* data, uint32_t size) {
+    void push(void* data, uint32_t size, int64_t pts) {
         std::lock_guard<std::mutex> lock(mtx_);
+        if (buffer_.size() > 1024 * 1024 * 1024) {
+            std::cout << "date send too quick" << std::endl;
+            abort();
+        }
         buffer_.write(data, size);
+        audioState.audio_clock = av_q2d(audioState.stream->time_base) * pts;
+        audioState.audio_clock += static_cast<double>(size) / (2 * audioState.channels * audioState.stream->codecpar->sample_rate);
+        audioState.decode_size += size;
     }
     void clear() {
+        std::lock_guard<std::mutex> lock(mtx_);
         buffer_.clean();
+    }
+
+    // get audio clock
+    double get_audio_clock() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        // todo: 剩余的数据块
+        int hw_buf_size = audioState.decode_size - audioState.audio_buff_consume;
+        int bytes_per_sec = audioState.stream->codecpar->sample_rate * audioState.channels * 2;
+        return audioState.audio_clock - static_cast<double>(hw_buf_size) / bytes_per_sec;
     }
 };
 
@@ -64,6 +103,10 @@ struct VideoChannel {
 
         using Ptr = std::unique_ptr<PixelBuffer>;
     };
+
+    double frame_timer = static_cast<double>(av_gettime()) / 1000000.0;         // Sync fields
+    double frame_last_pts = 0;
+    double frame_last_delay = 40e-3;
 
     Uint32 window_id;
     SDL_Window* window = nullptr;
@@ -178,16 +221,21 @@ struct AudioContainer {
         std::lock_guard<std::mutex> lock(mtx);
         for (auto& x : channels_) {
             while (len > 0) {
-                std::lock_guard<std::mutex> lock(x->mtx_);
                 if (x->buffer_.size() == 0) {
                     continue;
                 }
                 auto len1 = x->buffer_.size() > len ? len : x->buffer_.size();
+
+                std::lock_guard<std::mutex> lock(x->mtx_);
                 x->buffer_.read(cache, len1);
+
                 SDL_MixAudio(stream, cache, len1, SDL_MIX_MAXVOLUME);
 
                 len -= len1;
                 stream += len1;
+
+                // todo: 消耗的数据块
+                x->audioState.audio_buff_consume += len1;
             }
         }
     }
@@ -213,11 +261,6 @@ struct VideoContainer {
     std::mutex mtx;
     std::set<VideoChannel*> sources;
     std::map<Uint32, VideoChannel*> channels_;
-    MediaState* mediaState = nullptr;
-
-    double frame_timer = static_cast<double>(av_gettime()) / 1000000.0;         // Sync fields
-    double frame_last_pts = 0;
-    double frame_last_delay = 40e-3;
 
     VideoChannel* add(const std::string& uid) {
         auto item = new VideoChannel(uid);
@@ -249,71 +292,9 @@ struct VideoContainer {
         channels_.clear();
     }
 
-    bool show_internal(VideoChannel* channel) {
-        std::unique_lock<std::mutex> lock_(channel->mtx_);
-        if (channel->work_queue_.empty()) {
-            schedule_refresh(mediaState, 1);
-            return false;
-        }
-        auto pixel_buffer = std::move(channel->work_queue_.front());
-        channel->work_queue_.pop();
-        lock_.unlock();
-
-        double current_pts = pixel_buffer->pts;
-        double delay = current_pts - frame_last_pts;
-        if (delay <= 0 || delay >= 1.0)
-            delay = frame_last_delay;
-
-        frame_last_delay = delay;
-        frame_last_pts = current_pts;
-
-        // 当前显示帧的PTS来计算显示下一帧的延迟
-        double ref_clock = mediaState->audio->get_audio_clock();
-
-        double diff = current_pts - ref_clock;  // diff < 0 => video slow,diff > 0 => video quick
-
-        double threshold = (delay > SYNC_THRESHOLD) ? delay : SYNC_THRESHOLD;
-
-        if (fabs(diff) < NOSYNC_THRESHOLD) {
-            if (diff <= -threshold)  // 慢了，delay设为0
-                delay = 0;
-            else if (diff >= threshold)  // 快了，加倍delay
-                delay *= 2;
-        }
-        frame_timer += delay;
-        double actual_delay = frame_timer - static_cast<double>(av_gettime()) / 1000000.0;
-        if (actual_delay <= 0.010)
-            actual_delay = 0.010;
-
-//        std::cout << "delay time : " << static_cast<int>(actual_delay * 1000 + 0.5) << std::endl;
-        schedule_refresh(mediaState, static_cast<int>(actual_delay * 1000 + 0.5));
-
-        if (channel->ScreenVaild() && !channel->ScreenSameIn(pixel_buffer)) {
-            channel->Destroy();
-        }
-        if (!channel->ScreenVaild()) {
-            if (!channel->Create(pixel_buffer)) {
-                return false;
-            }
-            channels_.emplace(channel->window_id, channel);
-        }
-
-        channel->Update(pixel_buffer);
-        channel->ready_queue_.push(std::move(pixel_buffer));
-        return true;
-    }
-
     void clearBuffer(VideoChannel* channel) {
         std::unique_lock<std::mutex> lock_(channel->mtx_);
         channel->Destroy();
-    }
-
-    bool show() {
-        std::lock_guard<std::mutex> lock(mtx);
-        for (auto& v : sources) {
-            show_internal(v);
-        }
-        return true;
     }
 
     void exit() {
@@ -374,14 +355,14 @@ public:
     // initPcmPlayer
     void* openAudio(const std::string& uid, AVRegister::PcmPlayer* f) {
         using namespace std::placeholders;
-        *f = std::bind(&SDLPlayer::pushAudioData, this, _1, _2, _3);
+        *f = std::bind(&SDLPlayer::pushAudioData, this, _1, _2, _3, _4);
         return audioContainer.add(uid);
     }
 
-    void pushAudioData(void* handle, void* data, uint32_t size) {
+    void pushAudioData(void* handle, void* data, uint32_t size, int64_t pts) {
         assert(handle);
         auto that = static_cast<AudioChannel*>(handle);
-        that->push(data, size);
+        that->push(data, size, pts);
     }
 
     // destroyPcmPlayer
@@ -393,5 +374,73 @@ public:
         SDL_CloseAudio();
         SDL_Quit();
         running = false;
+    }
+
+    bool show_internal(VideoChannel* videoChannel, AudioChannel *audioChannel) {
+        std::unique_lock<std::mutex> lock_(videoChannel->mtx_);
+        if (videoChannel->work_queue_.empty()) {
+            schedule_refresh(1);
+            return false;
+        }
+        auto pixel_buffer = std::move(videoChannel->work_queue_.front());
+        videoChannel->work_queue_.pop();
+        lock_.unlock();
+
+        double current_pts = pixel_buffer->pts;
+        double delay = current_pts - videoChannel->frame_last_pts;
+        if (delay <= 0 || delay >= 1.0)
+            delay = videoChannel->frame_last_delay;
+
+        videoChannel->frame_last_delay = delay;
+        videoChannel->frame_last_pts = current_pts;
+
+        // 当前显示帧的PTS来计算显示下一帧的延迟
+        double ref_clock = audioChannel->get_audio_clock();
+
+        double diff = current_pts - ref_clock;  // diff < 0 => video slow,diff > 0 => video quick
+
+        double threshold = (delay > SYNC_THRESHOLD) ? delay : SYNC_THRESHOLD;
+
+        if (fabs(diff) < NOSYNC_THRESHOLD) {
+            if (diff <= -threshold) {
+                // 慢了，delay设为0
+                delay = 0;
+            } else if (diff >= threshold) {
+                // 快了，加倍delay
+                delay *= 2;
+            }
+        }
+        videoChannel->frame_timer += delay;
+        double actual_delay = videoChannel->frame_timer - static_cast<double>(av_gettime()) / 1000000.0;
+        if (actual_delay <= 0.010)
+            actual_delay = 0.010;
+
+//        std::cout << "delay time : " << static_cast<int>(actual_delay * 1000 + 0.5) << std::endl;
+        schedule_refresh(static_cast<int>(actual_delay * 1000 + 0.5));
+        if (videoChannel->ScreenVaild() && !videoChannel->ScreenSameIn(pixel_buffer)) {
+            videoChannel->Destroy();
+        }
+        if (!videoChannel->ScreenVaild()) {
+            if (!videoChannel->Create(pixel_buffer)) {
+                return false;
+            }
+//            channels_.emplace(channel->window_id, channel);
+        }
+        videoChannel->Update(pixel_buffer);
+        videoChannel->ready_queue_.push(std::move(pixel_buffer));
+        return true;
+    }
+
+    bool show() {
+        show_internal(*videoContainer.sources.begin(), (*audioContainer.channels_.begin()).get());
+//        for (auto& v : videoContainer.sources) {
+//            for (auto& a : audioContainer.channels_) {
+//                if (a->uid == v->uid) {
+//                    show_internal(v, a.get());
+////                    videoContainer.channels_.emplace(v->window_id, v);
+//                }
+//            }
+//        }
+        return true;
     }
 };

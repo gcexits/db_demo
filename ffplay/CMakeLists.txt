@@ -24,10 +24,6 @@ set(SOURCE_FILES
         ${ROOT}/../root/src_code/hlring/RingBuffer.cpp
         ${ROOT}/../root/src_code/hlring/rbuf.c
         ${ROOT}/../root/src_code/network/HttpClient.cpp
-        ${ROOT}/Audio.cpp
-        ${ROOT}/Media.cpp
-        ${ROOT}/PacketQueue.cpp
-        ${ROOT}/FrameQueue.cpp
         ${ROOT}/VideoDisplay.cpp)
 
 #include_directories(${ROOT})

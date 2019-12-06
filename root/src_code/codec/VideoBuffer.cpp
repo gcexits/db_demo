@@ -1,7 +1,3 @@
-//
-// Created by Johnny on 2/8/18.
-//
-
 #include "VideoBuffer.h"
 #include <string.h>
 

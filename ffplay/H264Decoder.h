@@ -80,7 +80,7 @@ public:
 public:
     H264Decode() {
         av_log_set_level(AV_LOG_QUIET);
-        playInternal.Init("video");
+        playInternal.Init("123");
     }
 
     bool OpenDecode(const AVCodecParameters* param) {

@@ -11,6 +11,7 @@ void RegisterPlayer() {
 
     SDLPlayer* player = SDLPlayer::getPlayer();
     AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
+    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
 }
 
 int main(int argc, char* argv[]) {
@@ -19,6 +20,7 @@ int main(int argc, char* argv[]) {
     duobei::HttpFile httpFile;
     std::string url = "http://vodkgeyttp8.vod.126.net/cloudmusic/IjAyMCAgMyEgYDEwIDhhMg==/mv/5619601/79bd07d7bd9394871da0c324d53f48dd.mp4?wsSecret=daadca716d9872c09b8d2dcbb780587f&wsTime=1573551857";
     url = "/Users/guochao/Downloads/5_往后余生.webm";
+    url = "/Users/guochao/Downloads/2_告白气球.mkv";
 
     int ret = httpFile.Open(url);
 
@@ -47,9 +49,7 @@ int main(int argc, char* argv[]) {
         }
     });
 
-    demuxer.mediaState.audio->audio_play();
-    schedule_refresh(&demuxer.mediaState, 40);
-    SDLPlayer::getPlayer()->videoContainer.mediaState = &demuxer.mediaState;
+    schedule_refresh(40);
     SDLPlayer::getPlayer()->EventLoop();
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {

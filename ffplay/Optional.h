@@ -8,7 +8,7 @@ namespace AVCallback {
 using VideoPlayer = std::function<void(void*, void*, uint32_t, int, int, double pts)>;
 void* initVideoPlayer(const std::string& uid, VideoPlayer* f);
 
-using PcmPlayer = std::function<void(void*, void*, uint32_t)>;
+using PcmPlayer = std::function<void(void*, void*, uint32_t, int64_t pts)>;
 void* initPcmPlayer(const std::string& uid, PcmPlayer* f);
 
 void destroyPcmPlayer(void* handle);
@@ -50,10 +50,10 @@ struct PlayInternal {
         handle = nullptr;
     }
 
-    void Play(void* data, uint32_t size) {
+    void Play(void* data, uint32_t size, int64_t pts) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (handle) {
-            player(handle, data, size);
+            player(handle, data, size, pts);
         }
     }
 };
