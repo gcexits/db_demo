@@ -29,9 +29,57 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
         auto success = context.Scaling(AV_PIX_FMT_YUV420P);
         if (success) {
             int size = av_image_get_buffer_size((AVPixelFormat)context.scale_frame->format, context.scale_frame->width, context.scale_frame->height, 1);
-            playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size, context.scale_frame->width, context.scale_frame->height);
+            playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size, context.scale_frame->width, context.scale_frame->height, pts);
             av_freep(&context.scale_frame->data[0]);
         }
+    }
+    return true;
+}
+bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
+    auto ret = context.Send(pkt);
+    if (ret < 0) {
+        return false;
+    }
+    if (context.Update()) {
+        context.Close();
+        context.Open(false, context.parameters);
+        ret = context.Send(pkt);
+        if (ret < 0) {
+            return false;
+        }
+    }
+
+    while (ret >= 0) {
+        int result = context.Receive();
+        if (result < 0) {
+            return false;
+        }
+
+        if (context.src_frame->best_effort_timestamp == AV_NOPTS_VALUE) {
+            pts = 0;
+        } else {
+            context.src_frame->pts = context.src_frame->best_effort_timestamp;
+        }
+
+        pts = av_q2d(videoState.stream->time_base) * context.src_frame->pts;
+        pts = videoState.synchronize(context.src_frame, pts);
+
+        auto success = context.Scaling(AV_PIX_FMT_YUV420P);
+        if (success) {
+            playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size, context.scale_frame->width, context.scale_frame->height, pts);
+            av_freep(&context.scale_frame->data[0]);
+        }
+
+//        auto that = static_cast<VideoChannel*>(playInternal.handle);
+//        if (that->work_queue_.size() >= 30) {
+//            std::this_thread::sleep_for(std::chrono::milliseconds(500 * 2));
+//        }
+//        int size_ = av_image_get_buffer_size((AVPixelFormat)context.src_frame->format, context.src_frame->width, context.src_frame->height, 1);
+//        uint8_t *videoBuffer = new uint8_t[size_];
+//        av_image_fill_arrays(context.src_frame->data, context.src_frame->linesize,
+//                             videoBuffer, static_cast<AVPixelFormat>(context.src_frame->format), context.src_frame->width, context.src_frame->height, 1);
+//        playInternal.Play(context.src_frame->data[0], size, context.src_frame->width, context.src_frame->height, pts);
+//        delete []videoBuffer;
     }
     return true;
 }
@@ -42,7 +90,7 @@ bool H264Decode::Context::Open(bool with_hw, const AVCodecParameters* param) {
     if (param) {
         parameters = param;
         codecCtx_ = avcodec_alloc_context3(nullptr);
-        avcodec_parameters_to_context(codecCtx_, param);
+        assert(avcodec_parameters_to_context(codecCtx_, param) == 0);
         codec = avcodec_find_decoder(codecCtx_->codec_id);
     } else {
         codec = avcodec_find_decoder(AV_CODEC_ID_H264);

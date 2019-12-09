@@ -5,7 +5,7 @@ extern "C" {
 }
 
 #include "../codec/H264Decoder.h"
-#include "../codec/AACDecoder.h"
+#include "../codec/AudioDecoder.h"
 #include "../display/SDLPlayer.h"
 
 #include <thread>

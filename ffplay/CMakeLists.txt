@@ -17,13 +17,14 @@ set(SOURCE_FILES
         ${ROOT}/main.cpp
         ${ROOT}/HttpFile.cpp
         ${ROOT}/SDLPlayer.cpp
-        ${ROOT}/H264Decoder.cpp
-        ${ROOT}/AudioDecoder.cpp
-        ${ROOT}/Optional.cpp
         ${ROOT}/Demuxer.cpp
+
+        ${ROOT}/../root/src_code/codec/AudioDecoder.cpp
+        ${ROOT}/../root/src_code/codec/H264Decoder.cpp
         ${ROOT}/../root/src_code/hlring/RingBuffer.cpp
         ${ROOT}/../root/src_code/hlring/rbuf.c
         ${ROOT}/../root/src_code/network/HttpClient.cpp
+        ${ROOT}/../root/src_code/utils/Optional.cpp
         ${ROOT}/VideoDisplay.cpp)
 
 #include_directories(${ROOT})

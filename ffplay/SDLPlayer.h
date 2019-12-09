@@ -1,15 +1,14 @@
 #pragma once
 
-#include <iostream>
 #include <map>
 #include <queue>
 #include <set>
 
-#include "Optional.h"
+#include "../root/src_code/utils/Optional.h"
 
 #include "../root/src_code/hlring/RingBuffer.h"
 #include "VideoDisplay.h"
-#include "H264Decoder.h"
+#include "../root/src_code/codec/H264Decoder.h"
 
 #include <SDL2/SDL.h>
 
@@ -75,8 +74,8 @@ struct VideoChannel {
         int capacity = 0;
         int w = 0;
         int h = 0;
-        double pts = 0;
-        PixelBuffer(void* _data, int _pitch, int _w, int _h, double _p) {
+        int64_t pts = 0.0;
+        PixelBuffer(void* _data, int _pitch, int _w, int _h, int64_t _p) {
             capacity = _w * _h * 3 / 2 + 1;
             data = new uint8_t[capacity];
             update(_data, _pitch, _w, _h, _p);
@@ -88,7 +87,7 @@ struct VideoChannel {
             }
         }
 
-        bool update(void* _data, int _pitch, int _w, int _h, double _p) {
+        bool update(void* _data, int _pitch, int _w, int _h, int64_t _p) {
             int size = _w * _h * 3 / 2;
             if (size < capacity) {
                 memcpy(data, _data, size);
@@ -194,7 +193,7 @@ struct VideoChannel {
         SDL_RenderPresent(renderer);
     }
 
-    void push(void* data, uint32_t size, int w, int h, double pts) {
+    void push(void* data, uint32_t size, int w, int h, int64_t pts) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (ready_queue_.empty()) {
             work_queue_.emplace(new PixelBuffer(data, size, w, h, pts));
@@ -219,6 +218,7 @@ struct AudioContainer {
     void MixAudio(Uint8* stream, int len) {
         SDL_memset(stream, 0, len);
         std::lock_guard<std::mutex> lock(mtx);
+
         for (auto& x : channels_) {
             while (len > 0) {
                 if (x->buffer_.size() == 0) {
@@ -308,8 +308,9 @@ public:
     static SDLPlayer* player;
 
     SDL_AudioSpec audioSpec;
-    VideoContainer videoContainer;
     AudioContainer audioContainer;
+    VideoContainer videoContainer;
+
 
     static void AudioCallback(void* userdata, Uint8* stream, int len) {
         auto that = (SDLPlayer*)userdata;
@@ -343,7 +344,7 @@ public:
         return videoContainer.add(uid);
     }
 
-    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h, double pts) {
+    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h, int64_t pts) {
         assert(handle);
         auto that = static_cast<VideoChannel*>(handle);
         that->push(data, size, w, h, pts);
@@ -386,8 +387,8 @@ public:
         videoChannel->work_queue_.pop();
         lock_.unlock();
 
-        double current_pts = pixel_buffer->pts;
-        double delay = current_pts - videoChannel->frame_last_pts;
+        auto current_pts = pixel_buffer->pts;
+        auto delay = current_pts - videoChannel->frame_last_pts;
         if (delay <= 0 || delay >= 1.0)
             delay = videoChannel->frame_last_delay;
 
@@ -395,11 +396,11 @@ public:
         videoChannel->frame_last_pts = current_pts;
 
         // 当前显示帧的PTS来计算显示下一帧的延迟
-        double ref_clock = audioChannel->get_audio_clock();
+        auto ref_clock = audioChannel->get_audio_clock();
 
-        double diff = current_pts - ref_clock;  // diff < 0 => video slow,diff > 0 => video quick
+        auto diff = current_pts - ref_clock;  // diff < 0 => video slow,diff > 0 => video quick
 
-        double threshold = (delay > SYNC_THRESHOLD) ? delay : SYNC_THRESHOLD;
+        auto threshold = (delay > SYNC_THRESHOLD) ? delay : SYNC_THRESHOLD;
 
         if (fabs(diff) < NOSYNC_THRESHOLD) {
             if (diff <= -threshold) {

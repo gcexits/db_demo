@@ -2,8 +2,8 @@
 
 #include "SDLPlayer.h"
 
-#include "H264Decoder.h"
-#include "AudioDecoder.h"
+#include "../root/src_code/codec/H264Decoder.h"
+#include "../root/src_code/codec/AudioDecoder.h"
 
 #include <thread>
 

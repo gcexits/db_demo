@@ -16,11 +16,16 @@ struct AudioChannel {
 
     explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 0) {}
 
-    void push(void* data, uint32_t size) {
+    void push(void* data, uint32_t size, int64_t pts) {
         std::lock_guard<std::mutex> lock(mtx_);
+        if (buffer_.size() > 1024 * 1024 * 1024) {
+            std::cout << "date send too quick" << std::endl;
+            abort();
+        }
         buffer_.write(data, size);
     }
     void clear() {
+        std::lock_guard<std::mutex> lock(mtx_);
         buffer_.clean();
     }
 };
@@ -32,10 +37,11 @@ struct VideoChannel {
         int capacity = 0;
         int w = 0;
         int h = 0;
-        PixelBuffer(void* _data, int _pitch, int _w, int _h) {
+        int64_t pts = 0.0;
+        PixelBuffer(void* _data, int _pitch, int _w, int _h, int64_t _p) {
             capacity = _w * _h * 3 / 2 + 1;
             data = new uint8_t[capacity];
-            update(_data, _pitch, _w, _h);
+            update(_data, _pitch, _w, _h, _p);
         }
 
         ~PixelBuffer() {
@@ -44,13 +50,14 @@ struct VideoChannel {
             }
         }
 
-        bool update(void* _data, int _pitch, int _w, int _h) {
+        bool update(void* _data, int _pitch, int _w, int _h, int64_t _p) {
             int size = _w * _h * 3 / 2;
             if (size < capacity) {
                 memcpy(data, _data, size);
                 pitch = _w;
                 w = _w;
                 h = _h;
+                pts = _p;
                 return true;
             }
             return false;
@@ -78,6 +85,7 @@ struct VideoChannel {
     bool ScreenVaild() const {
         return rect.w != 0 && rect.h != 0;
     }
+
     void Destroy() {
         SDL_DestroyWindow(window);
         SDL_DestroyRenderer(renderer);
@@ -88,6 +96,7 @@ struct VideoChannel {
         rect.w = 0;
         rect.h = 0;
     }
+
     bool Create(const PixelBuffer::Ptr& pixel_buffer) {
         window = SDL_CreateWindow(uid.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                   pixel_buffer->w, pixel_buffer->h, SDL_WINDOW_OPENGL);
@@ -113,16 +122,16 @@ struct VideoChannel {
         SDL_RenderPresent(renderer);
     }
 
-    void push(void* data, uint32_t size, int w, int h) {
+    void push(void* data, uint32_t size, int w, int h, int64_t pts) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (ready_queue_.empty()) {
-            work_queue_.emplace(new PixelBuffer(data, size, w, h));
+            work_queue_.emplace(new PixelBuffer(data, size, w, h, pts));
         } else {
             auto& e = ready_queue_.front();
-            if (e->update(data, size, w, h)) {
+            if (e->update(data, size, w, h, pts)) {
                 work_queue_.push(std::move(e));
             } else {
-                work_queue_.emplace(new PixelBuffer(data, size, w, h));
+                work_queue_.emplace(new PixelBuffer(data, size, w, h, pts));
             }
             ready_queue_.pop();
         }
@@ -141,12 +150,14 @@ struct AudioContainer {
 
         for (auto& x : channels_) {
             while (len > 0) {
-                std::lock_guard<std::mutex> lock(x->mtx_);
                 if (x->buffer_.size() == 0) {
                     continue;
                 }
                 auto len1 = x->buffer_.size() > len ? len : x->buffer_.size();
+
+                std::lock_guard<std::mutex> lock(x->mtx_);
                 x->buffer_.read(cache, len1);
+
                 SDL_MixAudio(stream, cache, len1, SDL_MIX_MAXVOLUME);
 
                 len -= len1;
@@ -267,6 +278,7 @@ struct VideoContainer {
 };
 
 class SDLPlayer {
+public:
     explicit SDLPlayer();
     static SDLPlayer* player;
 
@@ -280,7 +292,6 @@ class SDLPlayer {
         that->audioContainer.MixAudio(stream, len);
     }
 
-public:
     bool running = true;
     static SDLPlayer* getPlayer();
     virtual ~SDLPlayer() = default;
@@ -297,21 +308,21 @@ public:
         audioSpec.silence = 0;
         audioSpec.samples = nb_samples;
         audioSpec.callback = AudioCallback;
-        audioSpec.userdata = this;  //可以直接在内部传值给callback函数
+        audioSpec.userdata = this;
         SDL_OpenAudio(&audioSpec, NULL);
         SDL_PauseAudio(0);
     }
 
     void* openVideo(const std::string& uid, AVRegister::VideoPlayer* f) {
         using namespace std::placeholders;
-        *f = std::bind(&SDLPlayer::pushVideoData, this, _1, _2, _3, _4, _5);
+        *f = std::bind(&SDLPlayer::pushVideoData, this, _1, _2, _3, _4, _5, _6);
         return videoContainer.add(uid);
     }
 
-    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h) {
+    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h, int64_t pts) {
         assert(handle);
         auto that = static_cast<VideoChannel*>(handle);
-        that->push(data, size, w, h);
+        that->push(data, size, w, h, pts);
     }
 
     void closeVideo(void* handle) {
@@ -320,14 +331,14 @@ public:
     // initPcmPlayer
     void* openAudio(const std::string& uid, AVRegister::PcmPlayer* f) {
         using namespace std::placeholders;
-        *f = std::bind(&SDLPlayer::pushAudioData, this, _1, _2, _3);
+        *f = std::bind(&SDLPlayer::pushAudioData, this, _1, _2, _3, _4);
         return audioContainer.add(uid);
     }
 
-    void pushAudioData(void* handle, void* data, uint32_t size) {
+    void pushAudioData(void* handle, void* data, uint32_t size, int64_t pts) {
         assert(handle);
         auto that = static_cast<AudioChannel*>(handle);
-        that->push(data, size);
+        that->push(data, size, pts);
     }
 
     // destroyPcmPlayer

@@ -1,6 +1,5 @@
 #include "AudioDecoder.h"
 #include <cassert>
-#include <iostream>
 
 bool AudioDecode::Decode(AVPacket *pkt) {
     int result = avcodec_send_packet(codecCtx_, pkt);
@@ -41,10 +40,9 @@ bool AudioDecode::Decode(AVPacket *pkt) {
                                              0, nullptr);
             swr_init(pcm_convert);
         }
-        int nb = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
-        assert(nb > 0);
-        assert(pkt->pts != AV_NOPTS_VALUE);
-        playInternal.Play(dstFram->data[0], buffersize, pkt->pts);
+        ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
+        assert(ret > 0);
+        playInternal.Play(dstFram->data[0], buffersize, 0.0);
         delete[] dstPcm;
         av_frame_free(&dstFram);
         //        av_fast_malloc

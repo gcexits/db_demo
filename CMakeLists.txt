@@ -86,7 +86,7 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/src_code/codec/H264Decoder.cpp
         ${ROOT}/src_code/codec/H264Encoder.cpp
-        ${ROOT}/src_code/codec/AACDecoder.cpp
+        ${ROOT}/src_code/codec/AudioDecoder.cpp
         ${ROOT}/src_code/codec/SpeexDecoder.cpp
         ${ROOT}/src_code/codec/SpeexEncoder.cpp
         ${ROOT}/src_code/codec/OpusDecoder.cpp

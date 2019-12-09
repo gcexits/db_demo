@@ -11,7 +11,7 @@ int SpeexDecode::Decode(char *data, uint32_t size) {
     // 对帧进行解码
     int ret = speex_decode_int(dec_state, &bits, output_frame);
     while (ret == 0) {
-        playInternal.Play(output_frame, frame_size * 2);
+        playInternal.Play(output_frame, frame_size * 2, 0.0);
         ret = speex_decode_int(dec_state, &bits, output_frame);
     }
     return frame_count;

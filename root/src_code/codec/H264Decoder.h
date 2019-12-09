@@ -3,15 +3,49 @@
 #include <mutex>
 
 extern "C" {
+#include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+#include "libavutil/time.h"
 }
 
 #include "../utils/Optional.h"
 
+struct VideoState_ {
+    AVStream *stream;           // video stream
+
+    double video_clock;
+
+    double synchronize(AVFrame *srcFrame, double pts) {
+        double frame_delay;
+
+        if (pts != 0)
+            video_clock = pts;  // Get pts,then set video clock to it
+        else
+            pts = video_clock;  // Don't get pts,set it to video clock
+
+        frame_delay = av_q2d(stream->time_base);
+        frame_delay += srcFrame->repeat_pict * (frame_delay * 0.5);
+
+        video_clock += frame_delay;
+
+        return pts;
+    }
+
+    VideoState_() {
+        video_clock = 0.0;
+        stream = nullptr;
+    }
+
+    ~VideoState_() = default;
+};
+
 class H264Decode {
+public:
     video::PlayInternal playInternal;
+    VideoState_ videoState;
+    int64_t pts = 0.0;
 
     struct Context {
         struct VideoSize {
@@ -58,4 +92,5 @@ public:
     }
 
     bool Decode(uint8_t* buf, uint32_t size);
+    bool Decode(AVPacket *pkt, uint32_t size);
 };
