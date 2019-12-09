@@ -27,6 +27,137 @@ struct AVPacket;
 struct AVIOContext;
 
 namespace duobei {
+namespace format {
+struct Element {
+    uint8_t* video = nullptr;
+    int8_t* audio = nullptr;
+    int length = 0;
+    int capacity = 0;
+    int width = 0;
+    int height = 0;
+    int format = 0;
+    bool key = false;
+    uint32_t timestamp = 0;
+    bool empty = true;
+
+    // YUV
+    Element(const uint8_t* buffer, int size, int width_, int height_, int format_, uint32_t timestamp_) noexcept {
+        //capacity = utility::nextPowerOf2(size);
+        capacity = size + 1;
+        video = new uint8_t[capacity];
+        update(width_, height_, format_);
+        [[maybe_unused]] auto r = update(buffer, size, false, timestamp_);
+        assert(r);
+    }
+    // H264
+    Element(const uint8_t* buffer, int length_, bool keyFrame, uint32_t timestamp_) noexcept {
+        //capacity = utility::nextPowerOf2(length_);
+        capacity = length_ + 1;
+        video = new uint8_t[capacity];
+        [[maybe_unused]] auto r = update(buffer, length_, keyFrame, timestamp_);
+        assert(r);
+    }
+
+    // Audio
+    Element(const int8_t* buffer, int length_, uint32_t timestamp_) noexcept {
+        //capacity = utility::nextPowerOf2(length_);
+        capacity = length_ + 1;
+        audio = new int8_t[capacity];
+        [[maybe_unused]] auto r = update(buffer, length_, timestamp_);
+        assert(r);
+    }
+
+    bool isAudio() const { return video == nullptr; }
+
+    ~Element() {
+        if (isAudio()) {
+            delete[] audio;
+        } else {
+            delete[] video;
+        }
+    }
+
+    void update(int width_, int height_, int format_) {
+        width = width_;
+        height = height_;
+        format = format_;
+    }
+    bool update(const int8_t* buffer, int size, uint32_t ts) {
+        if (size > capacity) {
+            return false;
+        }
+
+        length = size;
+        timestamp = ts;
+        if (buffer) {
+            memcpy(audio, buffer, length);
+            empty = false;
+        } else {
+            empty = true;
+        }
+        return true;
+    }
+
+    bool update(const uint8_t* buffer, int size, bool k, uint32_t ts) {
+        if (size > capacity) {
+            return false;
+        }
+        length = size;
+        timestamp = ts;
+        key = k;
+        if (buffer) {
+            memcpy(video, buffer, length);
+            empty = false;
+        } else {
+            empty = true;
+        }
+        return true;
+    }
+
+    using Ptr = std::unique_ptr<Element>;
+    using Container = std::vector<Ptr>;
+
+    struct Compare {
+        bool operator()(const Ptr& a, const Ptr& b) {
+            return a->length > b->length;
+        }
+    };
+    using PriorityQueue = std::priority_queue<Ptr, Container, Compare>;
+
+    struct TimeSequenceCompare {
+        bool operator()(const Ptr& a, const Ptr& b) {
+            return a->timestamp > b->timestamp;
+        }
+    };
+    using TimeSequenceQueue = std::priority_queue<Ptr, Container, TimeSequenceCompare>;
+
+    using Queue = std::queue<Ptr>;
+
+    // note: 就绪队列入队
+    static void PushReadyPriorityQueue(PriorityQueue& queue_, Ptr&& e) {
+        if (queue_.empty()) {
+            queue_.push(std::move(e));
+        } else {
+            auto& t = queue_.top();
+            if (e->capacity > t->capacity) {
+                queue_.pop();
+                queue_.push(std::move(e));
+            }
+        }
+    }
+
+    static void Clear(Queue& queue) {
+        while (!queue.empty()) {
+            queue.pop();
+        }
+    }
+
+    template <typename... _Args>
+    static Ptr New(_Args&&... __args) {
+        return std::make_unique<Element>(std::forward<_Args>(__args)...);
+    }
+};
+}
 
 namespace Video {
 
