@@ -7,10 +7,12 @@
 #include "../root/src_code/utils/Optional.h"
 
 #include "../root/src_code/hlring/RingBuffer.h"
-#include "VideoDisplay.h"
 #include "../root/src_code/codec/H264Decoder.h"
 
 #include <SDL2/SDL.h>
+
+static const double SYNC_THRESHOLD = 0.01;
+static const double NOSYNC_THRESHOLD = 10.0;
 
 struct AudioChannel {
     struct AudioState_ {
@@ -302,6 +304,8 @@ struct VideoContainer {
     }
 };
 
+#define FF_REFRESH_EVENT (SDL_USEREVENT)
+
 class SDLPlayer {
 public:
     explicit SDLPlayer();
@@ -375,6 +379,18 @@ public:
         SDL_CloseAudio();
         SDL_Quit();
         running = false;
+    }
+
+
+    static uint32_t sdl_refresh_timer_cb(uint32_t interval, void *opaque) {
+        SDL_Event event;
+        event.type = FF_REFRESH_EVENT;
+        SDL_PushEvent(&event);
+        return 0;
+    }
+
+    void schedule_refresh(int delay) {
+        SDL_AddTimer(delay, sdl_refresh_timer_cb, nullptr);
     }
 
     bool show_internal(VideoChannel* videoChannel, AudioChannel *audioChannel) {
