@@ -66,7 +66,8 @@ bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
 
         auto success = context.Scaling(AV_PIX_FMT_YUV420P);
         if (success) {
-            playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size, context.scale_frame->width, context.scale_frame->height, pts);
+            auto size_ = av_image_get_buffer_size((AVPixelFormat)context.scale_frame->format, context.scale_frame->width, context.scale_frame->height, 1);
+            playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size_, context.scale_frame->width, context.scale_frame->height, pts);
             av_freep(&context.scale_frame->data[0]);
         }
 

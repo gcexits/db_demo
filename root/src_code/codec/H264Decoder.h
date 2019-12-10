@@ -45,7 +45,7 @@ class H264Decode {
 public:
     video::PlayInternal playInternal;
     VideoState_ videoState;
-    int64_t pts = 0.0;
+    double pts = 0.0;
 
     struct Context {
         struct VideoSize {
