@@ -43,7 +43,7 @@ struct AudioChannel {
 
     explicit AudioChannel(const std::string& uid) : uid(uid), buffer_(uid, 0) {}
 
-    void push(void* data, uint32_t size, int64_t pts) {
+    void push(void* data, uint32_t size, double pts) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (buffer_.size() > 1024 * 1024 * 1024) {
             std::cout << "date send too quick" << std::endl;
@@ -76,8 +76,8 @@ struct VideoChannel {
         int capacity = 0;
         int w = 0;
         int h = 0;
-        int64_t pts = 0.0;
-        PixelBuffer(void* _data, int _pitch, int _w, int _h, int64_t _p) {
+        double pts = 0.0;
+        PixelBuffer(void* _data, int _pitch, int _w, int _h, double _p) {
             capacity = _w * _h * 3 / 2 + 1;
             data = new uint8_t[capacity];
             update(_data, _pitch, _w, _h, _p);
@@ -89,7 +89,7 @@ struct VideoChannel {
             }
         }
 
-        bool update(void* _data, int _pitch, int _w, int _h, int64_t _p) {
+        bool update(void* _data, int _pitch, int _w, int _h, double _p) {
             int size = _w * _h * 3 / 2;
             if (size < capacity) {
                 memcpy(data, _data, size);
@@ -195,7 +195,7 @@ struct VideoChannel {
         SDL_RenderPresent(renderer);
     }
 
-    void push(void* data, uint32_t size, int w, int h, int64_t pts) {
+    void push(void* data, uint32_t size, int w, int h, double pts) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (ready_queue_.empty()) {
             work_queue_.emplace(new PixelBuffer(data, size, w, h, pts));
@@ -348,7 +348,7 @@ public:
         return videoContainer.add(uid);
     }
 
-    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h, int64_t pts) {
+    void pushVideoData(void* handle, void* data, uint32_t size, int w, int h, double pts) {
         assert(handle);
         auto that = static_cast<VideoChannel*>(handle);
         that->push(data, size, w, h, pts);
@@ -364,7 +364,7 @@ public:
         return audioContainer.add(uid);
     }
 
-    void pushAudioData(void* handle, void* data, uint32_t size, int64_t pts) {
+    void pushAudioData(void* handle, void* data, uint32_t size, double pts) {
         assert(handle);
         auto that = static_cast<AudioChannel*>(handle);
         that->push(data, size, pts);

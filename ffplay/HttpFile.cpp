@@ -344,6 +344,7 @@ void HttpFile::Close() {
     {
         std::lock_guard<std::mutex> lock(close_Mx_);
         worker.running = false;
+        //worker.curl_agent.Terminate();
     }
 
     do {

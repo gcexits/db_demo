@@ -6,10 +6,36 @@
 
 #include "../utils/Optional.h"
 #include "../hlring/RingBuffer.h"
+#include "../codec/H264Decoder.h"
 
 #include <SDL2/SDL.h>
 
+static const double SYNC_THRESHOLD = 0.01;
+static const double NOSYNC_THRESHOLD = 10.0;
+
 struct AudioChannel {
+    struct AudioState_ {
+        int64_t audio_buff_consume;
+        int64_t decode_size;
+        int channels;
+        double audio_clock; // audio clock
+        AVStream *stream; // audio stream
+        AudioState_() {
+            audio_buff_consume = 0;
+            decode_size = 0;
+            channels = 2;
+            audio_clock = 0;
+            stream = nullptr;
+        }
+        ~AudioState_() {
+            if (stream) {
+                stream = nullptr;
+            }
+        }
+
+    };
+
+    AudioState_ audioState;
     std::mutex mtx_;
     std::string uid;
     RingBuffer buffer_;
@@ -23,10 +49,22 @@ struct AudioChannel {
             abort();
         }
         buffer_.write(data, size);
+        audioState.audio_clock = av_q2d(audioState.stream->time_base) * pts;
+        audioState.audio_clock += static_cast<double>(size) / (2 * audioState.channels * audioState.stream->codecpar->sample_rate);
+        audioState.decode_size += size;
     }
     void clear() {
         std::lock_guard<std::mutex> lock(mtx_);
         buffer_.clean();
+    }
+
+    // get audio clock
+    double get_audio_clock() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        // todo: 剩余的数据块
+        int hw_buf_size = audioState.decode_size - audioState.audio_buff_consume;
+        int bytes_per_sec = audioState.stream->codecpar->sample_rate * audioState.channels * 2;
+        return audioState.audio_clock - static_cast<double>(hw_buf_size) / bytes_per_sec;
     }
 };
 
@@ -65,6 +103,10 @@ struct VideoChannel {
 
         using Ptr = std::unique_ptr<PixelBuffer>;
     };
+
+    double frame_timer = static_cast<double>(av_gettime()) / 1000000.0;         // Sync fields
+    double frame_last_pts = 0;
+    double frame_last_delay = 40e-3;
 
     Uint32 window_id;
     SDL_Window* window = nullptr;
@@ -162,6 +204,9 @@ struct AudioContainer {
 
                 len -= len1;
                 stream += len1;
+
+                // todo: 消耗的数据块
+                x->audioState.audio_buff_consume += len1;
             }
         }
     }
@@ -276,6 +321,8 @@ struct VideoContainer {
         clear();
     }
 };
+
+#define FF_REFRESH_EVENT (SDL_USEREVENT)
 
 class SDLPlayer {
 public:

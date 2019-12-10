@@ -56,12 +56,16 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
         if (ret == AVERROR_EOF || avio_feof(ifmt_ctx->pb)) {
             return ReadStatus::EndOff;
         }
+        //av_seek_frame(ifmt_ctx, pkt->stream_index, 0, AVSEEK_FLAG_BACKWARD);
         return ReadStatus::Error;
     }
     if (pkt->stream_index == videoindex) {
-        video_decode.Decode(pkt, 0);
+        // todo: 给h264裸流添加sps pps
+        addSpsPps(pkt, CodecPar(videoindex), "h264_mp4toannexb");
+        video_decode.Decode(pkt->data, pkt->size);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
+//        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
         audio_decode.Decode(pkt);
         {
             SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);

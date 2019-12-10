@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SDLPlayer.h"
 
 SDLPlayer* SDLPlayer::player = nullptr;
@@ -64,6 +66,7 @@ void SDLPlayer::EventLoop() {
                 }
             case SDL_MOUSEBUTTONDOWN:
                 break;
+            case SDLK_SPACE:
             default:
                 break;
         }
