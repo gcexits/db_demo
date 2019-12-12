@@ -1,5 +1,6 @@
 #include "H264Decoder.h"
 #include <cassert>
+#include "../display/MediaState.h"
 
 bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
     AVPacket pkt;
@@ -35,7 +36,7 @@ bool H264Decode::Decode(uint8_t *buf, uint32_t size) {
     }
     return true;
 }
-bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
+bool H264Decode::Decode(AVPacket *pkt, struct VideoState_1 *m) {
     auto ret = context.Send(pkt);
     if (ret < 0) {
         return false;
@@ -61,8 +62,8 @@ bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
             context.src_frame->pts = context.src_frame->best_effort_timestamp;
         }
 
-        pts = av_q2d(videoState.stream->time_base) * context.src_frame->pts;
-        pts = videoState.synchronize(context.src_frame, pts);
+        pts = av_q2d(m->stream->time_base) * context.src_frame->pts;
+        pts = m->synchronize(context.src_frame, pts);
 
         auto success = context.Scaling(AV_PIX_FMT_YUV420P);
         if (success) {
@@ -70,17 +71,6 @@ bool H264Decode::Decode(AVPacket *pkt, uint32_t size) {
             playInternal.Play(static_cast<void *>(context.scale_frame->data[0]), size_, context.scale_frame->width, context.scale_frame->height, pts);
             av_freep(&context.scale_frame->data[0]);
         }
-
-//        auto that = static_cast<VideoChannel*>(playInternal.handle);
-//        if (that->work_queue_.size() >= 30) {
-//            std::this_thread::sleep_for(std::chrono::milliseconds(500 * 2));
-//        }
-//        int size_ = av_image_get_buffer_size((AVPixelFormat)context.src_frame->format, context.src_frame->width, context.src_frame->height, 1);
-//        uint8_t *videoBuffer = new uint8_t[size_];
-//        av_image_fill_arrays(context.src_frame->data, context.src_frame->linesize,
-//                             videoBuffer, static_cast<AVPixelFormat>(context.src_frame->format), context.src_frame->width, context.src_frame->height, 1);
-//        playInternal.Play(context.src_frame->data[0], size, context.src_frame->width, context.src_frame->height, pts);
-//        delete []videoBuffer;
     }
     return true;
 }

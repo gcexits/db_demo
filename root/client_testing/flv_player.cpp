@@ -223,9 +223,11 @@ int h264_decode_sps(BYTE *buf, unsigned int nLen, int &width, int &height, int &
 
 int flv_player() {
     FlvPlayer flvPlayer;
+    MediaState mediaState;
+    assert(SDLPlayer::getPlayer()->setMediaState(&mediaState));
 
     flvPlayer.startParse();
-    SDLPlayer::getPlayer()->EventLoop();
+    SDLPlayer::getPlayer()->EventLoop(mediaState);
     flvPlayer.stopParse();
 
     std::cout << "program exit" << std::endl;

@@ -59,5 +59,5 @@ public:
         }
         playInternal.Destroy();
     }
-    bool Decode(AVPacket *pkt);
+    bool Decode(AVPacket *pkt, struct AudioState_1 *m);
 };

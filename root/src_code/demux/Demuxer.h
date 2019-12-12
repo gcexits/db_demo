@@ -1,12 +1,9 @@
 #pragma once
 
-extern "C" {
-#include <libavformat/avformat.h>
-}
-
 #include "../codec/H264Decoder.h"
 #include "../codec/AudioDecoder.h"
 #include "../display/SDLPlayer.h"
+#include "../display/MediaState.h"
 
 #include <thread>
 
@@ -152,8 +149,6 @@ public:
     struct AVFormatContext* ifmt_ctx = nullptr;
     bool need_free_ = true;
     struct AVPacket* pkt = nullptr;
-    H264Decode video_decode;
-    AudioDecode audio_decode;
     bool Opened() {
         return opened_;
     }
@@ -173,13 +168,13 @@ public:
     bool Open(const std::string& inUrl) {
         return true;
     }
-    bool Open(void* param);
+    bool Open(void* param, struct MediaState& m);
 
     // todo: 添加sps pps头
     bool addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar, std::string name);
 
     // todo: 视频:0, 音频:1, 字幕:2, 失败:-1
-    ReadStatus ReadFrame();
+    ReadStatus ReadFrame(struct MediaState& m);
 
     bool isKeyFrame() {
         return pkt->flags & AV_PKT_FLAG_KEY;

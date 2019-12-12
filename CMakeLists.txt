@@ -60,12 +60,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/lib)
 
 set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/main.cpp
-        ${ROOT}/client_testing/ffmpeg_curl.cpp
         ${ROOT}/client_testing/flv_player.cpp
         ${ROOT}/client_testing/send_h264.cpp
         ${ROOT}/client_testing/send_speex.cpp
         ${ROOT}/client_testing/deal_yuv.cpp
         ${ROOT}/client_testing/ffmpeg_capture.cpp
+        ${ROOT}/client_testing/ffplay.cpp
 
         ${ROOT}/client_testing/audio_mix.cpp
         ${ROOT}/client_testing/demux_audio_mix.cpp

@@ -1,25 +1,25 @@
-#include "Demuxer.h"
-#include "HttpFile.h"
+#include "ffplay.h"
 
-#include "../root/src_code/utils/Optional.h"
-#include "../root/src_code/hlring/RingBuffer.h"
-#include "../root/src_code/hlring/rbuf.h"
-
-void RegisterPlayer() {
-    using namespace std::placeholders;
-
-    SDLPlayer* player = SDLPlayer::getPlayer();
-    AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
-    AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
+static uint32_t sdl_refresh_timer_cb(uint32_t interval, void *opaque) {
+    SDL_Event event;
+    event.type = FF_REFRESH_EVENT;
+    SDL_PushEvent(&event);
+    return 0;
 }
 
-int main(int argc, char* argv[]) {
-    RegisterPlayer();
+void schedule_refresh(int delay) {
+    SDL_AddTimer(delay, sdl_refresh_timer_cb, nullptr);
+}
+
+int ffplay() {
+    MediaState mediaState;
+    assert(SDLPlayer::getPlayer()->setMediaState(&mediaState));
 
     duobei::HttpFile httpFile;
     std::string url = "http://vodkgeyttp8.vod.126.net/cloudmusic/IjAyMCAgMyEgYDEwIDhhMg==/mv/5619601/79bd07d7bd9394871da0c324d53f48dd.mp4?wsSecret=daadca716d9872c09b8d2dcbb780587f&wsTime=1573551857";
     url = "/Users/guochao/Downloads/5_往后余生.webm";
-//    url = "/Users/guochao/Downloads/2_告白气球.mkv";
+    url = "/Users/guochao/Downloads/2_告白气球.mkv";
+    url = "/Users/guochao/Downloads/out.mkv";
 
     int ret = httpFile.Open(url);
 
@@ -33,23 +33,25 @@ int main(int argc, char* argv[]) {
     Demuxer demuxer;
     httpFile.startRead();
 
-    std::thread readthread = std::thread([&ioBufferContext, &demuxer] {
+    std::thread readthread = std::thread([&] {
         bool status = false;
         void* param = nullptr;
         do {
             ioBufferContext.OpenInput();
             param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
         } while (!status);
-        demuxer.Open(param);
+        demuxer.Open(param, mediaState);
         while (1) {
-            if (demuxer.ReadFrame() == Demuxer::ReadStatus::EndOff) {
+            if (demuxer.ReadFrame(mediaState) == Demuxer::ReadStatus::EndOff) {
                 break;
             }
         }
     });
 
-    SDLPlayer::getPlayer()->schedule_refresh(40);
-    SDLPlayer::getPlayer()->EventLoop();
+    schedule_refresh(40);
+    mediaState.audioState.decode = std::thread(&AudioState_1::audio_thread, &mediaState.audioState);
+    mediaState.videoState.decode = std::thread(&VideoState_1::video_thread, &mediaState.videoState);
+    SDLPlayer::getPlayer()->EventLoop(mediaState);
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {
         readthread.join();

@@ -1,4 +1,3 @@
-#include "ffmpeg_curl.h"
 #include "flv_player.h"
 #include "send_h264.h"
 #include "send_speex.h"
@@ -10,6 +9,7 @@
 #include "ffmpeg_capture.h"
 #include "c++_test.h"
 #include "H264HardDecode.h"
+#include "ffplay.h"
 
 void RegisterPlayer() {
     using namespace std::placeholders;
@@ -17,16 +17,19 @@ void RegisterPlayer() {
     SDLPlayer *player = SDLPlayer::getPlayer();
     AVRegister::setinitVideoPlayer(std::bind(&SDLPlayer::openVideo, player, _1, _2));
     AVRegister::setinitPcmPlayer(std::bind(&SDLPlayer::openAudio, player, _1, _2));
+
+    AVRegister::setdestroyVideoPlayer(std::bind(&SDLPlayer::closeVideo, player, _1));
+    AVRegister::setdestroyPcmPlayer(std::bind(&SDLPlayer::closeAudio, player, _1));
 }
 
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
-    return ffmpeg_curl();
+    return flv_player();
+    return ffplay();
     return c_test();
     return send_speex();
     return send_h264();
-    return flv_player();
     return deal_yuv();
     return mainMix();
     return demux_audio_mix();

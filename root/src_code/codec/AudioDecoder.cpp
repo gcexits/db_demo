@@ -1,7 +1,8 @@
 #include "AudioDecoder.h"
 #include <cassert>
+#include "../display/MediaState.h"
 
-bool AudioDecode::Decode(AVPacket *pkt) {
+bool AudioDecode::Decode(AVPacket *pkt, struct AudioState_1 *m) {
     int result = avcodec_send_packet(codecCtx_, pkt);
     if (result < 0) {
         return false;
@@ -14,6 +15,11 @@ bool AudioDecode::Decode(AVPacket *pkt) {
         if (result < 0) {
             return false;
         }
+        AVRational tb = (AVRational){1, frame->sample_rate};
+        if (frame->pts != AV_NOPTS_VALUE) {
+            frame->pts = av_rescale_q(frame->pts, codecCtx_->pkt_timebase, tb);
+        }
+        m->audio_clock = (frame->pts == AV_NOPTS_VALUE) ? NAN : frame->pts * av_q2d(tb);
         if (!isInited()) {
             channels = frame->channels;
             sampleFmt = frame->format;
@@ -42,6 +48,8 @@ bool AudioDecode::Decode(AVPacket *pkt) {
         }
         ret = swr_convert(pcm_convert, dstFram->data, dstFram->nb_samples, (const uint8_t **)frame->data, frame->nb_samples);
         assert(ret > 0);
+        m->audio_clock += static_cast<double>(buffersize) / (2 * codecCtx_->channels * codecCtx_->sample_rate);
+        m->decode_size += buffersize;
         playInternal.Play(dstFram->data[0], buffersize, 0.0);
         delete[] dstPcm;
         av_frame_free(&dstFram);

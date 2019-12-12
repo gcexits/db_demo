@@ -2,7 +2,7 @@
 
 #include <string>
 
-bool Demuxer::Open(void* param) {
+bool Demuxer::Open(void* param, struct MediaState& m) {
     ifmt_ctx = (struct AVFormatContext*)param;
     need_free_ = false;
     int ret = avformat_find_stream_info(ifmt_ctx, NULL);
@@ -12,8 +12,11 @@ bool Demuxer::Open(void* param) {
     }
     videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    video_decode.OpenDecode(CodecPar(videoindex));
-    audio_decode.OpenDecode(CodecPar(audioindex));
+
+    m.videoState.stream = ifmt_ctx->streams[videoindex];
+    m.videoState.videoDecode.OpenDecode(CodecPar(videoindex));
+
+    m.audioState.audioDecode.OpenDecode(CodecPar(audioindex));
     opened_ = true;
     return true;
 }
@@ -43,7 +46,7 @@ bool Demuxer::addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar, std::string 
     return true;
 }
 
-Demuxer::ReadStatus Demuxer::ReadFrame() {
+Demuxer::ReadStatus Demuxer::ReadFrame(struct MediaState& m) {
     if (exit) {
         return ReadStatus::EndOff;
     }
@@ -58,21 +61,13 @@ Demuxer::ReadStatus Demuxer::ReadFrame() {
     if (pkt->stream_index == videoindex) {
         // todo: 给h264裸流添加sps pps
         addSpsPps(pkt, CodecPar(videoindex), "h264_mp4toannexb");
-        video_decode.Decode(pkt->data, pkt->size);
+        m.videoState.packetData.packet_queue_put(pkt);
+        av_packet_unref(pkt);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-//        addSpsPps(pkt, CodecPar(audioindex), "aac_adtstoasc");
-        audio_decode.Decode(pkt);
-        {
-            SDLPlayer::getPlayer()->playAudio(audio_decode.channels, audio_decode.sampleRate, audio_decode.nb_samples);
-        }
-        // todo: 抑制音频数据发送太快:
-        // 1. buffer内存太小，速度太快会导致数据覆盖
-        // 2. 模型需要delay，线程结束会干掉sdl_event线程
-        auto that = static_cast<AudioChannel*>(audio_decode.playInternal.handle);
-        while (that->buffer_.size() > 0 && !exit) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
+        SDLPlayer::getPlayer()->playAudio(2, 48000, 960);
+        m.audioState.packetData.packet_queue_put(pkt);
+        av_packet_unref(pkt);
         return ReadStatus::Audio;
     } else {
         return ReadStatus::Subtitle;
