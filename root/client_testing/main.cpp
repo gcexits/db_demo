@@ -25,8 +25,9 @@ void RegisterPlayer() {
 int main(int argc, char *argv[]) {
     RegisterPlayer();
 
-    return flv_player();
     return ffplay();
+    return ffmpeg_capture();
+    return flv_player();
     return c_test();
     return send_speex();
     return send_h264();
@@ -35,5 +36,4 @@ int main(int argc, char *argv[]) {
     return demux_audio_mix();
     return simplest_ffmpeg_video_filter();
     return main_json();
-    return ffmpeg_capture();
 }

@@ -6,57 +6,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 set(EXE_TARGET_NAME client-tool)
 
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
-endif()
+# 提高编译警告级别
+add_definitions(-Wall)
 
 set(ROOT ${CMAKE_CURRENT_LIST_DIR}/root)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/tool/cmake/")
-
-#写文件
-#add_definitions(-DWRITE_PCM_DATA_TO_FILE_FOR_ANALYSIS)
-
-if (NightlyBuild)
-    add_definitions(-DNIGHTLY_BUILD)
-endif ()
-
-if (DEVELOPMENT_OPTION)
-    add_definitions(-DUSE_PRINTF_OUTPUT_LOG_FOR_DEVELOPMENT)
-    add_definitions(-DENABLE_WRITE_LOG)
-    add_definitions(-DENABLE_DEV_LOG)
-    add_definitions(-DTURN_OFF_LOG_UPLOAD_CALLING)
-endif()
-
-if (HLS_STREAMING_OPTION)
-    add_definitions(-DDBY_CLIENT_TOOL_FOR_HLS_STREAMING_TESTING)
-endif ()
-
-if (DISABEL_LIBSOL_OPTION)
-    add_definitions(-DDISABEL_LIBSOL_STREAMING_CONNECTION)
-endif ()
-
-set(RTMP_MODE unisocket)
-add_definitions(-DRTMP_SUPPORT_UNISOCKET)
+set(USER /usr/local/Cellar)
 
 if (WIN32)
     set(CROSS_PATH win)
 elseif (APPLE)
     set(CROSS_PATH mac)
 endif()
-
-if (MSVC)
-    add_definitions(-DNOMINMAX)
-else()
-    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf")
-    set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/lib)
-
 
 set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/main.cpp
@@ -110,105 +70,41 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/src_code/common/PacketParser.cpp)
 
-include_directories(/usr/local/Cellar/speex/1.2.0/include/speex)
-include_directories(/usr/local/Cellar/rtmpdump/2.4+20151223/include)
-include_directories(/usr/local/Cellar/curl/7.65.3/include)
-include_directories(${ROOT}/third_party/libyuv/include)
-include_directories(${ROOT}/third_party/opus/${CROSS_PATH}/include)
-include_directories(${ROOT}/third_party/sdl2/${CROSS_PATH}/include)
-include_directories(${ROOT}/third_party/ffmpeg/${CROSS_PATH}/include)
-include_directories(${ROOT}/third_party/)
-
-add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${CLIENT_LIVING_FILES} ${PLAYBACK_SOURCE_FILES})
-
-## 测试
-#add_subdirectory(/Users/guochao/DBY_code/ff_test/src/client_testing)
-
-
 # Windows 处理
 if (WIN32)
+# MacOs 处理
 elseif(APPLE)
     message(STATUS ">>> DBY LiveStreaming SDK for macOS, CMAKE_GENERATOR is ${CMAKE_GENERATOR}")
 
     set(CMAKE_CXX_FLAGS_RELEASE  " -O2 -DNDEBUG ")
 
-    set(SDL_LINK_LIBRARIES
-            ${ROOT}/third_party/sdl2/${CROSS_PATH}/lib/libSDL2.a
+    # 添加第三方库
+    #1. *.h
+    include_directories(${USER}/sdl2/2.0.10/include)
+    include_directories(${USER}/ffmpeg/4.2.1_2/include)
+    include_directories(${USER}/curl/7.65.3/include)
+    include_directories(${USER}/rtmpdump/2.4+20151223_1/include)
+    include_directories(${USER}/speex/1.2.0/include)
+    include_directories(${ROOT}/third_party)
+    include_directories(${ROOT}/third_party/libyuv/include)
+    include_directories(${ROOT}/third_party/opus/${CROSS_PATH}/include)
 
-            "-framework CoreAudio"
-            "-framework AudioToolBox"
-            "-framework CoreFoundation"
-            "-framework CoreGraphics"
-            "-framework OpenGL"
-            "-framework CoreImage"
-
-            "-framework CoreVideo"
-            "-framework ForceFeedback"
-            "-framework IOKit"
-            "-framework Carbon"
-            "-framework AppKit"
-            )
-
-    if (${RTMP_MODE} STREQUAL "unisocket")
-        set(TARGET_LINK_LIBRARIES
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavcodec.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavdevice.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavfilter.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavformat.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libpostproc.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libavutil.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libswscale.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libswresample.a
-
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/liblzma.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvpx.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libaom.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheora.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheoraenc.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libtheoradec.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libfdk-aac.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libopencore-amrnb.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libopencore-amrwb.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libogg.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libaom.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libxvidcore.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbis.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libx264.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libx265.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libmp3lame.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbisenc.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvorbisfile.a
-                ${ROOT}/third_party/ffmpeg/${CROSS_PATH}/lib/libvidstab.a
-
-                ${ROOT}/third_party/opus/${CROSS_PATH}/lib/libopus.a
-                ${ROOT}/third_party/libyuv/lib/libyuv.a
-                /usr/local/Cellar/curl/7.65.3/lib/libcurl.a
-
-                /usr/local/Cellar/speex/1.2.0/lib/libspeex.a
-                /usr/local/Cellar/rtmpdump/2.4+20151223/lib/librtmp.a
-
-                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/darwin/libcrypto.a
-                /Users/guochao/DBY_code/2_mobile_发版/dby-client-core-sdk/OnlineVersion/root/lib/darwin/libssl.a
-                "-framework Security"
-                "-framework AVFoundation"
-
-                "-framework CoreFoundation"
-                "-framework CoreMedia"
-                "-framework CoreVideo"
-
-                "-framework VideoToolBox"
-                "-framework AudioToolBox"
-                "-framework VideoDecodeAcceleration"
-
-                "-framework LDAP"
-                bz2
-                iconv
-                z)
-    endif()
+    #2. lib
+    set(LINK_DIR
+            ${USER}/sdl2/2.0.10/lib
+            ${USER}/ffmpeg/4.2.1_2/lib
+            ${USER}/curl/7.65.3/lib
+            ${USER}/rtmpdump/2.4+20151223_1/lib
+            ${USER}/speex/1.2.0/lib
+            ${ROOT}/third_party/libyuv/lib
+            ${ROOT}/third_party/opus/${CROSS_PATH}/lib)
+    link_directories(${LINK_DIR})
 
 endif()
 
-target_link_libraries(${EXE_TARGET_NAME} ${TARGET_LINK_LIBRARIES} ${SDL_LINK_LIBRARIES})
+add_executable(${EXE_TARGET_NAME} ${CLIENT_LIVING_FILES} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
+
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a libopus.a)
 
 
 

@@ -65,7 +65,7 @@ Demuxer::ReadStatus Demuxer::ReadFrame(struct MediaState& m) {
         av_packet_unref(pkt);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-        SDLPlayer::getPlayer()->playAudio(2, 48000, 960);
+        SDLPlayer::getPlayer()->playAudio(m.audioState.audioDecode.codecCtx_->channels, m.audioState.audioDecode.codecCtx_->sample_rate, m.audioState.audioDecode.codecCtx_->frame_size);
         m.audioState.packetData.packet_queue_put(pkt);
         av_packet_unref(pkt);
         return ReadStatus::Audio;

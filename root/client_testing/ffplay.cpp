@@ -16,10 +16,10 @@ int ffplay() {
     assert(SDLPlayer::getPlayer()->setMediaState(&mediaState));
 
     duobei::HttpFile httpFile;
-    std::string url = "http://vodkgeyttp8.vod.126.net/cloudmusic/IjAyMCAgMyEgYDEwIDhhMg==/mv/5619601/79bd07d7bd9394871da0c324d53f48dd.mp4?wsSecret=daadca716d9872c09b8d2dcbb780587f&wsTime=1573551857";
+    std::string url = "http://v1-dy.ixigua.com/dbf411f1ef218f6b158433cdd54356d4/5df24e00/video/tos/cn/tos-cn-ve-15/d738504f39fb4e658b2b3aba890c9ed6/?a=1128&br=1090&cr=0&cs=0&dr=0&ds=3&er=&l=201912122125350100140431310B6C712C&lr=aweme&qs=0&rc=M25obWdpcDc5cTMzOWkzM0ApZWk3OWg7NGVlN2c4Nmk7ZWdsMDI2ZjQxcGpfLS1iLS9zczUwNmItYjZgL2EwNDVeNjM6Yw%3D%3D";
     url = "/Users/guochao/Downloads/5_往后余生.webm";
-    url = "/Users/guochao/Downloads/2_告白气球.mkv";
-    url = "/Users/guochao/Downloads/out.mkv";
+//    url = "/Users/guochao/Downloads/2_告白气球.mkv";
+//    url = "/Users/guochao/Downloads/out.mkv";
 
     int ret = httpFile.Open(url);
 

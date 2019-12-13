@@ -27,13 +27,13 @@ set(SOURCE_FILES
 # 添加第三方库
 #1. *.h
 set(INC_DIR
-        ${USR}/sdl2/2.0.9_1/include
-        ${USR}/ffmpeg/4.1.4_1/include)
+        ${USR}/sdl2/2.0.10/include
+        ${USR}/ffmpeg/4.2.1_2/include)
 include_directories(${INC_DIR})
 #2. lib
 set(LINK_DIR
-        ${USR}/sdl2/2.0.9_1/lib
-        ${USR}/ffmpeg/4.1.4_1/lib)
+        ${USR}/sdl2/2.0.10/lib
+        ${USR}/ffmpeg/4.2.1_2/lib)
 
 link_directories(${LINK_DIR})
 
