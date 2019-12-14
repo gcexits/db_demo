@@ -11,17 +11,12 @@ void schedule_refresh(int delay) {
     SDL_AddTimer(delay, sdl_refresh_timer_cb, nullptr);
 }
 
-int ffplay() {
+int ffplay(Argument& cmd) {
     MediaState mediaState;
-    assert(SDLPlayer::getPlayer()->setMediaState(&mediaState));
+    assert(cmd.player.setMediaState(&mediaState));
 
     duobei::HttpFile httpFile;
-    std::string url = "http://v1-dy.ixigua.com/dbf411f1ef218f6b158433cdd54356d4/5df24e00/video/tos/cn/tos-cn-ve-15/d738504f39fb4e658b2b3aba890c9ed6/?a=1128&br=1090&cr=0&cs=0&dr=0&ds=3&er=&l=201912122125350100140431310B6C712C&lr=aweme&qs=0&rc=M25obWdpcDc5cTMzOWkzM0ApZWk3OWg7NGVlN2c4Nmk7ZWdsMDI2ZjQxcGpfLS1iLS9zczUwNmItYjZgL2EwNDVeNjM6Yw%3D%3D";
-    url = "/Users/guochao/Downloads/5_往后余生.webm";
-//    url = "/Users/guochao/Downloads/2_告白气球.mkv";
-//    url = "/Users/guochao/Downloads/out.mkv";
-
-    int ret = httpFile.Open(url);
+    int ret = httpFile.Open(cmd.param.url);
 
     if (ret != duobei::FILEOK) {
         std::cout << "url is error" << std::endl;
@@ -40,7 +35,7 @@ int ffplay() {
             ioBufferContext.OpenInput();
             param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
         } while (!status);
-        demuxer.Open(param, mediaState);
+        demuxer.Open(param, mediaState, cmd.player);
         while (1) {
             if (demuxer.ReadFrame(mediaState) == Demuxer::ReadStatus::EndOff) {
                 break;
@@ -49,9 +44,7 @@ int ffplay() {
     });
 
     schedule_refresh(40);
-    mediaState.audioState.decode = std::thread(&AudioState_1::audio_thread, &mediaState.audioState);
-    mediaState.videoState.decode = std::thread(&VideoState_1::video_thread, &mediaState.videoState);
-    SDLPlayer::getPlayer()->EventLoop(mediaState);
+    cmd.player.EventLoop(mediaState);
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {
         readthread.join();

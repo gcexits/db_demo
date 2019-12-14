@@ -10,6 +10,7 @@
 #include "../codec/H264Decoder.h"
 #include "../display/SDLPlayer.h"
 #include "../codec/SpeexDecoder.h"
+#include "../client_testing/Param.h"
 
 #define LEN4_(dataTmp) ((dataTmp[0] & 0x000000FF) << 24 | (dataTmp[1] & 0x000000FF) << 16 | (dataTmp[2] & 0x000000FF) << 8 | (dataTmp[3] & 0x000000FF))
 #define LEN3_(dataTmp) ((dataTmp[0] & 0x000000FF) << 16 | (dataTmp[1] & 0x000000FF) << 8 | (dataTmp[2] & 0x000000FF))
@@ -301,9 +302,9 @@ public:
     uint64_t global_time = 0;
     int kStepTime = 40;
 
-    void updateThread();
-    void startParse() {
-        parse = std::thread(&FlvPlayer::updateThread, this);
+    void updateThread(Argument& cmd);
+    void startParse(Argument& cmd) {
+        parse = std::thread(&FlvPlayer::updateThread, this, std::ref(cmd));
     }
     std::thread parse;
 

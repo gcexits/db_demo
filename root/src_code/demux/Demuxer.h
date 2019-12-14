@@ -168,7 +168,7 @@ public:
     bool Open(const std::string& inUrl) {
         return true;
     }
-    bool Open(void* param, struct MediaState& m);
+    bool Open(void* param, struct MediaState& m, SDLPlayer& player);
 
     // todo: 添加sps pps头
     bool addSpsPps(AVPacket* pkt, AVCodecParameters* codecpar, std::string name);

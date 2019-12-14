@@ -8,4 +8,6 @@
 #include "../src_code/hlring/RingBuffer.h"
 #include "../src_code/hlring/rbuf.h"
 
-int ffplay();
+#include "Param.h"
+
+int ffplay(Argument& cmd);

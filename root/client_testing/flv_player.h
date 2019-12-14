@@ -4,4 +4,6 @@
 #include "../src_code/offline/FlvParse.h"
 #include "../src_code/display/MediaState.h"
 
-int flv_player();
+#include "Param.h"
+
+int flv_player(Argument& cmd);

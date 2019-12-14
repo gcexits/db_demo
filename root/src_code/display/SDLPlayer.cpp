@@ -1,19 +1,8 @@
-#pragma once
-
 #include "SDLPlayer.h"
-
-SDLPlayer* SDLPlayer::player = nullptr;
 
 SDLPlayer::SDLPlayer() {
     SDL_SetMainReady();
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
-}
-
-SDLPlayer* SDLPlayer::getPlayer() {
-    if (player == nullptr) {
-        player = new SDLPlayer;
-    }
-    return player;
 }
 
 // note: space：暂停 ->：快进10s <-：快退10s q/esc：退出 1/2/3：倍速播放

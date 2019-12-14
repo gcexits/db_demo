@@ -2,7 +2,7 @@
 
 #include <string>
 
-bool Demuxer::Open(void* param, struct MediaState& m) {
+bool Demuxer::Open(void* param, struct MediaState& m, SDLPlayer& player) {
     ifmt_ctx = (struct AVFormatContext*)param;
     need_free_ = false;
     int ret = avformat_find_stream_info(ifmt_ctx, NULL);
@@ -17,6 +17,10 @@ bool Demuxer::Open(void* param, struct MediaState& m) {
     m.videoState.videoDecode.OpenDecode(CodecPar(videoindex));
 
     m.audioState.audioDecode.OpenDecode(CodecPar(audioindex));
+
+    player.playAudio(m.audioState.audioDecode.codecCtx_->channels, m.audioState.audioDecode.codecCtx_->sample_rate, FFMAX(512, 2 << av_log2(m.audioState.audioDecode.codecCtx_->sample_rate / 30)));
+    m.audioState.decode = std::thread(&AudioState_1::audio_thread, &m.audioState);
+    m.videoState.decode = std::thread(&VideoState_1::video_thread, &m.videoState);
     opened_ = true;
     return true;
 }
@@ -65,7 +69,6 @@ Demuxer::ReadStatus Demuxer::ReadFrame(struct MediaState& m) {
         av_packet_unref(pkt);
         return ReadStatus::Video;
     } else if (pkt->stream_index == audioindex) {
-        SDLPlayer::getPlayer()->playAudio(m.audioState.audioDecode.codecCtx_->channels, m.audioState.audioDecode.codecCtx_->sample_rate, m.audioState.audioDecode.codecCtx_->frame_size);
         m.audioState.packetData.packet_queue_put(pkt);
         av_packet_unref(pkt);
         return ReadStatus::Audio;

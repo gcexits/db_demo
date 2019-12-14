@@ -132,6 +132,6 @@ int deal_yuv() {
     fp_in.close();
     fp_out.close();
     fp_rote.close();
-    std::cout << "finish" << std::endl;
+    std::cout << "finish deal_yuv" << std::endl;
     return 0;
 }

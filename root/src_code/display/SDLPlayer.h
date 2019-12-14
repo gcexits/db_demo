@@ -367,7 +367,7 @@ struct VideoContainer {
 class SDLPlayer {
 public:
     explicit SDLPlayer();
-    static SDLPlayer* player;
+    virtual ~SDLPlayer() = default;
 
     SDL_AudioSpec audioSpec;
     AudioContainer audioContainer;
@@ -389,8 +389,6 @@ public:
     }
 
     bool running = true;
-    static SDLPlayer* getPlayer();
-    virtual ~SDLPlayer() = default;
 
     void EventLoop(struct MediaState& m);
 
@@ -398,6 +396,7 @@ public:
         if (audioSpec.channels == channels && audioSpec.freq == sample_rate && audioSpec.samples == nb_samples) {
             return;
         }
+        std::cout << "nb_sample from ffmpeg : " << nb_samples << std::endl;
         audioSpec.freq = sample_rate;
         audioSpec.format = AUDIO_S16SYS;
         audioSpec.channels = channels;
