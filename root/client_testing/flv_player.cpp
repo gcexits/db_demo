@@ -1,6 +1,6 @@
 #include "flv_player.h"
 
-//#define PARSE_SPS
+#define PARSE_SPS
 
 #if defined(PARSE_SPS)
 #include <math.h>

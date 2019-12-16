@@ -109,6 +109,11 @@ int FlvPlayer::getH264Data(Frame& one_frame) {
 
     Span sps;
     Span pps;
+    if (!dataTmp[4] &0x40) {
+        std::cout << "Audio file" << std::endl;
+    } else {
+        std::cout << "Video file" << std::endl;
+    }
 
     if (dataTmp[0] == 0x17) {
         // note：onMetadata：sps/pps
