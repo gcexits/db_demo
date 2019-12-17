@@ -2,7 +2,7 @@
 
 // todo: ffmpeg -re -stream_loop -1 -i wangyiyun.mp4 -vcodec copy -acodec copy -f flv rtmp://utx-live.duobeiyun.net/live/guochao
 // todo: ffplay rtmp://htx-live.duobeiyun.net/live/guochao
-int send_h264() {
+int send_h264(Argument& cmd) {
     duobei::Time::Timestamp time;
     time.Start();
     int video_count = 0;
@@ -12,9 +12,8 @@ int send_h264() {
     AVPacket pkt;
     int ret, i;
     int videoindex = -1, audioindex = -1;
-    const char* in_filename = "/Users/guochao/Downloads/3_一生所爱.mp4";
 
-    if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, 0)) < 0) {
+    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.url.c_str(), nullptr, nullptr)) < 0) {
         printf("Could not open input file.");
         return -1;
     }
@@ -37,7 +36,17 @@ int send_h264() {
 
     av_bsf_init(absCtx);
 
-    while (av_read_frame(ifmt_ctx, &pkt) >= 0) {
+    int loop_count = 0;
+    while (true) {
+        int ret = av_read_frame(ifmt_ctx, &pkt);
+        if (ret == AVERROR_EOF) {
+            assert(av_seek_frame(ifmt_ctx, -1, 0, AVSEEK_FLAG_BYTE) >= 0);
+            video_count = 0;
+            if (++loop_count > 10000) {
+                break;
+            }
+            continue;
+        }
         time.Stop();
         if (pkt.stream_index == videoindex) {
             bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
@@ -52,7 +61,7 @@ int send_h264() {
         } else if (pkt.stream_index == audioindex) {
         }
         av_packet_unref(&pkt);
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
 
     av_bsf_free(&absCtx);

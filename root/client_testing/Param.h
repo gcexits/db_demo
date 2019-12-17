@@ -2,6 +2,8 @@
 
 #include "json.h"
 
+#include "../src_code/display/SDLPlayer.h"
+
 struct Argument {
     SDLPlayer player;
     struct Param {
