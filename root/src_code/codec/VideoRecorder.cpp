@@ -77,8 +77,8 @@ int VideoRecorder::SetContextMac() {
     AVDictionary* options = nullptr;
     av_dict_set(&options, "framerate", "30", 0);
     av_dict_set(&options, "video_device_index", device_.index.c_str(), 0);
-    av_dict_set(&options, "video_size", "640x480", 0);
-    av_dict_set(&options, "pixel_format", "nv12", 0);
+    av_dict_set(&options, "video_size", "1280x720", 0);
+    av_dict_set(&options, "pixel_format", "yuyv422", 0);
 
     auto fmt = av_find_input_format(device_.format.c_str());
     assert(fmt);
@@ -128,6 +128,7 @@ bool VideoRecorder::Open() {
         return false;
     }
     auto text = device_.name + " [ VideoCapture ] open success";
+    printf("%s\n", text.c_str());
     return true;
 }
 
@@ -139,10 +140,7 @@ bool VideoRecorder::Read() {
     if (!packet) {
         packet = av_packet_alloc();
     }
-
-    // WriteDebugLog("fixme: %s, av_read_frame 阻塞在此处", device_name.c_str());
-    int ret = av_read_frame(
-        fmt_ctx, packet);  // fixme: virtual-audio-capturer 阻塞在此处
+    int ret = av_read_frame(fmt_ctx, packet);  // fixme: virtual-audio-capturer 阻塞在此处
 
     if (ret < 0) {
         return false;
@@ -177,7 +175,7 @@ bool VideoRecorder::Read() {
 
 void VideoRecorder::Play(AVFrame *frame) {
     int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
-    frame_.Update(frame->data[0], size, frame->width, frame->height);
+    frame_.Update(frame->data[0], size, frame->width, frame->height, frame->linesize[0]);
     // play_internal->Play((void *)frame->data[0], size, frame->width, frame->height);
 }
 

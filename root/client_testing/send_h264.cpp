@@ -6,14 +6,14 @@ int send_h264(Argument& cmd) {
     duobei::Time::Timestamp time;
     time.Start();
     int video_count = 0;
-    duobei::RtmpObject rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao");
+    duobei::RtmpObject rtmpObject(cmd.param.senderUrl);
 
-    AVFormatContext* ifmt_ctx = NULL;
+    AVFormatContext* ifmt_ctx = nullptr;
     AVPacket pkt;
-    int ret, i;
+    int ret;
     int videoindex = -1, audioindex = -1;
 
-    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.url.c_str(), nullptr, nullptr)) < 0) {
+    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.playerUrl.c_str(), nullptr, nullptr)) < 0) {
         printf("Could not open input file.");
         return -1;
     }
@@ -38,7 +38,7 @@ int send_h264(Argument& cmd) {
 
     int loop_count = 0;
     while (true) {
-        int ret = av_read_frame(ifmt_ctx, &pkt);
+        ret = av_read_frame(ifmt_ctx, &pkt);
         if (ret == AVERROR_EOF) {
             assert(av_seek_frame(ifmt_ctx, -1, 0, AVSEEK_FLAG_BYTE) >= 0);
             video_count = 0;
@@ -53,9 +53,7 @@ int send_h264(Argument& cmd) {
             if (av_bsf_send_packet(absCtx, &pkt) != 0) {
                 continue;
             }
-            while (av_bsf_receive_packet(absCtx, &pkt) == 0) {
-                continue;
-            }
+            while (av_bsf_receive_packet(absCtx, &pkt) == 0);
             rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed(), video_count == 0);
             video_count++;
         } else if (pkt.stream_index == audioindex) {
@@ -68,11 +66,6 @@ int send_h264(Argument& cmd) {
     absCtx = nullptr;
 
     avformat_close_input(&ifmt_ctx);
-
-    if (ret < 0 && ret != AVERROR_EOF) {
-        printf("Error occurred.\n");
-        return -1;
-    }
     return 0;
 }
 

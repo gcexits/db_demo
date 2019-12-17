@@ -16,10 +16,10 @@ int ffplay(Argument& cmd) {
     assert(cmd.player.setMediaState(&mediaState));
 
     duobei::HttpFile httpFile;
-    int ret = httpFile.Open(cmd.param.url);
+    int ret = httpFile.Open(cmd.param.playerUrl);
 
     if (ret != duobei::FILEOK) {
-        std::cout << "url is error" << std::endl;
+        std::cout << "playerUrl is error" << std::endl;
         return -1;
     }
     // todo: 解封装 保存h264流有问题，需要av_bitstream_filter_init给h264裸流添加sps pps

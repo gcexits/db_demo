@@ -1,28 +1,52 @@
 #include "ffmpeg_capture.h"
 
-int ffmpeg_capture() {
-    duobei::video::H264Encoder h264Encoder;
-    duobei::RtmpObject rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao");
+bool playFrameData(const uint8_t *data, int width, int height, int linesize) {
+    static SDL_Window *screen = nullptr;
+    static SDL_Renderer* sdlRenderer = nullptr;
+    static SDL_Texture* sdlTexture = nullptr;
+    static SDL_Rect sdlRect;
 
-    auto video_recorder_ = std::make_unique<duobei::capturer::VideoRecorder>(1, "Integrated Webcam", "avfoundation");
+    static char file[64] = {0};
+    if (isprint(file[2]) == 0) {
+        snprintf(file, 63, "camera-%dx%d.yuv", width, height);
+        {
+            if (SDL_Init(SDL_INIT_VIDEO)) {
+                exit(-1);
+            }
+
+            screen = SDL_CreateWindow("ffmpeg-capture",
+                                      SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                      width, height, SDL_WINDOW_OPENGL);
+
+            if (!screen) {
+                exit(-1);
+            }
+            sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
+            sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
+
+            sdlRect.x=0;
+            sdlRect.y=0;
+            sdlRect.w= width;
+            sdlRect.h= height;
+        }
+    }
+    if (sdlTexture != nullptr) {
+        SDL_UpdateTexture(sdlTexture, nullptr,  data, linesize);
+        SDL_RenderClear(sdlRenderer);
+        SDL_RenderCopy(sdlRenderer, sdlTexture, nullptr, &sdlRect);
+        SDL_RenderPresent(sdlRenderer);
+    }
+    return true;
+}
+
+int ffmpeg_capture() {
+    auto video_recorder_ = std::make_unique<duobei::capturer::VideoRecorder>(0, "Integrated Webcam", "avfoundation");
     video_recorder_->Open();
 
-    duobei::Time::Timestamp timestamp;
     AVPacket *dst_pkt = av_packet_alloc();
     while (1) {
         if (video_recorder_->Read()) {
-            timestamp.Start();
-            auto& frame_ = video_recorder_->frame_;
-            if (!h264Encoder.DesktopEncode(const_cast<uint8_t*>(frame_.data), frame_.width, frame_.height, 3)) {
-                continue;
-            }
-            av_packet_move_ref(dst_pkt, h264Encoder.pkt);
-            timestamp.Stop();
-            rtmpObject.sendH264Packet(dst_pkt->data, dst_pkt->size, dst_pkt->flags & AV_PKT_FLAG_KEY, timestamp.Elapsed(), false);
-//            auto s = 66 - timestamp.Elapsed();
-//            if (s > 0) {
-//                std::this_thread::sleep_for(std::chrono::milliseconds(s));
-//            }
+            playFrameData(video_recorder_->frame_.data, video_recorder_->frame_.width, video_recorder_->frame_.height, video_recorder_->frame_.linesize);
             av_packet_unref(dst_pkt);
         }
     }

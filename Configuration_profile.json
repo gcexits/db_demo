@@ -1,6 +1,7 @@
 {
     "profile": {
-        "launch": 6,
-        "url": "/Users/guochao/Downloads/1_童话镇.flv"
+        "launch": 2,
+        "playerUrl": "/Users/guochao/Downloads/1_童话镇.flv",
+        "senderUrl": "rtmp://utx-live.duobeiyun.net/live/guochao"
     }
 }

@@ -7,7 +7,8 @@
 struct Argument {
     SDLPlayer player;
     struct Param {
-        std::string url;
+        std::string playerUrl;
+        std::string senderUrl;
         int launch;
         std::string profile =  "/Users/guochao/DBY_code/ff_test/Configuration_profile.json";
     };
@@ -35,8 +36,11 @@ struct Argument {
         if (p.HasMember("launch") && p["launch"].IsInt()) {
             param.launch = p["launch"].GetInt();
         }
-        if (p.HasMember("url") && p["url"].IsString()) {
-            param.url = p["url"].GetString();
+        if (p.HasMember("playerUrl") && p["playerUrl"].IsString()) {
+            param.playerUrl = p["playerUrl"].GetString();
+        }
+        if (p.HasMember("senderUrl") && p["senderUrl"].IsString()) {
+            param.senderUrl = p["senderUrl"].GetString();
         }
     }
 };

@@ -45,24 +45,18 @@ public:
         return that->InterruptCallback();
     }
 
-    struct {
+    struct MyFrame {
         const uint8_t *data = nullptr;
         std::unique_ptr<uint8_t[]> data_holder;
         int size = 0;
         int width = 0;
         int height = 0;
-        void Update(uint8_t *data_, int size_, int width_, int height_) {
-            assert(size == 0 || size == size_);
-            assert(size_ > 0);
+        int linesize = 0;
+        void Update(uint8_t *data_, int size_, int width_, int height_, int linesize_) {
             size = size_;
-
-            assert(width == 0 || width == width_);
-            assert(width_ > 0);
             width = width_;
-
-            assert(height == 0 || height == height_);
-            assert(height_ > 0);
             height = height_;
+            linesize = linesize_;
 
             if (!data_holder) {
                 data_holder = std::make_unique<uint8_t []>(size);

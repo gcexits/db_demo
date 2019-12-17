@@ -10,12 +10,12 @@
 #include "c++_test.h"
 #include "H264HardDecode.h"
 #include "ffplay.h"
+#include "Param.h"
 
 int main(int argc, char *argv[]) {
     Argument cmd;
     cmd.LoadProfile();
     cmd.RegisterPlayer();
-
     switch (cmd.param.launch) {
         case 1:
             return ffplay(cmd);
