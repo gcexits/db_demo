@@ -2,36 +2,30 @@
 
 bool playFrameData(const uint8_t *data, int width, int height, int linesize) {
     static SDL_Window *screen = nullptr;
-    static SDL_Renderer* sdlRenderer = nullptr;
-    static SDL_Texture* sdlTexture = nullptr;
+    static SDL_Renderer *sdlRenderer = nullptr;
+    static SDL_Texture *sdlTexture = nullptr;
     static SDL_Rect sdlRect;
 
     static char file[64] = {0};
     if (isprint(file[2]) == 0) {
         snprintf(file, 63, "camera-%dx%d.yuv", width, height);
         {
-            if (SDL_Init(SDL_INIT_VIDEO)) {
-                exit(-1);
-            }
-
-            screen = SDL_CreateWindow("ffmpeg-capture",
-                                      SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                      width, height, SDL_WINDOW_OPENGL);
-
+            SDL_Init(SDL_INIT_VIDEO);
+            screen = SDL_CreateWindow("ffmpeg-capture", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL);
             if (!screen) {
                 exit(-1);
             }
             sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
             sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
 
-            sdlRect.x=0;
-            sdlRect.y=0;
-            sdlRect.w= width;
-            sdlRect.h= height;
+            sdlRect.x = 0;
+            sdlRect.y = 0;
+            sdlRect.w = width;
+            sdlRect.h = height;
         }
     }
     if (sdlTexture != nullptr) {
-        SDL_UpdateTexture(sdlTexture, nullptr,  data, linesize);
+        SDL_UpdateTexture(sdlTexture, nullptr, data, linesize);
         SDL_RenderClear(sdlRenderer);
         SDL_RenderCopy(sdlRenderer, sdlTexture, nullptr, &sdlRect);
         SDL_RenderPresent(sdlRenderer);
