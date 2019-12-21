@@ -2,6 +2,11 @@
     "profile": {
         "launch": 2,
         "playerUrl": "https://youtu.be/UrYzqZQXvL8?list=PLgzU3TD6BWQdjOTCVXN6xNqyULs6TymS6&t=1237",
-        "senderUrl": "rtmp://utx-live.duobeiyun.net/live/guochao"
+        "senderUrl": "rtmp://utx-live.duobeiyun.net/live/guochao",
+        "capture": {
+            "index": 1,
+            "name": "Camera (High Definition Video Device)",
+            "format": "avfoundation"
+        }
     }
 }

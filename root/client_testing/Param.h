@@ -11,6 +11,12 @@ struct Argument {
         std::string senderUrl;
         int launch;
         std::string profile =  "/Users/guochao/DBY_code/ff_test/Configuration_profile.json";
+        struct Device {
+            int index;
+            std::string name;
+            std::string format;
+        };
+        Device device;
     };
     Param param;
 
@@ -41,6 +47,18 @@ struct Argument {
         }
         if (p.HasMember("senderUrl") && p["senderUrl"].IsString()) {
             param.senderUrl = p["senderUrl"].GetString();
+        }
+        if (p.HasMember("capture") && p["capture"].IsObject()) {
+            auto& device = p["capture"];
+            if (device.HasMember("index") && device["index"].IsInt()) {
+                param.device.index = device["index"].GetInt();
+            }
+            if (device.HasMember("name") && device["name"].IsString()) {
+                param.device.name = device["name"].GetString();
+            }
+            if (device.HasMember("format") && device["format"].IsString()) {
+                param.device.format = device["format"].GetString();
+            }
         }
     }
 };

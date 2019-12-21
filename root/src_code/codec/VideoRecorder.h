@@ -71,7 +71,6 @@ private:
         return 1;
     }
 
-    int SetContextWin();
     int SetContextMac();
 
 private:

@@ -47,7 +47,7 @@ bool playFrameData(uint8_t *data, int width, int height, int linesize) {
 }
 
 int ffmpeg_capture(Argument &cmd) {
-    auto video_recorder_ = std::make_unique<duobei::capturer::VideoRecorder>(0, "Integrated Webcam", "avfoundation");
+    auto video_recorder_ = std::make_unique<duobei::capturer::VideoRecorder>(cmd.param.device.index, "Integrated Webcam", cmd.param.device.format.c_str());
     assert(video_recorder_->Open());
 
     AVPacket *dst_pkt = av_packet_alloc();

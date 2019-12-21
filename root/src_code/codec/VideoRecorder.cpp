@@ -20,52 +20,18 @@ VideoRecorder::~VideoRecorder() {
         av_packet_free(&packet);
         packet = nullptr;
     }
-
     if (frame != nullptr) {
         av_frame_free(&frame);
         frame = nullptr;
     }
-
     if (fmt_ctx != nullptr) {
         avformat_close_input(&fmt_ctx);
         fmt_ctx = nullptr;
     }
-#if 0
     if (codec_context_ != nullptr) {
         avcodec_close(codec_context_);
         codec_context_ = nullptr;
     }
-#endif
-}
-
-
-
-int VideoRecorder::SetContextWin() {
-    // ffmpeg -f dshow -list_options true -i audio="Microphone (High Definition Audio Device)"
-    // ffplay -f dshow -i audio="Microphone (High Definition Audio Device)"
-
-    AVDictionary* options = nullptr;
-
-    av_dict_set_int(&options, "audio_device_number", std::stoi(device_.index), 0);
-    av_dict_set_int(&options, "channels", 1, 0);
-    av_dict_set_int(&options, "sample_rate", 16000, 0);
-    av_dict_set_int(&options, "sample_size", 16, 0);
-    av_dict_set_int(&options, "audio_buffer_size", 30, 0);
-    av_dict_set_int(&options, "timeout", 1000000, 0);  // 10000000 ms
-    // av_dict_set(&options, "rtbufsize", "16M", 0);
-
-    std::string deviceName = FixDeviceName(device_.name);
-    int ret =
-        avformat_open_input(&fmt_ctx, deviceName.c_str(),
-                            av_find_input_format(device_.format.c_str()), &options);
-    av_dict_free(&options);
-
-    if (ret < 0) {
-        ret = avformat_open_input(&fmt_ctx, deviceName.c_str(),
-                                  av_find_input_format(device_.format.c_str()),
-                                  nullptr);
-    }
-    return ret;
 }
 
 int VideoRecorder::SetContextMac() {
@@ -92,24 +58,15 @@ bool VideoRecorder::Open() {
     if (fmt_ctx == nullptr) {
         return false;
     }
-    // fmt_ctx->interrupt_callback = AVIOInterruptCB{
-    // &VideoRecorder::AVIOInterruptCallback, this};
-#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
-    auto ret = SetContextWin();
-#else
     auto ret = SetContextMac();
-#endif
     assert(ret >= 0);
 
-    // WriteDebugLog("fixme: %s, avformat_find_stream_info 阻塞在此处", device_name.c_str());
-    ret = avformat_find_stream_info(
-        fmt_ctx, nullptr);  // fixme: virtual-audio-capturer 阻塞在此处
+    ret = avformat_find_stream_info(fmt_ctx, nullptr);  // fixme: virtual-audio-capturer 阻塞在此处
 
     if (ret < 0) {
         return false;
     }
 
-    // select the video stream  判断流是否正常
     AVCodec* dec = nullptr;
     ret = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, &dec, 0);
     if (ret < 0) {
@@ -158,7 +115,6 @@ bool VideoRecorder::Read() {
         }
         ret = avcodec_receive_frame(codec_context_, frame);
         if (ret < 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-            // todo: EAGAIN and AVERROR_EOF
             av_frame_unref(frame);
             return false;
         }
