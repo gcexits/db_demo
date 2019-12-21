@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         case 1:
             return ffplay(cmd);
         case 2:
-            return ffmpeg_capture();
+            return ffmpeg_capture(cmd);
         case 3:
             return flv_player(cmd);
         case 4:

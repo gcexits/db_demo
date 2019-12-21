@@ -8,6 +8,8 @@
 #include "../src_code/stream/RtmpSender.h"
 #include "../src_code/display/SDLPlayer.h"
 
-bool playFrameData(const uint8_t *data, int width, int height, int linesize);
+#include "Param.h"
 
-int ffmpeg_capture();
+bool playFrameData(uint8_t *data, int width, int height, int linesize, SDLPlayer &player);
+
+int ffmpeg_capture(Argument& cmd);

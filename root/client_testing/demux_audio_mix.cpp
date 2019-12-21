@@ -1,7 +1,6 @@
 #include "demux_audio_mix.h"
 
 int demux_audio_mix() {
-#if 0
     std::string outUrl = "./44100_2_s16le.pcm";
     std::ofstream fp_pcm;
     fp_pcm.open(outUrl, std::ios::out | std::ios::app);
@@ -44,6 +43,5 @@ int demux_audio_mix() {
     // std::cout << "audio frame_size(nb_samples 1 channel) : " << demuxer.getAudioSize() << std::endl;
 
     fp_pcm.close();
-#endif
     return 0;
 }

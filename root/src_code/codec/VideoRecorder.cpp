@@ -78,7 +78,7 @@ int VideoRecorder::SetContextMac() {
     av_dict_set(&options, "framerate", "30", 0);
     av_dict_set(&options, "video_device_index", device_.index.c_str(), 0);
     av_dict_set(&options, "video_size", "1280x720", 0);
-    av_dict_set(&options, "pixel_format", "yuyv422", 0);
+    av_dict_set(&options, "pixel_format", "nv12", 0);
 
     auto fmt = av_find_input_format(device_.format.c_str());
     assert(fmt);

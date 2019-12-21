@@ -46,7 +46,7 @@ public:
     }
 
     struct MyFrame {
-        const uint8_t *data = nullptr;
+        uint8_t *data = nullptr;
         std::unique_ptr<uint8_t[]> data_holder;
         int size = 0;
         int width = 0;
