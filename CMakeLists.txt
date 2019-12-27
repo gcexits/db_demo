@@ -20,7 +20,6 @@ endif()
 
 set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/main.cpp
-        ${ROOT}/client_testing/send_speex.cpp
         ${ROOT}/client_testing/deal_yuv.cpp
         ${ROOT}/client_testing/mainPlayer.cpp
 

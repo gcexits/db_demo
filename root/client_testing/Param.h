@@ -17,6 +17,8 @@ struct Argument {
             std::string format;
         };
         Device device;
+        std::string h264;
+        std::string pcm;
     };
     Param param;
 
@@ -50,15 +52,14 @@ struct Argument {
         }
         if (p.HasMember("capture") && p["capture"].IsObject()) {
             auto& device = p["capture"];
-            if (device.HasMember("index") && device["index"].IsInt()) {
-                param.device.index = device["index"].GetInt();
-            }
-            if (device.HasMember("name") && device["name"].IsString()) {
-                param.device.name = device["name"].GetString();
-            }
-            if (device.HasMember("format") && device["format"].IsString()) {
-                param.device.format = device["format"].GetString();
-            }
+            param.device.index = device["index"].GetInt();
+            param.device.name = device["name"].GetString();
+            param.device.format = device["format"].GetString();
+        }
+        if (p.HasMember("local") && p["local"].IsObject()) {
+            auto& source = p["local"];
+            param.h264 = source["h264"].GetString();
+            param.pcm = source["pcm"].GetString();
         }
     }
 };

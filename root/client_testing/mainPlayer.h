@@ -6,6 +6,7 @@
 
 #include "../src_code/codec/VideoRecorder.h"
 #include "../src_code/codec/H264Encoder.h"
+#include "../src_code/codec/SpeexEncoder.h"
 
 #include "../src_code/demux/Demuxer.h"
 
@@ -41,3 +42,7 @@ int ffmpeg_capture(Argument& cmd);
 /****************************************/
 
 int send_h264(Argument& cmd);
+
+/****************************************/
+
+int send_speex(Argument& cmd);

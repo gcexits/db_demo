@@ -1,12 +1,16 @@
 {
     "profile": {
-        "launch": 1,
+        "launch": 5,
         "playerUrl": "/Users/guochao/Downloads/5_往后余生.webm",
         "senderUrl": "rtmp://utx-live.duobeiyun.net/live/guochao",
         "capture": {
             "index": 1,
             "name": "Camera (High Definition Video Device)",
             "format": "avfoundation"
+        },
+        "local": {
+            "h264": "/Users/guochao/Downloads/big_buck_bunny_4s.264",
+            "pcm": "/Users/guochao/Downloads/1_16000_s16le.pcm"
         }
     }
 }

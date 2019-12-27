@@ -331,6 +331,7 @@ bool playFrameData(uint8_t *data, int width, int height, int linesize) {
             }
         }
     }
+    return true;
 }
 
 int ffmpeg_capture(Argument &cmd) {
@@ -363,7 +364,7 @@ int send_h264(Argument& cmd) {
     int ret;
     int videoindex = -1, audioindex = -1;
 
-    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.playerUrl.c_str(), nullptr, nullptr)) < 0) {
+    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.h264.c_str(), nullptr, nullptr)) < 0) {
         printf("Could not open input file.");
         return -1;
     }
@@ -416,5 +417,26 @@ int send_h264(Argument& cmd) {
     absCtx = nullptr;
 
     avformat_close_input(&ifmt_ctx);
+    return 0;
+}
+
+int send_speex(Argument& cmd) {
+    uint32_t audioTime = 0;
+    duobei::audio::AudioEncoder audioEncoder(false);
+    duobei::RtmpObject rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao");
+    audioEncoder.encoder_->output_fn_ = std::bind(&duobei::RtmpObject::sendAudioPacket, rtmpObject, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+    std::ifstream fp_in(cmd.param.pcm, std::ios::in);
+    if (!fp_in.is_open()) {
+        return -1;
+    }
+    char *buf_1 = new char[640];
+    while (!fp_in.eof()) {
+        fp_in.read(buf_1, 640);
+        audioEncoder.Encode(buf_1, 640, audioTime);
+        audioTime += 20;
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    delete []buf_1;
     return 0;
 }

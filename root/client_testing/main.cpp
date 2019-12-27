@@ -1,4 +1,3 @@
-#include "send_speex.h"
 #include "deal_yuv.h"
 #include "audio_mix.h"
 #include "demux_audio_mix.h"
@@ -8,6 +7,7 @@
 #include "H264HardDecode.h"
 
 #include "mainPlayer.h"
+
 int main(int argc, char *argv[]) {
     Argument cmd;
     cmd.LoadProfile();
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         case 4:
             return c_test();
         case 5:
-            return send_speex();
+            return send_speex(cmd);
         case 6:
             return send_h264(cmd);
         case 7:

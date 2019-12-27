@@ -55,9 +55,7 @@ void SpeexEncoderContext::Encode(uint8_t *data, int size, uint32_t ts) {
     if (size > frame_size * 2) {
         return;
     }
-    // 在 Windows 上注释 speex_preprocess_run 编码质量会有所改善
-    // 但回音消除功能会有所削弱
-    //    speex_preprocess_run(preprocess, (short *)data);
+
     speex_encode_int(enc_state, (short *)data, &enc_bits);
 
     pkt_frame_count++;
@@ -65,14 +63,11 @@ void SpeexEncoderContext::Encode(uint8_t *data, int size, uint32_t ts) {
         memset(speex_buffer_, 0, frame_size * frames_per_packet);
         auto enc_size = speex_bits_write(&enc_bits, (char *)speex_buffer_, frame_size * frames_per_packet);
         speex_bits_reset(&enc_bits);
-        // note: enc_size 返回了特别大的值
         assert(output_fn_);
         if (frame_size * frames_per_packet > enc_size) {
             output_fn_(speex_buffer_, enc_size, ts);
         }
         pkt_frame_count = 0;
-    } else {
-        output_fn_(speex_buffer_, 1, ts);
     }
 }
 

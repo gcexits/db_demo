@@ -167,21 +167,21 @@ bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint
         index = parser_.dumpHeader(buffer, length);
         buffer += index;
         length -= index;
-        std::cout << "header is " << index << std::endl;
+        std::cout << "header is " << index << " time : " << timestamp << std::endl;
     }
     if (parser_.SPSPPS(buffer, length)) {
         auto status = send_video_sps_pps(buffer + parser_.spsBegin, parser_.spsLength, buffer + parser_.ppsBegin, parser_.ppsLength, timestamp);
         if (!status) {
             return false;
         }
-        std::cout << "send_video_sps_pps" << std::endl;
+        std::cout << "send_video_sps_pps" << " time : " << timestamp << std::endl;
     }
     return send_video_only(buffer + parser_.headerLength, length - parser_.headerLength, keyFrame, timestamp);
 }
 
 void RtmpObject::sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp) {
     RTMPPacket data;
-    RTMPPacket_Alloc(&data, len);
+    RTMPPacket_Alloc(&data, len + 1);
 
     data.m_nChannel = 0x04;
     data.m_headerType = RTMP_PACKET_SIZE_LARGE;
@@ -190,11 +190,12 @@ void RtmpObject::sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp)
     data.m_nInfoField2 = rtmp->m_stream_id;
     data.m_hasAbsTimestamp = 0;
 
-    data.m_nBodySize = len;
-    memcpy(data.m_body, buf, len);
+    data.m_nBodySize = len + 1;
+    data.m_body[0] = (char)0xB2;
+    memcpy(data.m_body + 1, buf, len);
 
     if (RTMP_SendPacket(rtmp, &data, TRUE)) {
-        std::cout << "send Audio Packet success" << std::endl;
+        std::cout << "send Audio Packet success : " << timestamp << std::endl;
     }
     return;
 }
