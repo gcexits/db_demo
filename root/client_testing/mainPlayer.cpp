@@ -1,6 +1,59 @@
-#include "flv_player.h"
+#include "mainPlayer.h"
 
-//#define PARSE_SPS
+static uint32_t sdl_refresh_timer_cb(uint32_t interval, void *opaque) {
+    SDL_Event event;
+    event.type = FF_REFRESH_EVENT;
+    SDL_PushEvent(&event);
+    return 0;
+}
+
+void schedule_refresh(int delay) {
+    SDL_AddTimer(delay, sdl_refresh_timer_cb, nullptr);
+}
+
+int ffplay(Argument& cmd) {
+    MediaState mediaState;
+    assert(cmd.player.setMediaState(&mediaState));
+
+    duobei::HttpFile httpFile;
+    int ret = httpFile.Open(cmd.param.playerUrl);
+
+    if (ret != duobei::FILEOK) {
+        std::cout << "playerUrl is error" << std::endl;
+        return -1;
+    }
+    // todo: 解封装 保存h264流有问题，需要av_bitstream_filter_init给h264裸流添加sps pps
+    IOBufferContext ioBufferContext(0);
+    httpFile.setIOBufferContext(&ioBufferContext);
+    Demuxer demuxer;
+    httpFile.startRead();
+
+    std::thread readthread = std::thread([&] {
+      bool status = false;
+      void* param = nullptr;
+      do {
+          ioBufferContext.OpenInput();
+          param = (AVFormatContext*)ioBufferContext.getFormatContext(&status);
+      } while (!status);
+      demuxer.Open(param, mediaState, cmd.player);
+      while (1) {
+          if (demuxer.ReadFrame(mediaState) == Demuxer::ReadStatus::EndOff) {
+              break;
+          }
+      }
+    });
+
+    schedule_refresh(40);
+    cmd.player.EventLoop(mediaState);
+    ioBufferContext.io_sync.exit = true;
+    if (readthread.joinable()) {
+        readthread.join();
+    }
+    httpFile.exit = true;
+    httpFile.Close();
+    std::cout << "curl file end" << std::endl;
+    return 0;
+}
 
 #if defined(PARSE_SPS)
 #include <math.h>
@@ -218,7 +271,6 @@ int h264_decode_sps(BYTE *buf, unsigned int nLen, int &width, int &height, int &
     } else
         return false;
 }
-
 #endif
 
 int flv_player(Argument& cmd) {
@@ -232,5 +284,137 @@ int flv_player(Argument& cmd) {
 
     std::cout << "program exit" << std::endl;
 
+    return 0;
+}
+
+bool playFrameData(uint8_t *data, int width, int height, int linesize) {
+    static SDL_Window *screen = nullptr;
+    static SDL_Renderer *sdlRenderer = nullptr;
+    static SDL_Texture *sdlTexture = nullptr;
+    static SDL_Rect sdlRect;
+    static SDL_Event event;
+
+    static char file[64] = {0};
+    if (isprint(file[2]) == 0) {
+        snprintf(file, 63, "window-%dx%d.yuv", width, height);
+        {
+            if (SDL_Init(SDL_INIT_VIDEO)) {
+                exit(-1);
+            }
+
+            screen = SDL_CreateWindow("window",
+                                      SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                      width, height, SDL_WINDOW_OPENGL);
+
+            if (!screen) {
+                exit(-1);
+            }
+            sdlRenderer = SDL_CreateRenderer(screen, -1, 0);
+            sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
+
+            sdlRect.x = 0;
+            sdlRect.y = 0;
+            sdlRect.w = width;
+            sdlRect.h = height;
+        }
+    }
+    if (sdlTexture != nullptr) {
+        SDL_UpdateTexture(sdlTexture, nullptr, data, linesize);
+        SDL_RenderClear(sdlRenderer);
+        SDL_RenderCopy(sdlRenderer, sdlTexture, nullptr, &sdlRect);
+        SDL_RenderPresent(sdlRenderer);
+
+        while (SDL_PollEvent(&event) != 0) {
+            if (event.type == SDL_QUIT) {
+                SDL_Quit();
+                return false;
+            }
+        }
+    }
+}
+
+int ffmpeg_capture(Argument &cmd) {
+    auto video_recorder_ = std::make_unique<duobei::capturer::VideoRecorder>(cmd.param.device.index, "Integrated Webcam", cmd.param.device.format.c_str());
+    assert(video_recorder_->Open());
+
+    AVPacket *dst_pkt = av_packet_alloc();
+    bool running = true;
+    while (running) {
+        if (video_recorder_->Read()) {
+            playFrameData(video_recorder_->frame_.data, video_recorder_->frame_.width, video_recorder_->frame_.height, video_recorder_->frame_.linesize);
+            av_packet_unref(dst_pkt);
+        }
+    }
+    video_recorder_->Close();
+
+    return 0;
+}
+
+// todo: ffmpeg -re -stream_loop -1 -i wangyiyun.mp4 -vcodec copy -acodec copy -f flv rtmp://utx-live.duobeiyun.net/live/guochao
+// todo: ffplay rtmp://htx-live.duobeiyun.net/live/guochao
+int send_h264(Argument& cmd) {
+    duobei::Time::Timestamp time;
+    time.Start();
+    int video_count = 0;
+    duobei::RtmpObject rtmpObject(cmd.param.senderUrl);
+
+    AVFormatContext* ifmt_ctx = nullptr;
+    AVPacket pkt;
+    int ret;
+    int videoindex = -1, audioindex = -1;
+
+    if ((ret = avformat_open_input(&ifmt_ctx, cmd.param.playerUrl.c_str(), nullptr, nullptr)) < 0) {
+        printf("Could not open input file.");
+        return -1;
+    }
+    if ((ret = avformat_find_stream_info(ifmt_ctx, 0)) < 0) {
+        printf("Failed to retrieve input stream information");
+        return -1;
+    }
+
+    videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+
+    const AVBitStreamFilter* avBitStreamFilter = nullptr;
+    AVBSFContext* absCtx = nullptr;
+
+    avBitStreamFilter = av_bsf_get_by_name("h264_mp4toannexb");
+
+    av_bsf_alloc(avBitStreamFilter, &absCtx);
+
+    avcodec_parameters_copy(absCtx->par_in, ifmt_ctx->streams[videoindex]->codecpar);
+
+    av_bsf_init(absCtx);
+
+    int loop_count = 0;
+    while (true) {
+        ret = av_read_frame(ifmt_ctx, &pkt);
+        if (ret == AVERROR_EOF) {
+            assert(av_seek_frame(ifmt_ctx, -1, 0, AVSEEK_FLAG_BYTE) >= 0);
+            video_count = 0;
+            if (++loop_count > 10000) {
+                break;
+            }
+            continue;
+        }
+        time.Stop();
+        if (pkt.stream_index == videoindex) {
+            bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
+            if (av_bsf_send_packet(absCtx, &pkt) != 0) {
+                continue;
+            }
+            while (av_bsf_receive_packet(absCtx, &pkt) == 0);
+            rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed(), video_count == 0);
+            video_count++;
+        } else if (pkt.stream_index == audioindex) {
+        }
+        av_packet_unref(&pkt);
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    }
+
+    av_bsf_free(&absCtx);
+    absCtx = nullptr;
+
+    avformat_close_input(&ifmt_ctx);
     return 0;
 }

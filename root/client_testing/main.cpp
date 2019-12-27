@@ -1,17 +1,13 @@
-#include "flv_player.h"
-#include "send_h264.h"
 #include "send_speex.h"
 #include "deal_yuv.h"
 #include "audio_mix.h"
 #include "demux_audio_mix.h"
 #include "simplest_ffmpeg_video_filter.h"
 #include "json.h"
-#include "ffmpeg_capture.h"
 #include "c++_test.h"
 #include "H264HardDecode.h"
-#include "ffplay.h"
-#include "Param.h"
 
+#include "mainPlayer.h"
 int main(int argc, char *argv[]) {
     Argument cmd;
     cmd.LoadProfile();

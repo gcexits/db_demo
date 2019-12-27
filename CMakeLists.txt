@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 project(client-tool)
 
 set(CMAKE_C_COMPILER g++)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 
 set(EXE_TARGET_NAME client-tool)
 
@@ -20,12 +20,9 @@ endif()
 
 set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/main.cpp
-        ${ROOT}/client_testing/flv_player.cpp
-        ${ROOT}/client_testing/send_h264.cpp
         ${ROOT}/client_testing/send_speex.cpp
         ${ROOT}/client_testing/deal_yuv.cpp
-        ${ROOT}/client_testing/ffmpeg_capture.cpp
-        ${ROOT}/client_testing/ffplay.cpp
+        ${ROOT}/client_testing/mainPlayer.cpp
 
         ${ROOT}/client_testing/audio_mix.cpp
         ${ROOT}/client_testing/demux_audio_mix.cpp

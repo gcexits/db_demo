@@ -1,7 +1,7 @@
 {
     "profile": {
-        "launch": 2,
-        "playerUrl": "https://youtu.be/UrYzqZQXvL8?list=PLgzU3TD6BWQdjOTCVXN6xNqyULs6TymS6&t=1237",
+        "launch": 1,
+        "playerUrl": "/Users/guochao/Downloads/5_往后余生.webm",
         "senderUrl": "rtmp://utx-live.duobeiyun.net/live/guochao",
         "capture": {
             "index": 1,
