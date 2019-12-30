@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         case 6:
             return send_h264(cmd);
         case 7:
-            return deal_yuv();
+            return deal_yuv(cmd);
         case 8:
             return mainMix();
         case 9:

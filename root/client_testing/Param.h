@@ -18,6 +18,7 @@ struct Argument {
         };
         Device device;
         std::string h264;
+        std::string yuv;
         std::string pcm;
     };
     Param param;
@@ -60,6 +61,7 @@ struct Argument {
             auto& source = p["local"];
             param.h264 = source["h264"].GetString();
             param.pcm = source["pcm"].GetString();
+            param.yuv = source["yuv"].GetString();
         }
     }
 };

@@ -424,7 +424,7 @@ int send_speex(Argument& cmd) {
     uint32_t audioTime = 0;
     duobei::audio::AudioEncoder audioEncoder(false);
     duobei::RtmpObject rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao");
-    audioEncoder.encoder_->output_fn_ = std::bind(&duobei::RtmpObject::sendAudioPacket, rtmpObject, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    audioEncoder.encoder_->output_fn_ = std::bind(&duobei::RtmpObject::sendAudioPacket, rtmpObject, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
     std::ifstream fp_in(cmd.param.pcm, std::ios::in);
     if (!fp_in.is_open()) {

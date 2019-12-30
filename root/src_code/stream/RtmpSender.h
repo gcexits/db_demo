@@ -28,6 +28,6 @@ public:
     }
 
     bool sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp, bool isdemux);
-    void sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp);
+    void sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp, int type);
 };
 }  // namespace duobei

@@ -65,7 +65,7 @@ void SpeexEncoderContext::Encode(uint8_t *data, int size, uint32_t ts) {
         speex_bits_reset(&enc_bits);
         assert(output_fn_);
         if (frame_size * frames_per_packet > enc_size) {
-            output_fn_(speex_buffer_, enc_size, ts);
+            output_fn_(speex_buffer_, enc_size, ts, 0);
         }
         pkt_frame_count = 0;
     }

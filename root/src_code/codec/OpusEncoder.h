@@ -19,7 +19,7 @@ struct EncoderContextInterface {
     virtual void Encode(uint8_t *data, int size, uint32_t ts) = 0;
     virtual ~EncoderContextInterface() = default;
 
-    std::function<void(const int8_t*, int, uint32_t)> output_fn_ = nullptr;
+    std::function<void(const int8_t*, int, uint32_t, int)> output_fn_ = nullptr;
 };
 
 struct OpusEncoderContext: EncoderContextInterface {

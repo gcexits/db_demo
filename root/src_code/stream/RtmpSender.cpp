@@ -179,7 +179,7 @@ bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint
     return send_video_only(buffer + parser_.headerLength, length - parser_.headerLength, keyFrame, timestamp);
 }
 
-void RtmpObject::sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp) {
+void RtmpObject::sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp, int type) {
     RTMPPacket data;
     RTMPPacket_Alloc(&data, len + 1);
 
@@ -191,7 +191,11 @@ void RtmpObject::sendAudioPacket(const int8_t *buf, int len, uint32_t timestamp)
     data.m_hasAbsTimestamp = 0;
 
     data.m_nBodySize = len + 1;
-    data.m_body[0] = (char)0xB2;
+    if (type == 0) {
+        data.m_body[0] = (char)0xB2;
+    } else if (type == 1) {
+        data.m_body[0] = (char)0xC6;
+    }
     memcpy(data.m_body + 1, buf, len);
 
     if (RTMP_SendPacket(rtmp, &data, TRUE)) {

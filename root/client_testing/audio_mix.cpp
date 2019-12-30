@@ -32,16 +32,14 @@ void mix2(char *sourseFile1, char *sourseFile2, char *objectFile, int len) {
 
 int mainMix() {
     int mix_count = 0;
-    std::ifstream fp1;
-    std::ifstream fp2;
-    std::ofstream fp_mix;
     std::string url_1 = "../audio_video/1_mix.pcm";
     std::string url_2 = "../audio_video/2_mix.pcm";
     std::string url_3 = "./mix.pcm";
 
-    fp1.open(url_1, std::ios::in);
-    fp2.open(url_2, std::ios::in);
-    fp_mix.open(url_3, std::ios::out | std::ios::app);
+    std::ifstream fp1(url_1, std::ios::in);
+    std::ifstream fp2(url_2, std::ios::in);
+    std::ofstream fp_mix(url_3, std::ios::out | std::ios::app);
+
     char *buf_1 = new char[320];
     char *buf_2 = new char[320];
     char *buf_3 = new char[320];

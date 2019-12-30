@@ -99,7 +99,7 @@ void OpusEncoderContext::Encode(uint8_t *in, int len, uint32_t ts) {
     }
     opus_len = nbytes;
     assert(output_fn_);
-    output_fn_((int8_t *)audio_buffer_, 1 + opus_len, ts);
+    output_fn_((int8_t *)audio_buffer_, 1 + opus_len, ts, 1);
 }
 
 }  // namespace audio
