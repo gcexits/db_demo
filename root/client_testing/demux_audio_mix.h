@@ -20,22 +20,57 @@ struct AuidoCache {
         int size = 0;
     };
     std::mutex audioMx_;
+    bool notify = false;
+    std::condition_variable audioCv_;
     std::list<AudioBuffer> audioBufferList;
 
+    struct PCM {
+        enum { kChunk = 640 };
+        uint8_t buffer[kChunk] = {0};
+        int postion = 0;
+    } pcm;
+    void chunkMix(uint8_t *data, int size) {
+        int postion = 0;
+        while (postion < size) {
+            auto copy_length = std::min(pcm.kChunk - pcm.postion, size - postion);
+            memcpy(pcm.buffer + pcm.postion, static_cast<uint8_t*>(data) + postion, copy_length);
+            postion += copy_length;
+            pcm.postion += copy_length;
+
+            if (pcm.postion == pcm.kChunk) {
+                // todo:
+                AudioBuffer audio;
+                audio.size = pcm.kChunk;
+                audio.data = new uint8_t[audio.size];
+                memcpy(audio.data, pcm.buffer, audio.size);
+                audioBufferList.push_back(audio);
+                pcm.postion = 0;
+            }
+        }
+    }
+
     void pushCache(uint8_t *data, int size) {
-        AudioBuffer audio;
-        audio.size = size;
-        audio.data = new uint8_t[size];
-        memcpy(audio.data, data, size);
         std::lock_guard<std::mutex> lckMap(audioMx_);
-        audioBufferList.push_back(audio);
+        chunkMix(data, size);
+        notify = true;
+        audioCv_.notify_all();
     }
 
     int popCache(uint8_t *data) {
-        std::lock_guard<std::mutex> lckMap(audioMx_);
-        if (audioBufferList.empty()) {
-            return 0;
+        while (audioBufferList.empty()) {
+            std::unique_lock<std::mutex> lckMap(audioMx_);
+            // todo: audioCv_.wait(lckMap)即可，audioMx_为两个对象所持有
+            audioCv_.wait(lckMap);
+            /*audioCv_.wait(lckMap, [&]() mutable->bool {
+                if (notify) {
+                    notify = false;
+                    return true;
+                }
+                return false;
+            });*/
         }
+        std::unique_lock<std::mutex> lckMap(audioMx_);
+        assert(!audioBufferList.empty());
         auto audio = audioBufferList.front();
         memcpy(data, audio.data, audio.size);
         delete[] audio.data;
@@ -188,6 +223,7 @@ public:
 
     void convert(int streamId) {
         int resample_size = swr_convert(swr, dst.frame->data, dst.frame->nb_samples, (const uint8_t **)src.frame->data, src.frame->nb_samples);
+        assert(resample_size > 0);
         if (streamId == 1) {
             cache_1.pushCache(dst.frame->data[0], dst.bufferSize);
         } else {
@@ -256,7 +292,6 @@ public:
 class Api {
     std::thread demux_thread_1;
     std::thread demux_thread_2;
-    int threadExit = 0;
 
     void demuxer_thread(std::string url, int streamId) {
         Demux demuxer(url);
@@ -286,24 +321,18 @@ class Api {
 
             // std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-        threadExit++;
+        av_packet_free(&pkt);
     }
 
 public:
     void start(std::string url_1, std::string url_2) {
         demux_thread_1 = std::thread(&Api::demuxer_thread, this, url_1, 1);
-        // demux_thread_2 = std::thread(&Api::demuxer_thread, this, url_2, 2);
+        demux_thread_2 = std::thread(&Api::demuxer_thread, this, url_2, 2);
     }
 
     void stop() {
-        assert(demux_thread_1.joinable());
-        // assert(demux_thread_2.joinable());
         demux_thread_1.join();
-        // demux_thread_2.join();
-    }
-
-    bool threadOver() {
-        return threadExit == 1;
+        demux_thread_2.join();
     }
 };
 

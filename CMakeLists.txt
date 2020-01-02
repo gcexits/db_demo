@@ -23,7 +23,6 @@ set(CLIENT_LIVING_FILES
         ${ROOT}/client_testing/deal_yuv.cpp
         ${ROOT}/client_testing/mainPlayer.cpp
 
-        ${ROOT}/client_testing/audio_mix.cpp
         ${ROOT}/client_testing/demux_audio_mix.cpp
         ${ROOT}/client_testing/simplest_ffmpeg_video_filter.cpp
 

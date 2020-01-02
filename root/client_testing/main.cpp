@@ -1,5 +1,4 @@
 #include "deal_yuv.h"
-#include "audio_mix.h"
 #include "demux_audio_mix.h"
 #include "simplest_ffmpeg_video_filter.h"
 #include "json.h"
@@ -28,12 +27,10 @@ int main(int argc, char *argv[]) {
         case 7:
             return deal_yuv(cmd);
         case 8:
-            return mainMix();
-        case 9:
             return demux_audio_mix();
-        case 10:
+        case 9:
             return simplest_ffmpeg_video_filter();
-        case 11:
+        case 10:
             return main_json();
         default:
             abort();
