@@ -20,6 +20,12 @@ struct Argument {
         std::string h264;
         std::string yuv;
         std::string pcm;
+        struct Mix {
+            std::string src_pcm_1;
+            std::string src_pcm_2;
+            std::string dst_pcm;
+        };
+        Mix mix;
     };
     Param param;
 
@@ -62,6 +68,12 @@ struct Argument {
             param.h264 = source["h264"].GetString();
             param.pcm = source["pcm"].GetString();
             param.yuv = source["yuv"].GetString();
+        }
+        if (p.HasMember("mix") && p["mix"].IsObject()) {
+            auto& mix = p["mix"];
+            param.mix.src_pcm_1 = mix["src_pcm_1"].GetString();
+            param.mix.src_pcm_2 = mix["src_pcm_2"].GetString();
+            param.mix.dst_pcm = mix["dst_pcm"].GetString();
         }
     }
 };

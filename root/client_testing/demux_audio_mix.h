@@ -14,6 +14,8 @@ extern "C" {
 #include <string>
 #include <thread>
 
+#include "Param.h"
+
 struct AuidoCache {
     struct AudioBuffer {
         uint8_t *data = nullptr;
@@ -336,4 +338,4 @@ public:
     }
 };
 
-int demux_audio_mix();
+int demux_audio_mix(Argument &cmd);

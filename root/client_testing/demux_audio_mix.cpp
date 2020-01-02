@@ -29,16 +29,11 @@ void mix2(char *sourseFile1, char *sourseFile2, char *objectFile, int len) {
     }
 }
 
-std::ofstream fp_pcm;
-
-int demux_audio_mix() {
-    std::string outUrl = "./44100_2_s16le.pcm";
-    fp_pcm.open(outUrl, std::ios::out | std::ios::ate);
-    std::string url_1 = "/Users/guochao/Downloads/5_往后余生.webm";
-    std::string url_2 = "/Users/guochao/Downloads/2_告白气球.mkv";
+int demux_audio_mix(Argument &cmd) {
+    std::ofstream fp_pcm(cmd.param.mix.dst_pcm, std::ios::out | std::ios::ate);
 
     Api api;
-    api.start(url_1, url_2);
+    api.start(cmd.param.mix.src_pcm_1, cmd.param.mix.src_pcm_2);
 
     uint8_t *buf_mix_1 = new uint8_t[1024 * 1024];
     uint8_t *buf_mix_2 = new uint8_t[1024 * 1024];
