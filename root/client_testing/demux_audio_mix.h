@@ -15,6 +15,7 @@ extern "C" {
 #include <thread>
 
 #include "Param.h"
+#include "../src_code/utils/Time.h"
 
 struct AuidoCache {
     struct AudioBuffer {
@@ -22,7 +23,6 @@ struct AuidoCache {
         int size = 0;
     };
     std::mutex audioMx_;
-    bool notify = false;
     std::condition_variable audioCv_;
     std::list<AudioBuffer> audioBufferList;
 
@@ -54,22 +54,23 @@ struct AuidoCache {
     void pushCache(uint8_t *data, int size) {
         std::lock_guard<std::mutex> lckMap(audioMx_);
         chunkMix(data, size);
-        notify = true;
         audioCv_.notify_all();
     }
 
     int popCache(uint8_t *data) {
-        while (audioBufferList.empty()) {
+        if (audioBufferList.empty()) {
             std::unique_lock<std::mutex> lckMap(audioMx_);
-            // todo: audioCv_.wait(lckMap)即可，audioMx_为两个对象所持有
-            audioCv_.wait(lckMap);
-            /*audioCv_.wait(lckMap, [&]() mutable->bool {
-                if (notify) {
-                    notify = false;
-                    return true;
-                }
-                return false;
-            });*/
+            // todo: audioCv_.wait(lckMap, __pred)
+            duobei::Time::Timestamp begin;
+            begin.Start();
+            audioCv_.wait(lckMap, [&]() mutable->bool {
+                begin.Stop();
+                return begin.Elapsed() > 1000;
+            });
+            if (audioBufferList.empty()) {
+                std::cout << "time out" << std::endl;
+                return -1;
+            }
         }
         std::unique_lock<std::mutex> lckMap(audioMx_);
         assert(!audioBufferList.empty());
@@ -294,6 +295,7 @@ public:
 class Api {
     std::thread demux_thread_1;
     std::thread demux_thread_2;
+    int threadExit = 0;
 
     void demuxer_thread(std::string url, int streamId) {
         Demux demuxer(url);
@@ -323,6 +325,7 @@ class Api {
 
             // std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
+        threadExit++;
         av_packet_free(&pkt);
     }
 
@@ -335,6 +338,10 @@ public:
     void stop() {
         demux_thread_1.join();
         demux_thread_2.join();
+    }
+
+    bool thread_over() {
+        return threadExit == 2;
     }
 };
 

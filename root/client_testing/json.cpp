@@ -7,7 +7,7 @@ void dump(json::Document &doc) {
     std::cout << s.GetString() << std::endl;
 }
 
-int main_json() {
+int main_json(Argument& cmd) {
     duobei::JsonBuilder jb;
     {
         auto object = jb.object();
@@ -45,7 +45,7 @@ int main_json() {
 
     IStreamWrapper isw{ifs};
 
-    Document doc{};
+    Document doc;
     doc.ParseStream(isw);
 
     StringBuffer buffer{};

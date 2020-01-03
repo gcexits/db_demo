@@ -33,15 +33,26 @@ int demux_audio_mix(Argument &cmd) {
     std::ofstream fp_pcm(cmd.param.mix.dst_pcm, std::ios::out | std::ios::ate);
 
     Api api;
-    api.start(cmd.param.mix.src_pcm_1, cmd.param.mix.src_pcm_2);
+    api.start(cmd.param.mix.src_audio_1, cmd.param.mix.src_audio_2);
 
-    uint8_t *buf_mix_1 = new uint8_t[1024 * 1024];
-    uint8_t *buf_mix_2 = new uint8_t[1024 * 1024];
-    uint8_t *buf_out = new uint8_t[1024 * 1024];
+    auto *buf_mix_1 = new uint8_t[1024 * 1024];
+    auto *buf_mix_2 = new uint8_t[1024 * 1024];
+    auto *buf_out = new uint8_t[1024 * 1024];
+    int len1 = 0;
+    int len2 = 0;
 
     while (1) {
-        int len = cache_1.popCache(buf_mix_1);
-        len = cache_2.popCache(buf_mix_2);
+        if (len1 != -1) {
+            len1 = cache_1.popCache(buf_mix_1);
+        }
+        if (len2 != -1) {
+            len2 = cache_2.popCache(buf_mix_2);
+        }
+        auto len = std::max(len1, len2);
+        assert(len <= 640);
+        if (len == -1 && api.thread_over()) {
+            break;
+        }
         mix2((char *)buf_mix_1, (char *)buf_mix_2, (char *)buf_out, len);
         fp_pcm.write((char *)buf_out, len);
     }

@@ -1,11 +1,5 @@
 #pragma once
 
-#include <json/document.h>
-#include <json/istreamwrapper.h>
-#include <json/rapidjson.h>
-#include <json/stringbuffer.h>
-#include <json/writer.h>
-
 #include <fstream>
 #include <iostream>
 #include <queue>
@@ -14,6 +8,7 @@
 #include <vector>
 
 #include "RapidJsonWrapper.hpp"
+#include "Param.h"
 
 namespace json = rapidjson;
 
@@ -107,4 +102,4 @@ struct PingHistory : Common {
 
 void dump(json::Document &doc);
 
-int main_json();
+int main_json(Argument& cmd);

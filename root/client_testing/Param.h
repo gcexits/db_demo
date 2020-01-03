@@ -1,6 +1,10 @@
 #pragma once
 
-#include "json.h"
+#include <json/document.h>
+#include <json/istreamwrapper.h>
+#include <json/rapidjson.h>
+#include <json/stringbuffer.h>
+#include <json/writer.h>
 
 #include "../src_code/display/SDLPlayer.h"
 
@@ -21,8 +25,8 @@ struct Argument {
         std::string yuv;
         std::string pcm;
         struct Mix {
-            std::string src_pcm_1;
-            std::string src_pcm_2;
+            std::string src_audio_1;
+            std::string src_audio_2;
             std::string dst_pcm;
         };
         Mix mix;
@@ -71,8 +75,8 @@ struct Argument {
         }
         if (p.HasMember("mix") && p["mix"].IsObject()) {
             auto& mix = p["mix"];
-            param.mix.src_pcm_1 = mix["src_pcm_1"].GetString();
-            param.mix.src_pcm_2 = mix["src_pcm_2"].GetString();
+            param.mix.src_audio_1 = mix["src_audio_1"].GetString();
+            param.mix.src_audio_2 = mix["src_audio_2"].GetString();
             param.mix.dst_pcm = mix["dst_pcm"].GetString();
         }
     }
