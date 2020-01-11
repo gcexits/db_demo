@@ -24,7 +24,6 @@ enum {
 };
 
 class HttpFile {
-    IOBufferContext *ioBufferContext = nullptr;
     std::string url_;
     std::ifstream fp;
 
@@ -131,9 +130,6 @@ class HttpFile {
     int Seek(int delta);
 
 public:
-    void setIOBufferContext(IOBufferContext *ioBufferContext_) {
-        ioBufferContext = ioBufferContext_;
-    }
     DownloadWorker worker;
     HttpFile() {}
     virtual ~HttpFile() {
@@ -143,7 +139,6 @@ public:
     int Open(std::string &);
     std::thread read;
     bool exit = false;
-    void startRead();
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, int &hasReadSize);
     int Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_size, int &hasReadSize);
     int ReadDelay(uint8_t *buf, size_t bufSize, size_t readSize);

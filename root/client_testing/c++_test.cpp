@@ -118,6 +118,16 @@ int testFun(int a, int b) {
 }
 
 int c_test() {
+    std::thread th_test = std::thread([](bool value) -> std::string {
+        auto str = value ? "true" : "false";
+        printf("str = %s\n", str);
+        return str;
+    }, true);
+    if (th_test.joinable()) {
+        th_test.join();
+    }
+    return 0;
+
     std::queue<int> q1;
     q1.push(1);
     q1.emplace(2);

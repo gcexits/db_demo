@@ -44,9 +44,7 @@ struct Argument {
 
     void LoadProfile() {
         std::ifstream fhandle(param.profile, std::ios::binary | std::ios::in);
-        if (!fhandle.is_open()) {
-            return;
-        }
+        assert(fhandle.is_open());
         rapidjson::IStreamWrapper is(fhandle);
         rapidjson::Document doc;
         doc.ParseStream(is);

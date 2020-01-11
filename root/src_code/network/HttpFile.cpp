@@ -245,21 +245,6 @@ int HttpFile::Read(uint8_t *buf, size_t bufSize, size_t readSize, size_t head_si
     return ret;
 }
 
-void HttpFile::startRead() {
-    read = std::thread([&] {
-      int buffer_size = 1024 * 320;
-      uint8_t* buffer = new uint8_t[buffer_size + 1];
-      int hasRead_size = 0;
-      while (!exit) {
-          int ret = Read(buffer, buffer_size, buffer_size, hasRead_size);
-          ioBufferContext->FillBuffer(buffer, hasRead_size);
-          if (ret == FILEEND) {
-              break;
-          }
-      }
-    });
-}
-
 //读取后指针不会延迟 OK
 int HttpFile::ReadDelay(uint8_t *buf, size_t bufSize, size_t readSize) {
     size_t hasRead = 0;

@@ -24,9 +24,22 @@ int ffplay(Argument& cmd) {
     }
     // todo: 解封装 保存h264流有问题，需要av_bitstream_filter_init给h264裸流添加sps pps
     IOBufferContext ioBufferContext(0);
-    httpFile.setIOBufferContext(&ioBufferContext);
     Demuxer demuxer;
-    httpFile.startRead();
+
+    std::thread read = std::thread([&] {
+      int buffer_size = 1024 * 320;
+      auto* buffer = new uint8_t[buffer_size + 1];
+      while (1) {
+          int hasRead_size = 0;
+          int ret = httpFile.Read(buffer, buffer_size, buffer_size, hasRead_size);
+          if (hasRead_size != 0) {
+              ioBufferContext.FillBuffer(buffer, hasRead_size);
+          }
+          if (ret == duobei::FILEEND) {
+              break;
+          }
+      }
+    });
 
     std::thread readthread = std::thread([&] {
       bool status = false;
@@ -48,6 +61,9 @@ int ffplay(Argument& cmd) {
     ioBufferContext.io_sync.exit = true;
     if (readthread.joinable()) {
         readthread.join();
+    }
+    if (read.joinable()) {
+        read.join();
     }
     httpFile.exit = true;
     httpFile.Close();
