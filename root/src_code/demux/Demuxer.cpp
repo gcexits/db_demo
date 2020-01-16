@@ -13,14 +13,18 @@ bool Demuxer::Open(void* param, struct MediaState& m, SDLPlayer& player) {
     videoindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     audioindex = av_find_best_stream(ifmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 
-    m.videoState.stream = ifmt_ctx->streams[videoindex];
-    m.videoState.videoDecode.OpenDecode(CodecPar(videoindex));
+    if (videoindex != AVERROR_STREAM_NOT_FOUND) {
+        m.videoState.stream = ifmt_ctx->streams[videoindex];
+        m.videoState.videoDecode.OpenDecode(CodecPar(videoindex));
+        m.videoState.decode = std::thread(&VideoState_1::video_thread, &m.videoState);
+    }
 
-    m.audioState.audioDecode.OpenDecode(CodecPar(audioindex));
+    if (audioindex != AVERROR_STREAM_NOT_FOUND) {
+        m.audioState.audioDecode.OpenDecode(CodecPar(audioindex));
+        m.audioState.decode = std::thread(&AudioState_1::audio_thread, &m.audioState);
+        player.playAudio(m.audioState.audioDecode.codecCtx_->channels, m.audioState.audioDecode.codecCtx_->sample_rate, FFMAX(512, 2 << av_log2(m.audioState.audioDecode.codecCtx_->sample_rate / 30)));
+    }
 
-    player.playAudio(m.audioState.audioDecode.codecCtx_->channels, m.audioState.audioDecode.codecCtx_->sample_rate, FFMAX(512, 2 << av_log2(m.audioState.audioDecode.codecCtx_->sample_rate / 30)));
-    m.audioState.decode = std::thread(&AudioState_1::audio_thread, &m.audioState);
-    m.videoState.decode = std::thread(&VideoState_1::video_thread, &m.videoState);
     opened_ = true;
     return true;
 }
