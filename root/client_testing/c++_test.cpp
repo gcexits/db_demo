@@ -118,6 +118,21 @@ int testFun(int a, int b) {
 }
 
 int c_test() {
+    auto getIpPort = [](const std::string &v, std::string &ips, int &port) {
+      size_t found = v.find(":");
+      if (found == std::string::npos) {
+          return false;
+      }
+      port = atoi(v.substr(found + 1).c_str());
+      ips = v.substr(0, found);
+      return true;
+    };
+    std::string v = "39.106.89.61:30080:";
+    std::string ips;
+    int port;
+    getIpPort(v, ips, port);
+    return 0;
+
     std::thread th_test = std::thread([](bool value) -> std::string {
         auto str = value ? "true" : "false";
         printf("str = %s\n", str);

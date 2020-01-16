@@ -1,10 +1,10 @@
 #pragma once
 
-#include <json/document.h>
-#include <json/istreamwrapper.h>
-#include <json/rapidjson.h>
-#include <json/stringbuffer.h>
-#include <json/writer.h>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 #include "../src_code/display/SDLPlayer.h"
 

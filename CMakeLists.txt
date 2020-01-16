@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 project(client-tool)
 
-set(CMAKE_C_COMPILER g++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 
 set(EXE_TARGET_NAME client-tool)
@@ -17,19 +16,6 @@ if (WIN32)
 elseif (APPLE)
     set(CROSS_PATH mac)
 endif()
-
-set(CLIENT_LIVING_FILES
-        ${ROOT}/client_testing/main.cpp
-        ${ROOT}/client_testing/deal_yuv.cpp
-        ${ROOT}/client_testing/mainPlayer.cpp
-
-        ${ROOT}/client_testing/demux_audio_mix.cpp
-        ${ROOT}/client_testing/simplest_ffmpeg_video_filter.cpp
-
-        ${ROOT}/client_testing/json.cpp
-        ${ROOT}/client_testing/c++_test.cpp
-
-        ${ROOT}/client_testing/H264HardDecode.cpp)
 
 set(PLAYBACK_SOURCE_FILES
         ${ROOT}/src_code/offline/FlvParse.cpp)
@@ -80,7 +66,7 @@ elseif(APPLE)
     include_directories(${USER}/curl/7.65.3/include)
     include_directories(${USER}/rtmpdump/2.4+20151223_1/include)
     include_directories(${USER}/speex/1.2.0/include)
-    include_directories(${ROOT}/third_party)
+    include_directories(${USER}/rapidjson/1.1.0/include)
     include_directories(${ROOT}/third_party/libyuv/include)
     include_directories(${ROOT}/third_party/opus/${CROSS_PATH}/include)
 
@@ -97,7 +83,13 @@ elseif(APPLE)
 
 endif()
 
+include_directories(${ROOT}/client_testing)
+
 add_executable(${EXE_TARGET_NAME} ${CLIENT_LIVING_FILES} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
+
+target_link_libraries(${EXE_TARGET_NAME} client_library)
+
+add_subdirectory(${ROOT}/client_testing)
 
 target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a libopus.a)
 

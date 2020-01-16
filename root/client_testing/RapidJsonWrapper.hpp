@@ -2,8 +2,8 @@
 
 #include <string>
 #include <memory>
-#include <json/writer.h>
-#include <json/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/document.h>
 
 namespace duobei {
 class JsonArrayBuilder;
