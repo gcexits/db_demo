@@ -10,23 +10,20 @@ void dump(json::Document &doc) {
 int main_json(Argument& cmd) {
     duobei::JsonBuilder jb;
     {
+#if 0
         auto object = jb.object();
-        object["room"] = "jz";
+        object["userId"] = "jz";
+        object["userName"] = "哈哈哈";
+        object["userRole"] = 2;
+#else
+        auto array = jb.array();
+        array.addString("{\"userRole\":\"2\",\"userId\":\"jz1ece67c98abf4171a2dd0b6d4d7fde3c\",\"userName\":\"zzz\"}");
+#endif
     }
     std::cout << jb.toString() << std::endl;
+    return 0;
 
 #if 0
-    using Pair = std::pair<std::string, std::string>;
-    std::list<Pair> list;
-    Pair pair;
-    pair = std::make_pair("1", "");
-    list.push_back(pair);
-    for (auto & l : list) {
-        if (!l.second.empty()) {
-            std::cout << l.first << " " << l.second << std::endl;
-        }
-    }
-
     PingHistory pingHistory;
     pingHistory.range.entryRTT.push_back(1);
     pingHistory.range.entryRTT.push_back(2);

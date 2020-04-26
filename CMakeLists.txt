@@ -85,7 +85,7 @@ endif()
 
 include_directories(${ROOT}/client_testing)
 
-add_executable(${EXE_TARGET_NAME} ${CLIENT_LIVING_FILES} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
 
 target_link_libraries(${EXE_TARGET_NAME} client_library)
 
