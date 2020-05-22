@@ -10,8 +10,7 @@ void FlvPlayer::updateThread(Argument& cmd) {
     int videoIndex = 0;
     int audioIndex = 0;
 
-    std::string url = "/Users/guochao/Downloads/1_童话镇.flv";
-    fp_in.open(url, std::ios::in);
+    fp_in.open(cmd.param.flvUrl, std::ios::in);
     Header header;
     std::unique_lock<std::mutex> lock(readMtx_);
     fp_in.read((char*)header.header_data, 9);

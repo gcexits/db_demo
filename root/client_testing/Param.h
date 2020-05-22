@@ -13,6 +13,7 @@ struct Argument {
     struct Param {
         std::string playerUrl;
         std::string senderUrl;
+        std::string flvUrl;
         int launch;
         std::string profile =  "/Users/guochao/DBY_code/ff_test/Configuration_profile.json";
         struct Device {
@@ -58,6 +59,9 @@ struct Argument {
         }
         if (p.HasMember("senderUrl") && p["senderUrl"].IsString()) {
             param.senderUrl = p["senderUrl"].GetString();
+        }
+        if (p.HasMember("flvUrl") && p["flvUrl"].IsString()) {
+            param.flvUrl = p["flvUrl"].GetString();
         }
         if (p.HasMember("capture") && p["capture"].IsObject()) {
             auto& device = p["capture"];
