@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         case 8:
             return demux_audio_mix(cmd);
         case 9:
-            return simplest_ffmpeg_video_filter();
+            return simplest_ffmpeg_video_filter(cmd);
         case 10:
             return main_json(cmd);
         default:

@@ -1,9 +1,11 @@
 #pragma once
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
+#include <cstdlib>
+#include <fstream>
 #include <unistd.h>
+#include "Param.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -13,7 +15,7 @@ extern "C" {
 #include <libavutil/opt.h>
 }
 
-static const char *filter_descr = "scale=78:24,transpose=cclock";
+static const char *filter_descr = "movie=/Users/guochao/Downloads/iQIY.png[wm];[in][wm]overlay=5:5[out]";
 static AVFormatContext *fmt_ctx;
 static AVCodecContext *dec_ctx;
 static AVFilterContext *buffersink_ctx;
@@ -25,4 +27,4 @@ int open_input_file(const char *filename);
 
 int init_filters(const char *filters_descr);
 
-int simplest_ffmpeg_video_filter();
+int simplest_ffmpeg_video_filter(Argument &cmd);
