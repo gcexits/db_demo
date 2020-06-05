@@ -13,6 +13,7 @@ struct Argument {
     struct Param {
         std::string playerUrl;
         std::string senderUrl;
+        std::string recvUrl;
         std::string filterUrl;
         std::string flvUrl;
         int launch;
@@ -63,6 +64,9 @@ struct Argument {
         }
         if (p.HasMember("senderUrl") && p["senderUrl"].IsString()) {
             param.senderUrl = p["senderUrl"].GetString();
+        }
+        if (p.HasMember("recvUrl") && p["recvUrl"].IsString()) {
+            param.recvUrl = p["recvUrl"].GetString();
         }
         if (p.HasMember("flvUrl") && p["flvUrl"].IsString()) {
             param.flvUrl = p["flvUrl"].GetString();

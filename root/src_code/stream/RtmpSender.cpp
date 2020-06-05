@@ -4,7 +4,7 @@
 
 namespace duobei {
 
-bool RtmpObject::Init() {
+bool RtmpObject::Init(RTMPPacket *cp) {
     int ret = 0;
     rtmp = RTMP_Alloc();
     assert(rtmp);
@@ -12,10 +12,6 @@ bool RtmpObject::Init() {
     ret = RTMP_SetupURL(rtmp, const_cast<char *>(url.c_str()));
     assert(ret == TRUE);
     RTMP_EnableWrite(rtmp);
-    ret = RTMP_Connect(rtmp, nullptr);
-    assert(ret == TRUE);
-    ret = RTMP_ConnectStream(rtmp, 0);
-    assert(ret);
 #if 0
     {
         RTMPPack packet(1024*16, info->r->streamId());
@@ -72,7 +68,15 @@ bool RtmpObject::Init() {
         return info->r->Connect(&packet.data);
 
     }
+#else
+    ret = RTMP_Connect(rtmp, cp);
 #endif
+    assert(ret == TRUE);
+    if (type == format::send) {
+        ret = RTMP_ConnectStream(rtmp, 0);
+        assert(ret);
+    }
+    rtmp->Link.lFlags = RTMP_LF_LIVE;
     ret = RTMP_IsConnected(rtmp);
     assert(ret == TRUE);
     return true;

@@ -46,3 +46,7 @@ int send_h264(Argument& cmd);
 /****************************************/
 
 int send_speex(Argument& cmd);
+
+/****************************************/
+
+int rtmp_recv(Argument& cmd);

@@ -10,7 +10,11 @@
 namespace duobei {
 
 class RtmpObject {
-    RTMP *rtmp = nullptr;
+    enum format {
+        send,
+        recv
+    };
+    int type = -1;
     std::string url;
     duobei::parser::PacketParser parser_;
 
@@ -21,10 +25,11 @@ class RtmpObject {
     bool send_video_only(const uint8_t *buf, int len, bool bKeyFrame, uint32_t timestamp);
 
 
-    bool Init();
+    bool Init(RTMPPacket *cp);
 public:
-    RtmpObject(std::string url_) : url(url_) {
-        Init();
+    RTMP *rtmp = nullptr;
+    RtmpObject(std::string url_, RTMPPacket *cp, int type_) : url(url_), type(type_) {
+        Init(cp);
     }
 
     bool sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp, bool isdemux);

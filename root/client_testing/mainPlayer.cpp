@@ -373,7 +373,7 @@ int send_h264(Argument& cmd) {
     duobei::Time::Timestamp time;
     time.Start();
     int video_count = 0;
-    duobei::RtmpObject rtmpObject(cmd.param.senderUrl);
+    duobei::RtmpObject rtmpObject(cmd.param.senderUrl, nullptr, 0);
 
     AVFormatContext* ifmt_ctx = nullptr;
     AVPacket pkt;
@@ -439,7 +439,7 @@ int send_h264(Argument& cmd) {
 int send_speex(Argument& cmd) {
     uint32_t audioTime = 0;
     duobei::audio::AudioEncoder audioEncoder(false);
-    duobei::RtmpObject rtmpObject("rtmp://utx-live.duobeiyun.net/live/guochao");
+    duobei::RtmpObject rtmpObject(cmd.param.senderUrl, nullptr, 0);
     audioEncoder.encoder_->output_fn_ = std::bind(&duobei::RtmpObject::sendAudioPacket, rtmpObject, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
     std::ifstream fp_in(cmd.param.pcm, std::ios::in);
@@ -454,5 +454,21 @@ int send_speex(Argument& cmd) {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     delete []buf_1;
+    return 0;
+}
+
+int rtmp_recv(Argument &cmd) {
+    duobei::RtmpObject rtmpObject(cmd.param.recvUrl, nullptr, 1);
+    std::ofstream fp("/Users/guochao/Downloads/rtmp.flv", std::ios::out | std::ios::binary);
+
+    while (1) {
+        if (!RTMP_IsConnected(rtmpObject.rtmp)) {
+            break;
+        }
+        RTMPPacket packet;
+        while (RTMP_ReadPacket(rtmpObject.rtmp, &packet)) {
+
+        }
+    }
     return 0;
 }

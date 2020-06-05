@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
             return simplest_ffmpeg_video_filter(cmd);
         case 10:
             return main_json(cmd);
+        case 11:
+            return rtmp_recv(cmd);
         default:
             abort();
     }

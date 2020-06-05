@@ -104,7 +104,7 @@ end:
 
 
 int simplest_ffmpeg_video_filter(Argument &cmd) {
-    duobei::RtmpObject rtmpObject(cmd.param.senderUrl);
+    duobei::RtmpObject rtmpObject(cmd.param.senderUrl, nullptr, 0);
     duobei::video::H264Encoder h264Encoder;
     duobei::Time::Timestamp time;
     time.Start();
