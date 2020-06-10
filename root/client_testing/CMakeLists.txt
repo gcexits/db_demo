@@ -13,5 +13,5 @@ set(CLIENT_FILES
 
         ${ROOT}/client_testing/H264HardDecode.cpp)
 
-add_library(client_library ${CLIENT_FILES})
+add_library(client_library STATIC ${CLIENT_FILES})
 target_include_directories(client_library PUBLIC ${PROJECT_SOURCE_DIR})

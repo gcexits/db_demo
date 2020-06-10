@@ -87,11 +87,9 @@ include_directories(${ROOT}/client_testing)
 
 add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
 
-target_link_libraries(${EXE_TARGET_NAME} client_library)
-
 add_subdirectory(${ROOT}/client_testing)
 
-target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a libopus.a)
+target_link_libraries(${EXE_TARGET_NAME} libSDL2.a libavutil.a libavcodec.a libavutil.a libswscale.a libswresample.a libavformat.a libavfilter.a libavdevice.a libcurl.a librtmp.a libspeex.a libyuv.a libopus.a client_library)
 
 
 
