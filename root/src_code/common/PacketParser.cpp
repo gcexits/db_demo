@@ -54,5 +54,47 @@ int PacketParser::dumpHeader(uint8_t *buffer, int length) {
     return index;
 }
 
+bool PacketParser::ParseH264Data(uint8_t *buffer, int length) {
+    has_idr = false;
+    headerLength = 0;
+    spsBegin = 0;
+    spsLength = 0;
+    ppsBegin = 0;
+    ppsLength = 0;
+    int i = 0;
+    for (; i < length - 3;) {
+        int len = 0;
+        if (isSPS(buffer + i, len)) {
+            spsBegin = headerLength = i + len;
+        } else if (isPPS(buffer + i, len)) {
+            if (spsLength == 0 && spsBegin > 0) {
+                spsLength = i - spsBegin;
+            }
+            ppsBegin = headerLength = i + len;
+        } else if (isSEI(buffer + i, len)) {
+            if (ppsLength == 0 && ppsBegin > 0) {
+                ppsLength = i - ppsBegin;
+            }
+            headerLength = i + len;
+        } else if (isIDR(buffer + i, len)) {
+            has_idr = true;
+            if (ppsLength == 0 && ppsBegin > 0) {
+                ppsLength = i - ppsBegin;
+            }
+            headerLength = i + len;
+        } else {
+            if (!isNAL(buffer + i, len)) {
+                len = 1;
+            }
+            if (headerLength == 0) {
+                headerLength = i + len;
+            }
+        }
+        i += len;
+    }
+
+    return has_idr;
 }
+
+}  // namespace parser
 }  // namespace duobei

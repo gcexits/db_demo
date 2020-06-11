@@ -185,7 +185,7 @@ public:
     }
 
     bool readFrame() {
-        return av_read_frame(ifmt, pkt) == 0 ? true : false;
+        return av_read_frame(ifmt, pkt) == 0;
     }
 
     int streamType() {

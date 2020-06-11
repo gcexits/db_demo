@@ -85,23 +85,23 @@ bool RtmpObject::Init(RTMPPacket *cp) {
 size_t RtmpObject::packVideoSpsPps(char *body, const uint8_t *sps, size_t sps_len, const uint8_t *pps, size_t pps_len) {
     // AVC head
     size_t i = 0;
-    body[i++] = 0x17;  //0
-    body[i++] = 0x00;  //1
-    body[i++] = 0x00;  //2
-    body[i++] = 0x00;  //3
-    body[i++] = 0x00;  //4
+    body[i++] = 0x17;
+    body[i++] = 0x00;
+    body[i++] = 0x00;
+    body[i++] = 0x00;
+    body[i++] = 0x00;
 
     // AVCDecoderConfigurationRecord
-    body[i++] = 0x01;        //5
-    body[i++] = sps[1];      //6
-    body[i++] = sps[2];      //7
-    body[i++] = sps[3];      //8
-    body[i++] = (char)0xff;  //9
+    body[i++] = 0x01;
+    body[i++] = sps[1];
+    body[i++] = sps[2];
+    body[i++] = sps[3];
+    body[i++] = (char)0xff;
 
     // sps
-    body[i++] = (char)0xe1;                   //10
-    body[i++] = (char)(sps_len >> 8) & 0xff;  //11
-    body[i++] = (char)(sps_len)&0xff;         //12
+    body[i++] = (char)0xe1;
+    body[i++] = (char)(sps_len >> 8) & 0xff;
+    body[i++] = (char)(sps_len)&0xff;
     memcpy(&body[i], sps, sps_len);
     i += sps_len;
 
@@ -160,25 +160,15 @@ bool RtmpObject::send_video_only(const uint8_t *buf, int len, bool bKeyFrame, ui
     return RTMP_SendPacket(rtmp, &data, TRUE) == TRUE;
 }
 
-bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp, bool isdemux) {
-    int index = 0;
-    if (isdemux) {
-//    if (buffer[4] == 0x06) {
-        // todo: 循环跳过解封装的头部SEI帧
-        //        if (parser_.isSEI(buffer, length)) {
-        //
-        //        }
-        index = parser_.dumpHeader(buffer, length);
-        buffer += index;
-        length -= index;
-        std::cout << "header is " << index << " time : " << timestamp << std::endl;
-    }
-    if (parser_.SPSPPS(buffer, length)) {
-        auto status = send_video_sps_pps(buffer + parser_.spsBegin, parser_.spsLength, buffer + parser_.ppsBegin, parser_.ppsLength, timestamp);
-        if (!status) {
-            return false;
+bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp) {
+    if (parser_.ParseH264Data(buffer, length)) {
+        if (parser_.has_idr) {
+            auto status = send_video_sps_pps(buffer + parser_.spsBegin, parser_.spsLength, buffer + parser_.ppsBegin, parser_.ppsLength, timestamp);
+            if (!status) {
+                return false;
+            }
+            std::cout << "send_video_sps_pps" <<  std::endl;
         }
-        std::cout << "send_video_sps_pps" << " time : " << timestamp << std::endl;
     }
     return send_video_only(buffer + parser_.headerLength, length - parser_.headerLength, keyFrame, timestamp);
 }

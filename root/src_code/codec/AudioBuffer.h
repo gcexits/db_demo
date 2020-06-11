@@ -73,11 +73,9 @@ public:
     }
 
     bool isChanged(int ch, int sr, int sf) {
-        if (ch != channels || sr != sampleRate || sf != sampleFmt) {
-            return true;
-        }
-        return false;
+        return ch != channels || sr != sampleRate || sf != sampleFmt;
     }
+
     bool FormatChanged(int sample_fmt) {
         return sampleFmt != sample_fmt;
     }

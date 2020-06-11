@@ -24,19 +24,6 @@ bool SpeexEncoderContext::Init() {
 
     speex_encoder_ctl(enc_state, SPEEX_GET_FRAME_SIZE, &enc_frame_size);
     speex_encoder_ctl(enc_state, SPEEX_GET_SAMPLING_RATE, &sample_rate);
-    //回声消除模块
-    /* Echo canceller with 200 ms tail length */
-    // echo_state = speex_echo_state_init(frame_size, 10 * frame_size);
-    // tmp = samplerate;
-    // speex_echo_ctl(echo_state, SPEEX_ECHO_SET_SAMPLING_RATE, &tmp);
-
-    // /* Setup preprocessor and associate with echo canceller for residual echo suppression */
-    // preprocess = speex_preprocess_state_init(frame_size, samplerate);
-    // speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_ECHO_STATE, echo_state);
-    // speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_DENOISE, &denoise);               //降噪
-    // speex_preprocess_ctl(preprocess, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &noiseSuppress);  //设置噪声的dB
-
-    // speex_encoder_ctl(enc_state, SPEEX_SET_VAD, &vad);
     pkt_frame_count = 0;
     return true;
 }
@@ -99,8 +86,8 @@ void AudioEncoder::Encode(void *data, size_t size, uint32_t ts) {
         if (!sampling.DataInit()) {
             sampling.src.updateFrame(audio.src);
             sampling.dst.updateFrame(audio.dst);
-            sampling.src.setCodecOptions(audio.src.nb_samples());  // 48k / 50
-            sampling.dst.setCodecOptions(audio.dst.nb_samples());  // 16k / 50
+            sampling.src.setCodecOptions(audio.src.nb_samples());
+            sampling.dst.setCodecOptions(audio.dst.nb_samples());
             sampling.dst.fillFrame();
         }
         Sampling(data, size, ts);

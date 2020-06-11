@@ -409,6 +409,7 @@ int send_h264(Argument& cmd) {
         if (ret == AVERROR_EOF) {
             assert(av_seek_frame(ifmt_ctx, -1, 0, AVSEEK_FLAG_BYTE) >= 0);
             video_count = 0;
+            std::cout << "ok file" << std::endl;
             if (++loop_count > 10000) {
                 break;
             }
@@ -421,7 +422,7 @@ int send_h264(Argument& cmd) {
                 continue;
             }
             while (av_bsf_receive_packet(absCtx, &pkt) == 0);
-            rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed(), video_count == 0);
+            rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed());
             video_count++;
         } else if (pkt.stream_index == audioindex) {
         }

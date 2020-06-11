@@ -23,10 +23,6 @@ class PacketParser {
     }
 
     bool isSPS(const uint8_t *buf, int &len) {
-        // !!! warning (buf[i] & 0x1f) == 0x07
-        //if (buf[i++] == 0x00 && buf[i++] == 0x00 && buf[i++] == 0x00 && buf[i++] == 0x01 && (buf[i] & 0x1f) == 0x07) //sps
-        //https://cardinalpeak.com/blog/the-h-264-sequence-parameter-set/
-        //const uint8_t sps[] = { 0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0x00, 0x0a, 0xf8, 0x41, 0xa2 };
         if (!isNAL(buf, len)) {
             return false;
         }
@@ -40,8 +36,8 @@ class PacketParser {
         }
         return (buf[len] & 0x1f) == 0x08;
     }
-    // is I frame
-    bool isIFM(const uint8_t *buf, int &len) {
+
+    bool isIDR(const uint8_t *buf, int &len) {
         if (!isNAL(buf, len)) {
             return false;
         }
@@ -49,13 +45,14 @@ class PacketParser {
     }
 
 public:
-    // is SEI
     bool isSEI(const uint8_t *buf, int &len) {
         if (!isNAL(buf, len)) {
             return false;
         }
         return buf[len] == 0x06;
     }
+    bool has_idr = false;
+    bool ParseH264Data(uint8_t* buffer, int length);
     int spsBegin = 0;
     int spsLength = 0;
     int ppsBegin = 0;

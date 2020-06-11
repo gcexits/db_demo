@@ -14,8 +14,8 @@ namespace audio {
 
 struct AudioConfigure {
     std::string uid;
-    audio::AudioOption src{1, 16000, 1};  // Record 输入， Play 输出
-    audio::AudioOption dst{1, 16000, 1};  // Record 输出， Play 输入 16k
+    audio::AudioOption src{1, 16000, 1};
+    audio::AudioOption dst{1, 16000, 1};
 
     bool sampling() const {
         return src.sampleRate != dst.sampleRate;

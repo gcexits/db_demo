@@ -1,19 +1,6 @@
 #include "deal_yuv.h"
 #include "mainPlayer.h"
 
-// todo: dst(9:16)
-//int dstWidth = 180;
-//int dstHeight = 320;
-
-// todo: dst(16:9)
-//int dstWidth = 320;
-//int dstHeight = 180;
-
-// todo: dst(3:4)
-//int dstWidth = 480;
-//int dstHeight = 640;
-
-// todo: dst(4:3)
 int dstWidth = 200;
 int dstHeight = 150;
 

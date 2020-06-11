@@ -175,7 +175,7 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
                     time.Stop();
                     if (h264Encoder.DesktopEncode(data, filt_frame->width, filt_frame->height, 3)) {
 //                        fp.write(reinterpret_cast<char *>(h264Encoder.pkt->data), h264Encoder.pkt->size);
-                        rtmpObject.sendH264Packet(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY, time.Elapsed(), false);
+                        rtmpObject.sendH264Packet(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY, time.Elapsed());
                     }
                     av_frame_unref(filt_frame);
                     std::cout << "send h264 packet success" << std::endl;
