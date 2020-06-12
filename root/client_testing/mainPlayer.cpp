@@ -370,8 +370,8 @@ int ffmpeg_capture(Argument &cmd) {
 // todo: ffmpeg -re -stream_loop -1 -i wangyiyun.mp4 -vcodec copy -acodec copy -f flv rtmp://utx-live.duobeiyun.net/live/guochao
 // todo: ffplay rtmp://htx-live.duobeiyun.net/live/guochao
 int send_h264(Argument& cmd) {
-    duobei::Time::Timestamp time;
-    time.Start();
+    duobei::Time::Timestamp rtmp_time;
+    rtmp_time.Start();
     int video_count = 0;
     duobei::RtmpObject rtmpObject(cmd.param.senderUrl, nullptr, 0);
 
@@ -404,7 +404,12 @@ int send_h264(Argument& cmd) {
     av_bsf_init(absCtx);
 
     int loop_count = 0;
+    auto fps = av_q2d(ifmt_ctx->streams[videoindex]->r_frame_rate);
+    int duration = 1000 / static_cast<int64_t>(fps);
+    duobei::Time::Timestamp sleep_time;
+
     while (true) {
+        sleep_time.Start();
         ret = av_read_frame(ifmt_ctx, &pkt);
         if (ret == AVERROR_EOF) {
             assert(av_seek_frame(ifmt_ctx, -1, 0, AVSEEK_FLAG_BYTE) >= 0);
@@ -415,19 +420,23 @@ int send_h264(Argument& cmd) {
             }
             continue;
         }
-        time.Stop();
+        rtmp_time.Stop();
         if (pkt.stream_index == videoindex) {
             bool keyFrame = pkt.flags & AV_PKT_FLAG_KEY;
             if (av_bsf_send_packet(absCtx, &pkt) != 0) {
                 continue;
             }
             while (av_bsf_receive_packet(absCtx, &pkt) == 0);
-            rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, time.Elapsed());
+            rtmpObject.sendH264Packet(pkt.data, pkt.size, keyFrame, rtmp_time.Elapsed());
             video_count++;
         } else if (pkt.stream_index == audioindex) {
         }
         av_packet_unref(&pkt);
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        sleep_time.Stop();
+        auto l = duration - sleep_time.Elapsed();
+        if (l > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(l));
+        }
     }
 
     av_bsf_free(&absCtx);

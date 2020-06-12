@@ -1,61 +1,52 @@
 #include "PacketParser.h"
 
-namespace duobei {
-namespace parser {
-bool PacketParser::SPSPPS(uint8_t *buffer, int length) {
-    headerLength = 0;
-    spsBegin = headerLength;
-    int spsEnd = headerLength;
-    ppsBegin = headerLength;
-    int ppsEnd = headerLength;
-    int naulLength = 0;
-    if (isSPS(buffer, naulLength)) {
-        headerLength += naulLength;
-        spsBegin = headerLength;
-        for (; headerLength + 4 < length; ++headerLength) {
-            if (isNAL(buffer + headerLength, naulLength)) {
-                spsEnd = headerLength;
-                break;
-            }
-        }
+namespace duobei::parser {
 
-        if (spsEnd > spsBegin && headerLength + 4 < length && isPPS(buffer + headerLength, naulLength)) {
-            headerLength += naulLength;
-            ppsBegin = headerLength;
-            for (; headerLength + 3 < length; ++headerLength) {
-                if (isNAL(buffer + headerLength, naulLength)) {
-                    ppsEnd = headerLength;
-                    break;
-                }
-            }
-        }
+bool PacketParser::isNALU(const uint8_t* buf, int& len) {
+    static const uint8_t nal3[] = {0x00, 0x00, 0x01};
+    if (memcmp(buf, nal3, sizeof(nal3)) == 0) {
+        len = 3;
+        return true;
+    }
 
-        if (spsEnd > spsBegin && ppsEnd > ppsBegin) {
-            spsLength = spsEnd - spsBegin;
-            ppsLength = ppsEnd - ppsBegin;
-            if (isNAL(buffer + headerLength, naulLength)) {
-                headerLength += naulLength;
-            }
-            return true;
-        }
+    static const uint8_t nal4[] = {0x00, 0x00, 0x00, 0x01};
+    if (memcmp(buf, nal4, sizeof(nal4)) == 0) {
+        len = 4;
+        return true;
     }
-    if (isNAL(buffer + headerLength, naulLength)) {
-        headerLength += naulLength;
-    }
+
     return false;
 }
 
-int PacketParser::dumpHeader(uint8_t *buffer, int length) {
-    int naulLength = 0;
-    int index = 0;
-    while (!isSPS(buffer + index, naulLength)) {
-        index++;
+bool PacketParser::isSPS(const uint8_t* buf, int& len) {
+    if (!isNALU(buf, len)) {
+        return false;
     }
-    return index;
+    return (buf[len] & 0x1f) == 0x07;
 }
 
-bool PacketParser::ParseH264Data(uint8_t *buffer, int length) {
-    has_idr = false;
+bool PacketParser::isPPS(const uint8_t* buf, int& len) {
+    if (!isNALU(buf, len)) {
+        return false;
+    }
+    return (buf[len] & 0x1f) == 0x08;
+}
+
+bool PacketParser::isIDR(const uint8_t* buf, int& len) {
+    if (!isNALU(buf, len)) {
+        return false;
+    }
+    return (buf[len] & 0x1f) == 0x05;
+}
+
+bool PacketParser::isSEI(const uint8_t* buf, int& len) {
+    if (!isNALU(buf, len)) {
+        return false;
+    }
+    return buf[len] == 0x06;
+}
+
+bool PacketParser::ParseH264Data(uint8_t* buffer, int length) {
     headerLength = 0;
     spsBegin = 0;
     spsLength = 0;
@@ -77,13 +68,12 @@ bool PacketParser::ParseH264Data(uint8_t *buffer, int length) {
             }
             headerLength = i + len;
         } else if (isIDR(buffer + i, len)) {
-            has_idr = true;
             if (ppsLength == 0 && ppsBegin > 0) {
                 ppsLength = i - ppsBegin;
             }
             headerLength = i + len;
         } else {
-            if (!isNAL(buffer + i, len)) {
+            if (!isNALU(buffer + i, len)) {
                 len = 1;
             }
             if (headerLength == 0) {
@@ -93,8 +83,7 @@ bool PacketParser::ParseH264Data(uint8_t *buffer, int length) {
         i += len;
     }
 
-    return has_idr;
+    return spsLength > 0 && ppsLength > 0;
 }
 
-}  // namespace parser
 }  // namespace duobei

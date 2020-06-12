@@ -162,13 +162,11 @@ bool RtmpObject::send_video_only(const uint8_t *buf, int len, bool bKeyFrame, ui
 
 bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint32_t timestamp) {
     if (parser_.ParseH264Data(buffer, length)) {
-        if (parser_.has_idr) {
-            auto status = send_video_sps_pps(buffer + parser_.spsBegin, parser_.spsLength, buffer + parser_.ppsBegin, parser_.ppsLength, timestamp);
-            if (!status) {
-                return false;
-            }
-            std::cout << "send_video_sps_pps" <<  std::endl;
+        auto status = send_video_sps_pps(buffer + parser_.spsBegin, parser_.spsLength, buffer + parser_.ppsBegin, parser_.ppsLength, timestamp);
+        if (!status) {
+            return false;
         }
+        std::cout << "send_video_sps_pps : " <<  timestamp << std::endl;
     }
     return send_video_only(buffer + parser_.headerLength, length - parser_.headerLength, keyFrame, timestamp);
 }

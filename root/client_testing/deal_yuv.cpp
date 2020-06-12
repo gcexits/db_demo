@@ -14,9 +14,9 @@ int deal_yuv(Argument& cmd) {
     // todo: 旋转
     int src_size = srcWidth * srcHeight * 1.5;
     int dst_size = dstWidth * dstHeight * 1.5;
-    uint8_t *src = new uint8_t[src_size];
-    uint8_t *rote = new uint8_t[src_size];
-    uint8_t *crop_dst = new uint8_t[dst_size];
+    auto *src = new uint8_t[src_size];
+    auto *rote = new uint8_t[src_size];
+    auto *crop_dst = new uint8_t[dst_size];
     YuvScaler yuvScaler;
     while (!fp_in.eof()) {
         fp_in.read((char *)src, src_size);
