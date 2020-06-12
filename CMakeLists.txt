@@ -17,6 +17,8 @@ elseif (APPLE)
     set(CROSS_PATH mac)
 endif()
 
+#add_definitions(-DSAVEFILE)
+
 set(PLAYBACK_SOURCE_FILES
         ${ROOT}/src_code/offline/FlvParse.cpp)
 

@@ -112,8 +112,10 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
     AVPacket packet;
     AVFrame *frame;
     AVFrame *filt_frame;
-    std::string out_yuv = "/Users/guochao/Downloads/out_filter.yuv";
+#if defined(SAVEFILE)
+    std::string out_yuv = "/Users/guochao/Downloads/1_告白气球_filter.h264";
     std::ofstream fp(out_yuv, std::ios::out | std::ios::binary | std::ios::app);
+#endif
     uint8_t *data = new uint8_t[640 * 360 * 1.5];
 
     frame = av_frame_alloc();
@@ -174,11 +176,13 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
                     assert(ret > 0);
                     time.Stop();
                     if (h264Encoder.DesktopEncode(data, filt_frame->width, filt_frame->height, 3)) {
-//                        fp.write(reinterpret_cast<char *>(h264Encoder.pkt->data), h264Encoder.pkt->size);
+#if defined(SAVEFILE)
+                        fp.write(reinterpret_cast<char *>(h264Encoder.pkt->data), h264Encoder.pkt->size);
+#else
                         rtmpObject.sendH264Packet(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY, time.Elapsed());
+#endif
                     }
                     av_frame_unref(filt_frame);
-                    std::cout << "send h264 packet success" << std::endl;
                     std::this_thread::sleep_for(std::chrono::milliseconds(40));
                 }
                 av_frame_unref(frame);
@@ -197,7 +201,8 @@ end:
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         exit(1);
     }
+#if defined(SAVEFILE)
     fp.close();
-
+#endif
     return 0;
 }
