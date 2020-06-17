@@ -166,7 +166,7 @@ bool RtmpObject::sendH264Packet(uint8_t *buffer, int length, bool keyFrame, uint
         if (!status) {
             return false;
         }
-        std::cout << "send_video_sps_pps : " <<  timestamp << std::endl;
+        printf("%d, %d, %d, %d, %d-- %d\n", parser_.spsBegin, parser_.spsLength, parser_.ppsBegin, parser_.ppsLength, parser_.headerLength, length);
     }
     return send_video_only(buffer + parser_.headerLength, length - parser_.headerLength, keyFrame, timestamp);
 }

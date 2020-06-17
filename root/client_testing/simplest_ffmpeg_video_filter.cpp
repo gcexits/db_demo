@@ -134,7 +134,7 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
         ret = av_read_frame(fmt_ctx, &packet);
         if (ret == AVERROR_EOF) {
             std::cout << "read while" << std::endl;
-            continue;
+            break;
         } else if (ret < 0) {
             std::cout << "read over" << std::endl;
             break;
@@ -183,7 +183,9 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
 #endif
                     }
                     av_frame_unref(filt_frame);
+#if !defined(SAVEFILE)
                     std::this_thread::sleep_for(std::chrono::milliseconds(40));
+#endif
                 }
                 av_frame_unref(frame);
             }

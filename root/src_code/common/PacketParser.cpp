@@ -71,7 +71,6 @@ bool PacketParser::ParseH264Data(uint8_t* buffer, int length) {
             if (ppsLength == 0 && ppsBegin > 0) {
                 ppsLength = i - ppsBegin;
             }
-            headerLength = i + len;
         } else {
             if (!isNALU(buffer + i, len)) {
                 len = 1;
