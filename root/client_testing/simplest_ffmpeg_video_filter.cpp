@@ -1,6 +1,8 @@
 #include "simplest_ffmpeg_video_filter.h"
 #include "mainPlayer.h"
 
+#include "../../airPlayTest/duobei/parser/PacketParser.h"
+
 int open_input_file(const char *filename) {
     int ret;
     AVCodec *dec;
@@ -104,7 +106,7 @@ end:
 
 
 int simplest_ffmpeg_video_filter(Argument &cmd) {
-    duobei::RtmpObject rtmpObject(cmd.param.senderUrl, nullptr, 0);
+    duobei::parse_::PacketParser_ parser;
     duobei::video::H264Encoder h264Encoder;
     duobei::Time::Timestamp time;
     time.Start();
@@ -179,7 +181,8 @@ int simplest_ffmpeg_video_filter(Argument &cmd) {
 #if defined(SAVEFILE)
                         fp.write(reinterpret_cast<char *>(h264Encoder.pkt->data), h264Encoder.pkt->size);
 #else
-                        rtmpObject.sendH264Packet(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY, time.Elapsed());
+                        parser.decodeH264Data(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY ? 0 : 1, 0);
+//                        rtmpObject.sendH264Packet(h264Encoder.pkt->data, h264Encoder.pkt->size, h264Encoder.pkt->flags & AV_PKT_FLAG_KEY, time.Elapsed());
 #endif
                     }
                     av_frame_unref(filt_frame);

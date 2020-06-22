@@ -53,6 +53,12 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/src_code/common/PacketParser.cpp)
 
+set(AIRPLAY
+        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/receiver/server.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/parser/PacketParser.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/decodec/DecoderSpan.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/decodec/H264Decoder.cpp)
+
 # Windows 处理
 if (WIN32)
 # MacOs 处理
@@ -87,7 +93,7 @@ endif()
 
 include_directories(${ROOT}/client_testing)
 
-add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
+add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES} ${AIRPLAY})
 
 add_subdirectory(${ROOT}/client_testing)
 
