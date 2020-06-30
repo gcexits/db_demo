@@ -7,9 +7,9 @@ PacketParser::PacketParser() {
     audio_invoke_ = &DecoderSpan::Audio;
 }
 
-int PacketParser::Decoding(uint8_t *buffer, uint32_t length, uint32_t timestamp) {
+int PacketParser::Decoding(uint8_t *buffer, uint32_t length, bool isKey, uint32_t timestamp) {
     assert(video_invoke_);
-    return (span.*video_invoke_)(buffer, length, timestamp);
+    return (span.*video_invoke_)(buffer, length, isKey, timestamp);
 }
 
 int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uint64_t pts) {
@@ -26,11 +26,11 @@ int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uin
             memcpy(data_ + keyFrame.length, data, data_len);
             keyFrame.length = 0;
             delete [] keyFrame.data;
-            auto ret = Decoding(data_, len, pts);
+            auto ret = Decoding(data_, len, true, pts);
             delete [] data_;
             return ret;
         } else {
-            return Decoding(data, data_len, pts);
+            return Decoding(data, data_len, false, pts);
         }
     }
 #else

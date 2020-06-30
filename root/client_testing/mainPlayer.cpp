@@ -304,6 +304,7 @@ int flv_player(Argument& cmd) {
 }
 
 bool playFrameData(uint8_t *data, int width, int height, int linesize) {
+    std::cout << width << " : " << height << std::endl;
     static SDL_Window *screen = nullptr;
     static SDL_Renderer *sdlRenderer = nullptr;
     static SDL_Texture *sdlTexture = nullptr;

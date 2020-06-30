@@ -45,14 +45,15 @@ int H264Decoder::Context::Receive() {
         av_frame_free(&src_frame);
         src_frame = nullptr;
     }
-    if (dst_frame) {
-        av_frame_free(&dst_frame);
-        dst_frame = nullptr;
+    if (filter_frame) {
+        av_frame_free(&filter_frame);
+        filter_frame = nullptr;
     }
     src_frame = av_frame_alloc();
-    dst_frame = av_frame_alloc();
+    filter_frame = av_frame_alloc();
 
-    if (!src_frame || !dst_frame) {
+    if (!src_frame || !filter_frame) {
+        WriteErrorLog("av_frame_alloc fail");
         return -1;
     }
 
@@ -60,8 +61,8 @@ int H264Decoder::Context::Receive() {
     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF || ret < 0) {
         av_frame_free(&src_frame);
         src_frame = nullptr;
-        av_frame_free(&dst_frame);
-        dst_frame = nullptr;
+        av_frame_free(&filter_frame);
+        filter_frame = nullptr;
         if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
             WriteErrorLog("avcodec_receive_frame error, %s", av_err2str(ret));
         }
@@ -78,13 +79,9 @@ void H264Decoder::Context::Close() {
         av_frame_free(&src_frame);
         src_frame = nullptr;
     }
-    if (dst_frame) {
-        av_frame_free(&dst_frame);
-        dst_frame = nullptr;
-    }
-    if (scale_frame) {
-        av_frame_free(&scale_frame);
-        scale_frame = nullptr;
+    if (filter_frame) {
+        av_frame_free(&filter_frame);
+        filter_frame = nullptr;
     }
 
     if (codecCtx_) {
@@ -117,47 +114,8 @@ int H264Decoder::Context::Reset(uint8_t *data, int size) {
     return avcodec_open2(codecCtx_, codec, nullptr);
 }
 
-bool H264Decoder::Context::Scaling(int pix_fmt, int dstWidth, int dstHeight) {
-    src_frame->width = codecCtx_->width;
-    src_frame->height = codecCtx_->height;
+bool H264Decoder::Context::dealYuv(int dstPixelFormat, int dstWidth, int dstHeight, int rimWidth, int rimHeight) {
 
-    if (!sws_ctx) {
-        sws_ctx = sws_getContext(src_frame->width, src_frame->height, static_cast<AVPixelFormat>(src_frame->format),
-                                 dstWidth, dstHeight, static_cast<AVPixelFormat>(pix_fmt),
-                                 SWS_BILINEAR, nullptr, nullptr, nullptr);
-        if (!sws_ctx) {
-            return false;
-        }
-    }
-
-    if (scale_frame) {
-        av_frame_free(&scale_frame);
-        scale_frame = nullptr;
-    }
-    scale_frame = av_frame_alloc();
-    if (!scale_frame) {
-        return false;
-    }
-
-    scale_frame->format = pix_fmt;
-    scale_frame->width = dstWidth;
-    scale_frame->height = dstHeight;
-    auto len = av_image_alloc(scale_frame->data, scale_frame->linesize, scale_frame->width, scale_frame->height,
-                              static_cast<AVPixelFormat>(scale_frame->format), 1);
-
-    if (len < 0) {
-        return false;
-    }
-
-    auto ret = sws_scale(sws_ctx, src_frame->data, src_frame->linesize, 0, scale_frame->height, scale_frame->data,
-                         scale_frame->linesize);
-
-    auto success = ret > 0;
-    if (success && scale_frame->height > 0 && scale_frame->width > 0) {
-        video_size.height = scale_frame->height;
-        video_size.width = scale_frame->width;
-    }
-    return success;
 }
 
 void H264Decoder::Close() {
@@ -168,29 +126,56 @@ void H264Decoder::Play(AVFrame *frame, uint32_t timestamp) {
     int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
     auto *buf = new uint8_t[size];
     av_image_copy_to_buffer(buf, size, frame->data, frame->linesize, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
+//    fp.write(reinterpret_cast<char *>(buf), size);
+    fp.write((char *)frame->data[0], size);
     //WriteErrorLog("🤣🤣🤣 sucess Play packet !!!");
 //    play_internal.Play((void *)frame->data[0], size, frame->width, frame->height, timestamp);
     delete[] buf;
 }
 
-int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, uint32_t timestamp) {
+int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, bool isKey, uint32_t timestamp) {
     AVPacket packet;
     av_init_packet(&packet);
     packet.data = buf;
     packet.size = size;
 
-    auto ret = ctx.Send(&packet);
+    int ret = 0;
+    ret = ctx.Send(&packet);
     if (ret < 0) {
         return ret;
     }
 
     while (ctx.Receive() >= 0) {
-        auto success = ctx.Scaling(0, 1024, 768);
-        if (success) {
-            Play(ctx.scale_frame, timestamp);
-            av_freep(&ctx.scale_frame->data[0]);
-        } else {
+        // 608x1080
+        // todo: 1. w | h 小 2. w & h 小 3. w & h 大
+        int scalW = 0;
+        int scalH = 0;
+        if (isKey) {
+            if (ctx.src_frame->width < default_screen_w && ctx.src_frame->height < default_screen_h) {
+            } else if (ctx.src_frame->width < default_screen_w && ctx.src_frame->height < default_screen_h) {
+            } else if (ctx.src_frame->width < default_screen_w || ctx.src_frame->height < default_screen_h) {
+                if (ctx.src_frame->width < default_screen_w) {
+                    scalH = default_screen_h;
+                    auto lineW = scalH * ctx.src_frame->width / ctx.src_frame->height;
+                    scalW = lineW % 2 == 0 ? lineW : lineW + 1;
+                } else {
+                }
+            }
+            AVRational time_base = {1, 10000};
+            AVRational sample_aspect_ratio = {76, 135};
+            ret = filter_.initFilter(ctx.src_frame->width, ctx.src_frame->height, scalW, scalH, ctx.src_frame->format, default_screen_w, default_screen_h, time_base, sample_aspect_ratio);
+            assert(ret == 0);
+        }
 
+        if (filter_.sendFrame(ctx.src_frame) < 0) {
+            continue;
+        }
+        while (1) {
+            ret = filter_.recvFrame(ctx.filter_frame);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                break;
+            }
+            Play(ctx.filter_frame, timestamp);
         }
     }
     return 0;
@@ -203,14 +188,15 @@ H264Decoder::H264Decoder() {
 #endif
     av_log_set_level(AV_LOG_QUIET);
     ctx.Open();
+    fp.open("/Users/guochao/Downloads/test.rgb", std::ios::binary | std::ios::out);
 }
 
 H264Decoder::~H264Decoder() {
     Close();
 }
 
-int H264Decoder::Decode(uint8_t *buf, uint32_t size, uint32_t timestamp) {
-    return DecodeInternal(ctx, buf, size, timestamp);
+int H264Decoder::Decode(uint8_t *buf, uint32_t size, bool isKey, uint32_t timestamp) {
+    return DecodeInternal(ctx, buf, size, isKey, timestamp);
 }
 
 int H264Decoder::resetContext(uint8_t *data, int size) {

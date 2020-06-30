@@ -14,7 +14,7 @@ class PacketParser {
     DecoderSpan::InvokeVideoType video_invoke_ = nullptr;
     DecoderSpan::InvokeAudioType audio_invoke_ = nullptr;
 
-    int Decoding(uint8_t* buffer, uint32_t length, uint32_t timestamp);
+    int Decoding(uint8_t* buffer, uint32_t length, bool isKey, uint32_t timestamp);
 
 public:
     explicit PacketParser();

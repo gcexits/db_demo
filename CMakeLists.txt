@@ -17,7 +17,7 @@ elseif (APPLE)
     set(CROSS_PATH mac)
 endif()
 
-#add_definitions(-DSAVEFILE)
+add_definitions(-DSAVEFILE)
 
 set(PLAYBACK_SOURCE_FILES
         ${ROOT}/src_code/offline/FlvParse.cpp)
@@ -53,12 +53,6 @@ set(COMMON_SOURCE_FILES
 
         ${ROOT}/src_code/common/PacketParser.cpp)
 
-set(AIRPLAY
-        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/receiver/server.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/parser/PacketParser.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/decodec/DecoderSpan.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/airPlayTest/duobei/decodec/H264Decoder.cpp)
-
 # Windows 处理
 if (WIN32)
 # MacOs 处理
@@ -69,8 +63,8 @@ elseif(APPLE)
 
     # 添加第三方库
     #1. *.h
-    include_directories(${USER}/sdl2/2.0.10/include)
-    include_directories(${USER}/ffmpeg/4.2.1_2/include)
+    include_directories(${USER}/sdl2/2.0.12_1/include)
+    include_directories(${USER}/ffmpeg/4.3_1/include)
     include_directories(${USER}/curl/7.65.3/include)
     include_directories(${USER}/rtmpdump/2.4+20151223_1/include)
     include_directories(${USER}/speex/1.2.0/include)
@@ -80,8 +74,8 @@ elseif(APPLE)
 
     #2. lib
     set(LINK_DIR
-            ${USER}/sdl2/2.0.10/lib
-            ${USER}/ffmpeg/4.2.1_2/lib
+            ${USER}/sdl2/2.0.12_1/lib
+            ${USER}/ffmpeg/4.3_1/lib
             ${USER}/curl/7.65.3/lib
             ${USER}/rtmpdump/2.4+20151223_1/lib
             ${USER}/speex/1.2.0/lib
@@ -93,7 +87,7 @@ endif()
 
 include_directories(${ROOT}/client_testing)
 
-add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES} ${AIRPLAY})
+add_executable(${EXE_TARGET_NAME} ${COMMON_SOURCE_FILES} ${PLAYBACK_SOURCE_FILES})
 
 add_subdirectory(${ROOT}/client_testing)
 

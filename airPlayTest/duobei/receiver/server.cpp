@@ -14,6 +14,7 @@ void video_process(void* cls, h264_decode_struct* data, const char* remoteName, 
 }
 
 void audio_process(void* cls, pcm_data_struct* data, const char* remoteName, const char* remoteDeviceId) {
+    return;
     AirPlayServer *airPlayServer = static_cast<AirPlayServer *>(cls);
     if (!airPlayServer || data->data_len <= 0 || !airPlayServer->parser) {
         return;

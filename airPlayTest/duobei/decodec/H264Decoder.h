@@ -10,8 +10,10 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <fstream>
 
 #include "PlayInternal.h"
+#include "Filter.h"
 
 struct AVCodecContext;
 struct AVCodec;
@@ -23,31 +25,30 @@ namespace duobei::video {
 
 class H264Decoder {
     struct Context {
-        struct VideoSize {
-            int width = 0;
-            int height = 0;
-        };
-        VideoSize video_size;
         AVCodecContext *codecCtx_ = nullptr;
         AVCodec *codec = nullptr;
         SwsContext *sws_ctx = nullptr;
 
         AVFrame *src_frame = nullptr;
-        AVFrame *dst_frame = nullptr;
-        AVFrame *scale_frame = nullptr;
+        AVFrame *filter_frame = nullptr;
 
         void Open();
         int Send(AVPacket *avpkt);
         int Receive();
         void Close();
         int Reset(uint8_t *data, int size);
-        bool Scaling(int dstPixelFormat, int dstWidth, int dstHeight);
+        bool dealYuv(int dstPixelFormat, int dstWidth, int dstHeight, int rimWidth, int rimHeight);
     };
     Context ctx;
+    filter::Filter filter_;
 
     void Close();
     void Play(AVFrame *frame, uint32_t timestamp);
-    int DecodeInternal(Context &ctx, uint8_t *buf, uint32_t size, uint32_t timestamp);
+    int DecodeInternal(Context &ctx, uint8_t *buf, uint32_t size, bool isKey, uint32_t timestamp);
+
+    std::ofstream fp;
+    int default_screen_w = 1280;
+    int default_screen_h = 720;
 
 public:
     PlayInternal play_internal;
@@ -55,7 +56,7 @@ public:
     explicit H264Decoder();
     virtual ~H264Decoder();
 
-    int Decode(uint8_t *buf, uint32_t size, uint32_t timestamp);
+    int Decode(uint8_t *buf, uint32_t size, bool isKey, uint32_t timestamp);
     int resetContext(uint8_t *data, int size);
     bool Init(const std::string &stream_id);
     bool Destroy();

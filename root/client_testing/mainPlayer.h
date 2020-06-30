@@ -25,6 +25,8 @@
 #include "../src_code/utils/Time.h"
 #include "../src_code/utils/Optional.h"
 
+#include "../src_code/common/PacketParser.h"
+
 #include "Param.h"
 
 int ffplay(Argument& cmd);

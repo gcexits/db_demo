@@ -22,4 +22,4 @@ add_subdirectory(${CLIENT})
 
 add_executable(${EXE_TARGET_NAME} ${CMAKE_CURRENT_LIST_DIR}/test.cpp)
 
-target_link_libraries(${EXE_TARGET_NAME} libavcodec.a libavutil.a libswscale.a libavformat.a client_library play-lib crypto curve25519 ed25519 fdk-aac playfair plist)
+target_link_libraries(${EXE_TARGET_NAME} libavcodec.a libavutil.a libswscale.a libavformat.a libavfilter.a client_library play-lib crypto curve25519 ed25519 fdk-aac playfair plist)

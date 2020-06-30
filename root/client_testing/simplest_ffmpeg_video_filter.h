@@ -15,7 +15,8 @@ extern "C" {
 #include <libavutil/opt.h>
 }
 
-static const char *filter_descr = "movie=/Users/guochao/Downloads/iQIY.png[wm];[in][wm]overlay=5:5[out]";
+//static const char *filter_descr = "movie=/Users/guochao/Downloads/iQIY.png[wm];[in][wm]overlay=5:5[out]";
+static const char *filter_descr = "scale=964:720,pad=1280:720:158:0";
 static AVFormatContext *fmt_ctx;
 static AVCodecContext *dec_ctx;
 static AVFilterContext *buffersink_ctx;

@@ -1,14 +1,14 @@
 #include "deal_yuv.h"
 #include "mainPlayer.h"
 
-int dstWidth = 200;
-int dstHeight = 150;
+int dstWidth = 1024;
+int dstHeight = 768;
 
 int deal_yuv(Argument& cmd) {
-    bool need_mirror = true;
+    bool need_mirror = false;
     std::ifstream fp_in;
-    int srcWidth = 640;
-    int srcHeight = 360;
+    int srcWidth = 1024;
+    int srcHeight = 1819;
     fp_in.open(cmd.param.yuv, std::ios::binary | std::ios::in);
 
     // todo: 旋转
@@ -22,7 +22,7 @@ int deal_yuv(Argument& cmd) {
         fp_in.read((char *)src, src_size);
         int roteWidth = 0;
         int roteHeight = 0;
-        int rot = 180;
+        int rot = 0;
         int cropWidth = 0;
         int cropHeight = 0;
 

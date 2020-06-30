@@ -6,6 +6,7 @@ set(DECODE_SOURCE_FILES
         ${CLIENT}/decodec/H264Decoder.cpp
         ${CLIENT}/decodec/AudioDecoder.cpp
         ${CLIENT}/decodec/PlayInternal.cpp
+        ${CLIENT}/decodec/Filter.cpp
         ${CLIENT}/parser/PacketParser.cpp
         ${CLIENT}/receiver/server.cpp
         ${CLIENT}/util/Callback.cpp
