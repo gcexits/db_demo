@@ -95,6 +95,13 @@ void H264Decoder::Context::Close() {
 }
 
 int H264Decoder::Context::Reset(uint8_t *data, int size) {
+    if (codecCtx_) {
+        avcodec_close(codecCtx_);
+        avcodec_free_context(&codecCtx_);
+        codecCtx_ = nullptr;
+        codec = nullptr;
+    }
+
     if (!codec) {
         codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     }
@@ -110,27 +117,13 @@ int H264Decoder::Context::Reset(uint8_t *data, int size) {
     return avcodec_open2(codecCtx_, codec, nullptr);
 }
 
-bool H264Decoder::Context::Update() const {
-    if (0 == video_size.width || 0 == video_size.height) {
-        return false;
-    }
-    if (0 == codecCtx_->width || 0 == codecCtx_->height) {
-        return true;
-    }
-    if (codecCtx_->width != video_size.width || codecCtx_->height != video_size.height) {
-        return true;
-    }
-    return false;
-}
-
-bool H264Decoder::Context::Scaling(int pix_fmt) {
+bool H264Decoder::Context::Scaling(int pix_fmt, int dstWidth, int dstHeight) {
     src_frame->width = codecCtx_->width;
     src_frame->height = codecCtx_->height;
-    auto f = src_frame;
 
     if (!sws_ctx) {
-        sws_ctx = sws_getContext(f->width, f->height, static_cast<AVPixelFormat>(f->format),
-                                 f->width, f->height, static_cast<AVPixelFormat>(pix_fmt),
+        sws_ctx = sws_getContext(src_frame->width, src_frame->height, static_cast<AVPixelFormat>(src_frame->format),
+                                 dstWidth, dstHeight, static_cast<AVPixelFormat>(pix_fmt),
                                  SWS_BILINEAR, nullptr, nullptr, nullptr);
         if (!sws_ctx) {
             return false;
@@ -147,8 +140,8 @@ bool H264Decoder::Context::Scaling(int pix_fmt) {
     }
 
     scale_frame->format = pix_fmt;
-    scale_frame->width = f->width;
-    scale_frame->height = f->height;
+    scale_frame->width = dstWidth;
+    scale_frame->height = dstHeight;
     auto len = av_image_alloc(scale_frame->data, scale_frame->linesize, scale_frame->width, scale_frame->height,
                               static_cast<AVPixelFormat>(scale_frame->format), 1);
 
@@ -156,7 +149,7 @@ bool H264Decoder::Context::Scaling(int pix_fmt) {
         return false;
     }
 
-    auto ret = sws_scale(sws_ctx, f->data, f->linesize, 0, scale_frame->height, scale_frame->data,
+    auto ret = sws_scale(sws_ctx, src_frame->data, src_frame->linesize, 0, scale_frame->height, scale_frame->data,
                          scale_frame->linesize);
 
     auto success = ret > 0;
@@ -173,7 +166,11 @@ void H264Decoder::Close() {
 
 void H264Decoder::Play(AVFrame *frame, uint32_t timestamp) {
     int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
-    play_internal.Play((void *)frame->data[0], size, frame->width, frame->height, timestamp);
+    auto *buf = new uint8_t[size];
+    av_image_copy_to_buffer(buf, size, frame->data, frame->linesize, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
+    //WriteErrorLog("🤣🤣🤣 sucess Play packet !!!");
+//    play_internal.Play((void *)frame->data[0], size, frame->width, frame->height, timestamp);
+    delete[] buf;
 }
 
 int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, uint32_t timestamp) {
@@ -187,17 +184,8 @@ int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, uint3
         return ret;
     }
 
-    if (ctx.Update()) {
-        ctx.Close();
-        ctx.Open();
-        ret = ctx.Send(&packet);
-        if (ret < 0) {
-            return ret;
-        }
-    }
-
     while (ctx.Receive() >= 0) {
-        auto success = ctx.Scaling(0);
+        auto success = ctx.Scaling(0, 1024, 768);
         if (success) {
             Play(ctx.scale_frame, timestamp);
             av_freep(&ctx.scale_frame->data[0]);

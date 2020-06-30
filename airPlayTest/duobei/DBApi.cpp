@@ -11,18 +11,17 @@ DBApi::DBApi() {
 int DBApi::startApi() {
     int ret = 0;
     if ((ret = airPlayServer.initServer()) < 0) {
-        WriteErrorLog("airPlayServer.initServer error : ", ret);
+        WriteErrorLog("airPlayServer.initServer error : %d", ret);
         return ret;
     }
     if ((ret = airPlayServer.startServer()) < 0) {
-        WriteErrorLog("airPlayServer.startServer error : ", ret);
+        WriteErrorLog("airPlayServer.startServer error : %d", ret);
         return ret;
     }
     if ((ret = airPlayServer.publishServer()) < 0) {
-        WriteErrorLog("airPlayServer.publishServer error : ", ret);
+        WriteErrorLog("airPlayServer.publishServer error : %d", ret);
         return ret;
     }
-    WriteDebugLog("%s airPlayServer begin !!!", airPlayServer.hostname.c_str());
     return ret;
 }
 

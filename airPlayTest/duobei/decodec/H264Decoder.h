@@ -41,8 +41,7 @@ class H264Decoder {
         int Receive();
         void Close();
         int Reset(uint8_t *data, int size);
-        bool Update() const;
-        bool Scaling(int dstPixelFormat);
+        bool Scaling(int dstPixelFormat, int dstWidth, int dstHeight);
     };
     Context ctx;
 

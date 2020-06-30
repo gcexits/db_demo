@@ -7,22 +7,13 @@ PacketParser::PacketParser() {
     audio_invoke_ = &DecoderSpan::Audio;
 }
 
-int PacketParser::Decoding(uint8_t *buffer, uint32_t length, bool key, uint32_t timestamp) {
+int PacketParser::Decoding(uint8_t *buffer, uint32_t length, uint32_t timestamp) {
     assert(video_invoke_);
     return (span.*video_invoke_)(buffer, length, timestamp);
 }
 
 int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uint64_t pts) {
-#if 0
-    // todo: 当分辨率发生转换的时候会崩溃，仅把sps pps送给解码器会解码失败
-    if (data_type == 0) {
-        ret = span.videoDecoder.resetContext(data, data_len);
-        if (ret < 0) {
-            return ret;
-        }
-    }
-    return Decoding(data, data_len, data_type == 0, pts);
-#else
+#if 1
     if (data_type == 0) {
         keyFrame.data = new uint8_t[data_len];
         memcpy(keyFrame.data, data, data_len);
@@ -35,13 +26,22 @@ int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uin
             memcpy(data_ + keyFrame.length, data, data_len);
             keyFrame.length = 0;
             delete [] keyFrame.data;
-            auto ret = Decoding(data_, len, true, pts);
+            auto ret = Decoding(data_, len, pts);
             delete [] data_;
             return ret;
         } else {
-            return Decoding(data, data_len, false, pts);
+            return Decoding(data, data_len, pts);
         }
     }
+#else
+    // todo: windows运行一会儿会崩溃？？？？
+    if (data_type == 0) {
+        auto ret = span.videoDecoder.resetContext(data, data_len);
+        if (ret < 0) {
+            return ret;
+        }
+    }
+    return Decoding(data, data_len, pts);
 #endif
 }
 

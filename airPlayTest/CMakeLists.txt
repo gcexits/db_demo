@@ -9,11 +9,11 @@ set(USER /usr/local/Cellar)
 
 if (WIN32)
 elseif(APPLE)
-    include_directories(${USER}/ffmpeg/4.2.1_2/include)
+    include_directories(${USER}/ffmpeg/4.3_1/include)
     include_directories(${CLIENT}/third_party/airplay/include)
 
     set(LINK_DIR
-            ${USER}/ffmpeg/4.2.1_2/lib
+            ${USER}/ffmpeg/4.3_1/lib
             ${CLIENT}/third_party/airplay/lib)
     link_directories(${LINK_DIR})
 endif ()

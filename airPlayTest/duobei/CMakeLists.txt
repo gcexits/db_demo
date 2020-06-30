@@ -10,6 +10,7 @@ set(DECODE_SOURCE_FILES
         ${CLIENT}/receiver/server.cpp
         ${CLIENT}/util/Callback.cpp
         ${CLIENT}/util/DBLog.cpp
+        ${CLIENT}/util/Time.cpp
         )
 
 add_library(client_library ${DECODE_SOURCE_FILES})
