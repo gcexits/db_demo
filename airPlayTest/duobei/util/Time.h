@@ -19,7 +19,6 @@ public:
 
     template <typename Duration = std::chrono::milliseconds>
     int64_t Elapsed() const {
-        assert(stop_ >= start_);
         return std::chrono::duration_cast<Duration>(stop_ - start_).count();
     }
 };

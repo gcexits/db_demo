@@ -8,7 +8,6 @@ PacketParser::PacketParser() {
 }
 
 int PacketParser::Decoding(uint8_t *buffer, uint32_t length, bool isKey, uint32_t timestamp) {
-    assert(video_invoke_);
     return (span.*video_invoke_)(buffer, length, isKey, timestamp);
 }
 
@@ -46,7 +45,6 @@ int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uin
 }
 
 int PacketParser::dealPcmData(uint16_t* data, int data_len, bool raw, uint64_t pts) {
-    assert(audio_invoke_);
     return (span.*audio_invoke_)(data, data_len, raw, pts);
 }
 

@@ -5,7 +5,6 @@ namespace video {
 
 bool PlayInternal::Init(std::string const& stream_id) {
     std::lock_guard<std::mutex> lock(mtx_);
-    assert(handle == nullptr);
     auto h = AVCallback::initVideoPlayer(stream_id, &player);
     if (h == nullptr) {
         return false;
@@ -17,7 +16,6 @@ bool PlayInternal::Init(std::string const& stream_id) {
 
 bool PlayInternal::Destroy() {
     std::lock_guard<std::mutex> lock(mtx_);
-    assert(handle);
     AVCallback::destroyVideoPlayer(handle);
     handle = nullptr;
     id.clear();
@@ -36,9 +34,7 @@ namespace audio {
 
 bool PlayInternal::Init(std::string const& stream_id) {
     std::lock_guard<std::mutex> lock(mtx_);
-    assert(handle == nullptr);
     auto h = AVCallback::initPcmPlayer(stream_id, &player);
-    assert(h);
     if (h == nullptr) {
         return false;
     }
@@ -49,7 +45,6 @@ bool PlayInternal::Init(std::string const& stream_id) {
 
 bool PlayInternal::Destroy() {
     std::lock_guard<std::mutex> lock(mtx_);
-    assert(handle);
     AVCallback::destroyPcmPlayer(handle);
     handle = nullptr;
     id.clear();

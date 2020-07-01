@@ -45,7 +45,6 @@ namespace AVCallback {
 
 Handle initVideoPlayer(const std::string& stream_id, VideoPlayer* f) {
     if (!internal::AVCallbackImpl::initVideoPlayer) {
-        assert(internal::AVCallbackImpl::initVideoPlayer);
         return nullptr;
     }
     return internal::AVCallbackImpl::initVideoPlayer(stream_id, f);
@@ -53,7 +52,6 @@ Handle initVideoPlayer(const std::string& stream_id, VideoPlayer* f) {
 
 Handle initPcmPlayer(const std::string& stream_id, PcmPlayer* f) {
     if (!internal::AVCallbackImpl::initPcmPlayer) {
-        assert(internal::AVCallbackImpl::initPcmPlayer);
         return nullptr;
     }
     return internal::AVCallbackImpl::initPcmPlayer(stream_id, f);
@@ -61,7 +59,6 @@ Handle initPcmPlayer(const std::string& stream_id, PcmPlayer* f) {
 
 void destroyPcmPlayer(Handle handle) {
     if (!internal::AVCallbackImpl::destroyPcmPlayer) {
-        assert(internal::AVCallbackImpl::destroyPcmPlayer);
         return;
     }
     internal::AVCallbackImpl::destroyPcmPlayer(handle);
@@ -70,7 +67,6 @@ void destroyPcmPlayer(Handle handle) {
 
 void destroyVideoPlayer(Handle handle) {
     if (!internal::AVCallbackImpl::destroyVideoPlayer) {
-        assert(internal::AVCallbackImpl::destroyVideoPlayer);
         return;
     }
     internal::AVCallbackImpl::destroyVideoPlayer(handle);

@@ -2,11 +2,9 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
-#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
 
@@ -115,7 +113,7 @@ int H264Decoder::Context::Reset(uint8_t *data, int size) {
 }
 
 bool H264Decoder::Context::dealYuv(int dstPixelFormat, int dstWidth, int dstHeight, int rimWidth, int rimHeight) {
-
+    return true;
 }
 
 void H264Decoder::Close() {
@@ -164,7 +162,6 @@ int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, bool 
             AVRational time_base = {1, 10000};
             AVRational sample_aspect_ratio = {76, 135};
             ret = filter_.initFilter(ctx.src_frame->width, ctx.src_frame->height, scalW, scalH, ctx.src_frame->format, default_screen_w, default_screen_h, time_base, sample_aspect_ratio);
-            assert(ret == 0);
         }
 
         if (filter_.sendFrame(ctx.src_frame) < 0) {

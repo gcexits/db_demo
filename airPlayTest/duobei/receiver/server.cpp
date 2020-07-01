@@ -115,7 +115,7 @@ void AirPlayServer::keepLiveLoop() {
         if (connectRunning) {
             std::lock_guard<std::mutex> lock(keeplock_);
             if (keep_count > 30) {
-                WriteErrorLog("🤣🤣🤣sucess Recv packet frome keepLiveLoop !!!");
+                WriteErrorLog("sucess Recv packet frome keepLiveLoop !!!");
                 parser->decodeH264Data(airplayData.data, airplayData.len, 1, airplayData.pts);
                 std::this_thread::sleep_for(std::chrono::milliseconds(20));
             }

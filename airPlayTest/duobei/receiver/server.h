@@ -13,6 +13,7 @@
 #include <net/if_dl.h>
 #include <unistd.h>
 #elif WIN32
+#include <windows.h>
 #include <iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
 #endif
@@ -41,7 +42,7 @@ class AirPlayServer{
     bool getMacAddress(char macstr[6]);
     void getHostName(std::string& hostname);
 
-    std::string hostname;
+    std::string hostname = "gc-windows-demo";
 
     // todo: save last data, airplay在画面静止一段事件后是不回传输数据，需要开启一个保活线程
     struct AirplayData {
@@ -84,4 +85,5 @@ public:
     int publishServer();
     void stopServer();
 };
+
 }
