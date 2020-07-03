@@ -125,7 +125,7 @@ void H264Decoder::Context::Open() {
 int H264Decoder::Context::Send(AVPacket *avpkt) {
     int ret = avcodec_send_packet(codecCtx_, avpkt);
     if (ret < 0) {
-        WriteErrorLog("avcodec_send_packet error, %s", av_err2str(ret));
+        WriteErrorLog("avcodec_send_packet error, %d", ret);
     }
     return ret;
 }
@@ -154,7 +154,7 @@ int H264Decoder::Context::Receive() {
         av_frame_free(&filter_frame);
         filter_frame = nullptr;
         if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-            WriteErrorLog("avcodec_receive_frame error, %s", av_err2str(ret));
+            WriteErrorLog("avcodec_receive_frame error, %d", ret);
         }
     }
     return ret;

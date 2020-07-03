@@ -26,6 +26,9 @@ namespace duobei {
 
 void log(LogLevel level, int line, const char* fn, const char* format, ...) noexcept {
 #if defined(ENABLE_WRITE_LOG)
+    if (level > 0) {
+        return;
+    }
     std::string msg;
     va_list args;
     va_start(args, format);
