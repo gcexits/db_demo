@@ -11,7 +11,12 @@ bool RtmpObject::Init(RTMPPacket *cp) {
     RTMP_Init(rtmp);
     ret = RTMP_SetupURL(rtmp, const_cast<char *>(url.c_str()));
     assert(ret == TRUE);
-    RTMP_EnableWrite(rtmp);
+    rtmp->Link.timeout = 10;
+    rtmp->Link.lFlags = RTMP_LF_LIVE;
+    RTMP_SetBufferMS(rtmp, 3600 * 1000);
+    if (type == format::send) {
+        RTMP_EnableWrite(rtmp);
+    }
 #if 0
     {
         RTMPPack packet(1024*16, info->r->streamId());
@@ -72,11 +77,8 @@ bool RtmpObject::Init(RTMPPacket *cp) {
     ret = RTMP_Connect(rtmp, cp);
 #endif
     assert(ret == TRUE);
-    if (type == format::send) {
-        ret = RTMP_ConnectStream(rtmp, 0);
-        assert(ret);
-    }
-    rtmp->Link.lFlags = RTMP_LF_LIVE;
+    ret = RTMP_ConnectStream(rtmp, 0);
+    assert(ret);;
     ret = RTMP_IsConnected(rtmp);
     assert(ret == TRUE);
     return true;
