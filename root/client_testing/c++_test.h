@@ -11,5 +11,6 @@
 #include <optional>
 #include <queue>
 #include <thread>
+#include <sstream>
 
 int c_test();

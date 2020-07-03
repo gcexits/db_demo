@@ -1,4 +1,4 @@
-#include "PacketParser.h"
+﻿#include "PacketParser.h"
 
 namespace duobei::parse_ {
 
@@ -42,14 +42,23 @@ int PacketParser::decodeH264Data(uint8_t* data, int data_len, int data_type, uin
     }
     return Decoding(data, data_len, pts);
 #endif
+    return 0;
 }
 
 int PacketParser::dealPcmData(uint16_t* data, int data_len, bool raw, uint64_t pts) {
     return (span.*audio_invoke_)(data, data_len, raw, pts);
 }
 
-void PacketParser::Init(std::string &uid) {
-    span.Init(uid);
+void PacketParser::Init(std::string &uid, int w, int h) {
+    span.Init(uid, w, h);
+}
+
+void PacketParser::BeginAirPlay() {
+    span.videoDecoder.Play();
+}
+
+void PacketParser::StopAirPlay() {
+    span.videoDecoder.Stop();
 }
 
 }

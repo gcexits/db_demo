@@ -1,22 +1,19 @@
 #include "server.h"
 
 namespace duobei::server {
+
 void video_process(void* cls, h264_decode_struct* data, const char* remoteName, const char* remoteDeviceId) {
     AirPlayServer *airPlayServer = static_cast<AirPlayServer *>(cls);
-    if (!airPlayServer || data->data_len <= 0 || !airPlayServer->parser) {
+    if (!airPlayServer || data->data_len <= 0 || airPlayServer->invalid()) {
         return;
     }
-    std::lock_guard<std::mutex> lock(airPlayServer->keeplock_);
-    airPlayServer->airplayData.fillBuffer(data->data, data->data_len, data->pts);
-    WriteErrorLog("sucess Recv packet frome airPlay !!!");
     airPlayServer->parser->decodeH264Data(data->data, data->data_len, data->frame_type, data->pts);
-    airPlayServer->keep_count = 0;
 }
 
 void audio_process(void* cls, pcm_data_struct* data, const char* remoteName, const char* remoteDeviceId) {
     return;
     AirPlayServer *airPlayServer = static_cast<AirPlayServer *>(cls);
-    if (!airPlayServer || data->data_len <= 0 || !airPlayServer->parser) {
+    if (!airPlayServer || data->data_len <= 0 || airPlayServer->invalid()) {
         return;
     }
     airPlayServer->parser->dealPcmData(data->data, data->data_len, true, data->pts);
@@ -30,7 +27,9 @@ void raop_connected(void* cls, const char* remoteName, const char* remoteDeviceI
     if (!airPlayServer) {
         return;
     }
-    airPlayServer->connectRunning = true;
+    airPlayServer->parser->BeginAirPlay();
+    airPlayServer->setConnect(true);
+    Callback::statusCodeCall(AIRPLAY_CONNECT_OK);
     WriteDebugLog("%s is connected", remoteName, remoteDeviceId);
 }
 
@@ -39,7 +38,9 @@ void raop_disconnected(void* cls, const char* remoteName, const char* remoteDevi
     if (!airPlayServer) {
         return;
     }
-    airPlayServer->connectRunning = false;
+    airPlayServer->setConnect(false);
+    airPlayServer->parser->StopAirPlay();
+    Callback::statusCodeCall(AIRPLAY_DISCONNECT);
     WriteDebugLog("%s is disconnected", remoteName, remoteDeviceId);
 }
 
@@ -110,21 +111,6 @@ void AirPlayServer::getHostName(std::string &hostname) {
 #endif
 }
 
-void AirPlayServer::keepLiveLoop() {
-    while (running) {
-        if (connectRunning) {
-            std::lock_guard<std::mutex> lock(keeplock_);
-            if (keep_count > 30) {
-                WriteErrorLog("sucess Recv packet frome keepLiveLoop !!!");
-                parser->decodeH264Data(airplayData.data, airplayData.len, 1, airplayData.pts);
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-            }
-            keep_count++;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    }
-}
-
 AirPlayServer::AirPlayServer() {
     m_pRaop_callback.cls = this;
     using namespace std::placeholders;
@@ -188,9 +174,8 @@ int AirPlayServer::publishServer() {
     if (error_code < 0) {
         return error_code;
     }
-    keepliving_ = std::thread(&AirPlayServer::keepLiveLoop, this);
-    running = true;
     WriteDebugLog("%s airPlayServer begin !!!", hostname.c_str());
+    connect_ = false;
     return 0;
 }
 
@@ -213,12 +198,16 @@ void AirPlayServer::stopServer() {
         m_pAirplay = nullptr;
     }
 
-    running = false;
-    if (keepliving_.joinable()) {
-        keepliving_.join();
-    }
+    setConnect(false);
+    parser->StopAirPlay();
+}
 
-    airplayData.resert();
+void AirPlayServer::setConnect(bool state) {
+    connect_ = state;
+}
+
+bool AirPlayServer::invalid() {
+    return !parser || !connect_;
 }
 
 }

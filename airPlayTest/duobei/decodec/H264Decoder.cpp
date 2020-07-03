@@ -1,16 +1,108 @@
 #include "H264Decoder.h"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
-#include <libswscale/swscale.h>
-}
-
 #include <iostream>
 
 namespace duobei::video {
+
+void Cache::Play(AVFrame *frame, uint32_t timestamp) {
+    if (!running) {
+        return;
+    }
+    int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
+    std::lock_guard lck(work_mtx_);
+    buffer_ = std::make_unique<Buffer>(frame, size);
+#ifdef __APPLE__
+    memcpy((uint8_t *)shmServer.addr, buffer_->data, buffer_->length);
+#else
+    VCamSource_FillFrame(handle, buffer_->data, buffer_->length, buffer_->width, buffer_->height);
+#endif
+
+#ifdef SAVEFILE
+    fp.write(reinterpret_cast<char *>(buffer_->data), size);
+#endif
+    play_frame_count = 0;
+    frame_count++;
+}
+
+void Cache::keepFpsThread() {
+    while(running) {
+        if (frame_count == 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            continue;
+        }
+        if (play_frame_count > 2) {
+            std::lock_guard lck(work_mtx_);
+#ifdef __APPLE__
+            memcpy((uint8_t *)shmServer.addr, buffer_->data, buffer_->length);
+#else
+            VCamSource_FillFrame(handle, buffer_->data, buffer_->length, buffer_->width, buffer_->height);
+#endif
+
+#ifdef SAVEFILE
+            fp.write(reinterpret_cast<char *>(buffer_->data), buffer_->length);
+#endif
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        play_frame_count++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    running = false;
+}
+
+void Cache::PlayQueue() {
+    if (running) {
+        return;
+    }
+    running = true;
+    keepfps_ = std::thread(&Cache::keepFpsThread, this);
+#ifdef __APPLE__
+    shmServer.key = 5678;
+    shmServer.shmid = shmget(shmServer.key, SHMSZ, 0666);
+    if (shmServer.shmid < 0) {
+        shmServer.shmid = shmget(shmServer.key, SHMSZ, IPC_CREAT | 0666);
+    }
+    if (shmServer.shmid < 0) {
+        return;
+    }
+    shmServer.addr = shmat(shmServer.shmid, nullptr, 0);
+#else
+    VCamSource_Create(&handle);
+    VCamSource_Init(handle);
+#endif
+
+#ifdef SAVEFILE
+    fp.open("/Users/guochao/Downloads/air.rgb", std::ios::binary | std::ios::out);
+#endif
+}
+
+void Cache::StopQueue() {
+    play_frame_count = 0;
+    if (!running) {
+        return;
+    }
+    running = false;
+    if (keepfps_.joinable()) {
+        keepfps_.join();
+    }
+#ifdef __APPLE__
+    shmdt(shmServer.addr);
+    shmctl(shmServer.shmid, IPC_RMID, NULL);
+#else
+    VCamSource_Destroy(&handle);
+    handle = nullptr;
+#endif
+    buffer_.reset();
+    frame_count = 0;
+
+#ifdef SAVEFILE
+    fp.close();
+#endif
+}
+
+void H264Decoder::Context::SetVideoSize(int w, int h) {
+    default_screen_w = w;
+    default_screen_h = h;
+}
 
 void H264Decoder::Context::Open() {
     codec = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -112,23 +204,55 @@ int H264Decoder::Context::Reset(uint8_t *data, int size) {
     return avcodec_open2(codecCtx_, codec, nullptr);
 }
 
-bool H264Decoder::Context::dealYuv(int dstPixelFormat, int dstWidth, int dstHeight, int rimWidth, int rimHeight) {
-    return true;
+void H264Decoder::Context::dealYuv(int& scalW, int& scalH) {
+    if (src_frame->width < default_screen_w && src_frame->height < default_screen_h) {
+    } else if (src_frame->width > default_screen_w && src_frame->height > default_screen_h) {
+        if (src_frame->width * default_screen_h == src_frame->height * default_screen_w) {
+            scalW = -1;
+            scalH = -1;
+        } else {
+            int count = 1;
+            int type = src_frame->width - default_screen_w > src_frame->height - default_screen_h ? 0 : 1;
+            while (1) {
+                int ret = type == 0 ? default_screen_w / count : default_screen_h / count;
+                scalW = ret % 2 == 0 ? ret : ret + 1;
+                auto line = type == 0 ? scalW * src_frame->height / src_frame->width : scalW * src_frame->width / src_frame->height;
+                scalH = line % 2 == 0 ? line : line + 1;
+                if (type == 0 && scalW <= default_screen_h) {
+                    break;
+                } else if (scalH <= default_screen_w) {
+                    break;
+                }
+                count++;
+            }
+
+            if (type == 1) {
+                std::swap(scalW, scalH);
+            }
+        }
+    } else if (src_frame->width <= default_screen_w || src_frame->height <= default_screen_h) {
+        if (src_frame->width < default_screen_w) {
+            scalH = default_screen_h;
+            auto lineW = scalH * src_frame->width / src_frame->height;
+            scalW = lineW % 2 == 0 ? lineW : lineW + 1;
+        } else {
+            scalW = default_screen_w;
+            auto lineH = scalW * src_frame->height / src_frame->width;
+            scalH = lineH % 2 == 0 ? lineH : lineH + 1;
+        }
+    }
+    return;
+}
+
+bool H264Decoder::Context::Update() {
+    if (0 == video_size.width && 0 == video_size.height) {
+        return true;
+    }
+    return video_size.width != src_frame->width || video_size.height != src_frame->height;
 }
 
 void H264Decoder::Close() {
     ctx.Close();
-}
-
-void H264Decoder::Play(AVFrame *frame, uint32_t timestamp) {
-    int size = av_image_get_buffer_size((AVPixelFormat)frame->format, frame->width, frame->height, 1);
-    auto *buf = new uint8_t[size];
-    av_image_copy_to_buffer(buf, size, frame->data, frame->linesize, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, 1);
-//    fp.write(reinterpret_cast<char *>(buf), size);
-    fp.write((char *)frame->data[0], size);
-    //WriteErrorLog("🤣🤣🤣 sucess Play packet !!!");
-//    play_internal.Play((void *)frame->data[0], size, frame->width, frame->height, timestamp);
-    delete[] buf;
 }
 
 int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, bool isKey, uint32_t timestamp) {
@@ -144,26 +268,16 @@ int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, bool 
     }
 
     while (ctx.Receive() >= 0) {
-        // 608x1080
-        // todo: 1. w | h 小 2. w & h 小 3. w & h 大
-        int scalW = 0;
-        int scalH = 0;
-        if (isKey) {
-            if (ctx.src_frame->width < default_screen_w && ctx.src_frame->height < default_screen_h) {
-            } else if (ctx.src_frame->width < default_screen_w && ctx.src_frame->height < default_screen_h) {
-            } else if (ctx.src_frame->width < default_screen_w || ctx.src_frame->height < default_screen_h) {
-                if (ctx.src_frame->width < default_screen_w) {
-                    scalH = default_screen_h;
-                    auto lineW = scalH * ctx.src_frame->width / ctx.src_frame->height;
-                    scalW = lineW % 2 == 0 ? lineW : lineW + 1;
-                } else {
-                }
+        if (ctx.Update()) {
+            int scalW = 0;
+            int scalH = 0;
+            ctx.dealYuv(scalW, scalH);
+            filter_.resetFilter();
+            ret = filter_.initFilter(ctx.src_frame, scalW, scalH, ctx.default_screen_w, ctx.default_screen_h);
+            if (ret < 0) {
+                return ret;
             }
-            AVRational time_base = {1, 10000};
-            AVRational sample_aspect_ratio = {76, 135};
-            ret = filter_.initFilter(ctx.src_frame->width, ctx.src_frame->height, scalW, scalH, ctx.src_frame->format, default_screen_w, default_screen_h, time_base, sample_aspect_ratio);
         }
-
         if (filter_.sendFrame(ctx.src_frame) < 0) {
             continue;
         }
@@ -172,7 +286,8 @@ int H264Decoder::DecodeInternal(Context& ctx, uint8_t *buf, uint32_t size, bool 
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 break;
             }
-            Play(ctx.filter_frame, timestamp);
+            ctx.video_size = {ctx.src_frame->width, ctx.src_frame->height};
+            cache.Play(ctx.filter_frame, timestamp);
         }
     }
     return 0;
@@ -184,8 +299,6 @@ H264Decoder::H264Decoder() {
     avcodec_register_all();
 #endif
     av_log_set_level(AV_LOG_QUIET);
-    ctx.Open();
-    fp.open("/Users/guochao/Downloads/test.rgb", std::ios::binary | std::ios::out);
 }
 
 H264Decoder::~H264Decoder() {
@@ -206,6 +319,20 @@ bool H264Decoder::Init(const std::string &stream_id) {
 
 bool H264Decoder::Destroy() {
     return play_internal.Destroy();
+}
+
+void H264Decoder::Play() {
+    ctx.Open();
+    cache.PlayQueue();
+}
+
+void H264Decoder::Stop() {
+    cache.StopQueue();
+    ctx.Close();
+}
+
+void H264Decoder::SetWindowSize(int w, int h) {
+    ctx.SetVideoSize(w, h);
 }
 
 }

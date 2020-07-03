@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../decodec/DecoderSpan.h"
+#include "decodec/DecoderSpan.h"
 
 namespace duobei::parse_ {
 
@@ -22,6 +22,8 @@ public:
 
     int decodeH264Data(uint8_t *data, int data_len, int data_type, uint64_t pts);
     int dealPcmData(uint16_t *data, int data_len, bool raw, uint64_t pts);
-    void Init(std::string &uid);
+    void Init(std::string &uid, int w, int h);
+    void BeginAirPlay();
+    void StopAirPlay();
 };
 }

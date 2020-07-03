@@ -40,7 +40,9 @@ int main(int argc, char *argv[]) {
     duobei::AVRegister::setinitVideoPlayer(std::bind(videocallback, _1, _2));
     duobei::AVRegister::setinitPcmPlayer(std::bind(audiocallback, _1, _2));
     duobei::RegisterCallback::setprettyLogCallback(std::bind(log_fun, _1, _2, _3, _4, _5));
-    int ret = duobei::DBApi::getApi()->startApi();
+    std::string uid = "123";
+    std::wstring path = L"./AirplayServer.exe";
+    int ret = duobei::DBApi::getApi()->startApi(uid, path, 1280, 720);
     getchar();
     return 0;
 }

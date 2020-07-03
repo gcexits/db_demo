@@ -84,6 +84,7 @@ struct DecoderSpan : public CacheSpan {
         if (videoDecoder.play_internal.handle) {
             return videoDecoder.Destroy();
         }
+        return false;
     }
 
     bool BindAudioCallbackPlaying() {
@@ -113,10 +114,13 @@ struct DecoderSpan : public CacheSpan {
         return decoder_.Audio(data, size, raw, timestamp);
     }
 
-    void Init(std::string &uid) {
+    void Init(std::string &uid, int w, int h) {
         setUid(uid);
+        videoDecoder.SetWindowSize(w, h);
+#if 0
         BindVideoCallbackPlaying();
         BindAudioCallbackPlaying();
+#endif
     }
 };
 

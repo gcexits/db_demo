@@ -118,6 +118,12 @@ int testFun(int a, int b) {
 }
 
 int c_test() {
+    char parse[256] = {0};
+    auto oss = std::stringstream();
+    snprintf(parse, 256, "pad=");
+    oss << parse << ",pad";
+    std::cout << oss.str() << std::endl;
+    return 0;
     auto getIpPort = [](const std::string &v, std::string &ips, int &port) {
       size_t found = v.find(":");
       if (found == std::string::npos) {

@@ -6,6 +6,7 @@ namespace internal {
 
 namespace detail {
 static std::function<void(int level, const char* timestamp, const char* fn, int line, const char* msg)> prettyLog = nullptr;
+static std::function<void(int num)> statusCodeCall = nullptr;
 }
 
 namespace AVCallbackImpl {
@@ -32,11 +33,22 @@ void prettyLog(int level, const char* timestamp, const char* fn, int line, const
     }
     internal::detail::prettyLog(level, timestamp, fn, line, msg);
 }
+void statusCodeCall(int num) {
+    if (!internal::detail::statusCodeCall) {
+        return;
+    }
+    internal::detail::statusCodeCall(num);
+}
+
 }
 
 namespace RegisterCallback {
 void setprettyLogCallback(std::function<void(int level, const char* timestamp, const char* fn, int line, const char* msg)> f) {
     internal::detail::prettyLog = std::move(f);
+}
+
+void setstatusCodeCallCallback(std::function<void(int)> f) {
+    internal::detail::statusCodeCall = std::move(f);
 }
 
 }

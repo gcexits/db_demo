@@ -16,12 +16,14 @@ class Filter {
     AVFilterContext *buffersrc_ctx = nullptr;
     AVFilterGraph *filter_graph = nullptr;
 
-    std::string getFilters(int scaleW, int scaleH, int dstW, int dstH);
+    std::string getFilters(int scaleW, int scaleH, int dstW, int dstH, int srcW, int srcH);
+    int setFilter(AVFrame *frame, AVFilterGraph *filter_graph, AVFilterInOut *output);
+
 public:
     explicit Filter() = default;
     virtual ~Filter() = default;
 
-    int initFilter(int srcW, int srcH, int scaleW, int scaleH, int fmt, int dstW, int dstH, AVRational time_base, AVRational sample_aspect_ratio);
+    int initFilter(AVFrame *frame, int scaleW, int scaleH, int dstW, int dstH);
 
     int sendFrame(AVFrame *src_frame);
 

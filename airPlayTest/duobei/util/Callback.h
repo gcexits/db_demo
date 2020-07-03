@@ -7,10 +7,12 @@ namespace duobei {
 
 namespace Callback {
 void prettyLog(int level, const char* timestamp, const char* fn, int line, const char* msg);
+void statusCodeCall(int num);
 }
 
 namespace RegisterCallback {
 void setprettyLogCallback(std::function<void(int, const char* timestamp, const char* fn, int line, const char* msg)> f);
+void setstatusCodeCallCallback(std::function<void(int)> f);
 }
 
 namespace AVCallback {

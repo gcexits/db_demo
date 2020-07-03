@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../util/Callback.h"
-#include "../util/DBLog.h"
+#include "util/Callback.h"
+#include "util/DBLog.h"
 
 #include <mutex>
 

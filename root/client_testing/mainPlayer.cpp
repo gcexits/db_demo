@@ -469,17 +469,20 @@ int send_speex(Argument& cmd) {
 }
 
 int rtmp_recv(Argument &cmd) {
-    duobei::RtmpObject rtmpObject(cmd.param.recvUrl, nullptr, 1);
+    duobei::RtmpObject rtmpObject("rtmp://192.168.254.150/live/livestream", nullptr, 1);
+//    duobei::RtmpObject rtmpObject(cmd.param.recvUrl, nullptr, 1);
     std::ofstream fp("/Users/guochao/Downloads/rtmp.flv", std::ios::out | std::ios::binary);
 
     while (1) {
-        if (!RTMP_IsConnected(rtmpObject.rtmp)) {
-            break;
-        }
+//        if (!RTMP_IsConnected(rtmpObject.rtmp)) {
+//            break;
+//        }
         RTMPPacket packet;
-        while (RTMP_ReadPacket(rtmpObject.rtmp, &packet)) {
-
-        }
+//        while (RTMP_ReadPacket(rtmpObject.rtmp, &packet) == TRUE) {
+//            printf("recv packet\n");
+//        }
+        RTMP_ReadPacket(rtmpObject.rtmp, &packet);
+        printf("recv packet %u\n", packet.m_nBodySize);
     }
     return 0;
 }

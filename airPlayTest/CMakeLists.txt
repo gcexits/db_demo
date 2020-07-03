@@ -7,6 +7,10 @@ set(EXE_TARGET_NAME airPlay)
 set(CLIENT ${CMAKE_CURRENT_LIST_DIR}/duobei)
 set(USER /usr/local/Cellar)
 
+#add_definitions(-DSAVEFILE)
+
+include_directories(${CLIENT})
+
 if (WIN32)
 elseif(APPLE)
     include_directories(${USER}/ffmpeg/4.3_1/include)
