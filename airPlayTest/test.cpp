@@ -7,7 +7,6 @@ std::ofstream fp_yuv;
 
 duobei::AVRegister::VideoPlayer YuvDta(duobei::AVRegister::Handle handle, void* data, uint32_t size, int w, int h, uint32_t ts) {
     std::cout << "video data" << std::endl;
-//    fp_yuv.write((char *)data, size);
 }
 
 void *videocallback(const std::string& id, duobei::AVRegister::VideoPlayer* f) {

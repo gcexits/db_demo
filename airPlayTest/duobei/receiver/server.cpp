@@ -199,7 +199,9 @@ void AirPlayServer::stopServer() {
     }
 
     setConnect(false);
-    parser->StopAirPlay();
+    if (parser) {
+        parser->StopAirPlay();
+    }
 }
 
 void AirPlayServer::setConnect(bool state) {
